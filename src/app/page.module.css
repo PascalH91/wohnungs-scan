@@ -5,6 +5,8 @@
   align-items: center;
   padding: 6rem;
   min-height: 100vh;
+  height: 100%;
+  gap: 2rem;
 }
 
 .description {
