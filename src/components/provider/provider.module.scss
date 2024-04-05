@@ -1,3 +1,47 @@
 .houseEntriesWrapper {
+    // background-color: red;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+.houseEntry {
+    width: 100%;
+    background-color: rgba(220, 220, 220, 0.5);
+    border-radius: 10px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    gap: 1rem;
+}
+
+.entryTitle {
+    font-size: medium;
+    cursor: pointer;
+    color: white;
+    &:hover{
+        color: rgb(250, 200, 150);
+    }
+}
+
+.specs {
+    display: flex;
+    gap: 2rem;
+}
+
+.redBoarder {
+    border: 1px solid red;
+}
+
+.newDot {
+    width: 15px;
+    height: 15px;
+    margin: 10px;
+    border-radius: 50%;
     background-color: red;
+    position: absolute;
+    right: 0;
+    top: 0;
 }

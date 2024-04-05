@@ -1,14 +1,23 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import clsx from "clsx";
 import { useSound } from "use-sound";
 import ringTone from "../../../../public/sounds/ring.mp3";
 
 import styles from "../provider.module.scss";
-import clsx from "clsx";
-import { Offer } from "../GEWOBAG/GEWOBAG";
 
-export const WBM = () => {
+export type Offer = {
+    id: string;
+    address: string;
+    title?: string;
+    region?: string;
+    link?: string | null;
+    size?: string;
+    rooms?: number | string;
+};
+
+export const GEWOBAG = () => {
     const [play] = useSound(ringTone);
     const [number, setNumber] = useState<number>(0);
     const [run, setRun] = useState<boolean>(true);
@@ -31,12 +40,12 @@ export const WBM = () => {
     useEffect(() => {
         if (run) {
             const getOffers = async () => {
-                const res = await fetch("http://localhost:3000/api/cron/wbm");
+                const res = await fetch("http://localhost:3000/api/cron/gewobag");
                 const { data }: { data: Offer[] } = await res.json();
-                console.log("WBM", { data });
                 const newOffers = data.filter((data) => !offers.map((offer) => offer.id).includes(data.id));
+                // console.log({ newOffers });
                 if (!!newOffers.length) {
-                    console.log("plaay wbm");
+                    console.log("plaay gewobag");
                     play();
                     setNewOfferIds((ids) => [...ids, ...newOffers.map((offer) => offer.id)]);
                 }
@@ -70,7 +79,7 @@ export const WBM = () => {
                             className={styles.entryTitle}
                             onClick={() => goToPage(offer.id, offer.link)}
                         >
-                            {offer.region} | {offer.title}
+                            📍 {offer.region} | {offer.title}
                         </h2>
                         <div className={styles.specs}>
                             <h3>🚪 {offer.rooms}</h3>
