@@ -7,37 +7,29 @@ import Image from "next/image";
 // import ringTone from "../../../public/sounds/ring.mp3";
 
 import styles from "./providerList.module.scss";
-import { WBM } from "../provider/WBM/WBM";
-import { GEWOBAG } from "../provider/GEWOBAG/GEWOBAG";
-import { FRIEDRICHSHEIM } from "../provider/FRIEDRICHSHEIM/FRIEDRICHSHEIM";
-
-type Provider = "WBM" | "HOWOGE" | "GEWOBAG" | "DAGEWO" | "DEUTSCHE_WOHNEN" | "FRIEDRICHSHEIM" | "STADTUNDLAND";
+import { Provider } from "../Provider/Provider";
 
 const providerDetails: {
     [key in Provider]: {
         id: Provider;
         name: string;
         logo?: string;
-        component?: JSX.Element;
     };
 } = {
     WBM: {
         id: "WBM",
         name: "WBM",
         logo: "/images/company_image_WBM_Logo_Claim_blau.jpg",
-        component: <WBM />,
     },
     GEWOBAG: {
         id: "GEWOBAG",
         name: "GEWOBAG",
         logo: "/images/1280px-Gewobag_logo.svg.png",
-        component: <GEWOBAG />,
     },
     FRIEDRICHSHEIM: {
         id: "FRIEDRICHSHEIM",
         name: "Friedrichsheim",
         logo: "/images/logo_Wohnungsbaugenossenschaften.jpg",
-        component: <FRIEDRICHSHEIM />,
     },
     DAGEWO: {
         id: "DAGEWO",
@@ -81,7 +73,7 @@ export const ProviderList = () => {
                             />
                         </div>
 
-                        {provider.component}
+                        <Provider type={provider.id} />
                     </div>
                 );
             })}
