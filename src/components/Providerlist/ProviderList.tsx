@@ -9,6 +9,7 @@ import Image from "next/image";
 import styles from "./providerList.module.scss";
 import { WBM } from "../provider/WBM/WBM";
 import { GEWOBAG } from "../provider/GEWOBAG/GEWOBAG";
+import { FRIEDRICHSHEIM } from "../provider/FRIEDRICHSHEIM/FRIEDRICHSHEIM";
 
 type Provider = "WBM" | "HOWOGE" | "GEWOBAG" | "DAGEWO" | "DEUTSCHE_WOHNEN" | "FRIEDRICHSHEIM" | "STADTUNDLAND";
 
@@ -35,6 +36,8 @@ const providerDetails: {
     FRIEDRICHSHEIM: {
         id: "FRIEDRICHSHEIM",
         name: "Friedrichsheim",
+        logo: "/images/logo_Wohnungsbaugenossenschaften.jpg",
+        component: <FRIEDRICHSHEIM />,
     },
     DAGEWO: {
         id: "DAGEWO",
@@ -66,15 +69,18 @@ export const ProviderList = () => {
                         key={provider.id}
                         className={styles.providerItem}
                     >
-                        <Image
-                            src={provider.logo || ""}
-                            width={20}
-                            height={20}
-                            // sizes="20vh"
-                            // style={{ width: "100%", height: "auto" }} // optional
-                            alt="Picture of the author"
-                        />
-                        <h2 className={styles.providerHeader}>{provider.name}</h2>
+                        <div className={styles.providerItemHeader}>
+                            <h2 className={styles.providerHeader}>{provider.name}</h2>
+                            <Image
+                                width={0}
+                                height={0}
+                                src={provider.logo || ""}
+                                alt="Picture of the author"
+                                style={{ height: "40px", width: "auto" }}
+                                quality={100}
+                            />
+                        </div>
+
                         {provider.component}
                     </div>
                 );
