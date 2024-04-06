@@ -12,6 +12,7 @@
     "dependencies": {
         "@types/node-schedule": "^2.1.6",
         "clsx": "^2.1.0",
+        "date-fns": "^3.6.0",
         "fs": "^0.0.1-security",
         "next": "14.1.4",
         "node-schedule": "^2.1.1",

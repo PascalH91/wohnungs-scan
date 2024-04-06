@@ -24,12 +24,17 @@ const providerDetails: {
     GEWOBAG: {
         id: "GEWOBAG",
         name: "GEWOBAG",
-        logo: "/images/1280px-Gewobag_logo.svg.png",
+        logo: "/images/Gewobag.png",
     },
     FRIEDRICHSHEIM: {
         id: "FRIEDRICHSHEIM",
         name: "Friedrichsheim",
         logo: "/images/logo_Wohnungsbaugenossenschaften.jpg",
+    },
+    DEUTSCHE_WOHNEN: {
+        id: "DEUTSCHE_WOHNEN",
+        name: "Deutsche Wohnen",
+        logo: "/images/Deutsche_Wohnen.png",
     },
     DAGEWO: {
         id: "DAGEWO",
@@ -38,11 +43,9 @@ const providerDetails: {
     STADTUNDLAND: {
         id: "STADTUNDLAND",
         name: "Stadt & Land",
+        logo: "/images/stadtundland_logo.png",
     },
-    DEUTSCHE_WOHNEN: {
-        id: "DEUTSCHE_WOHNEN",
-        name: "Deutsche Wohnen",
-    },
+
     HOWOGE: {
         id: "HOWOGE",
         name: "HOWOGE",
@@ -55,7 +58,7 @@ export const ProviderList = () => {
     return (
         <div className={styles.providerListWrapper}>
             {/* <button onClick={play}>PLAY</button> */}
-            {Object.values(providerDetails).map((provider) => {
+            {Object.values(providerDetails).map((provider, index) => {
                 return (
                     <div
                         key={provider.id}
@@ -63,14 +66,17 @@ export const ProviderList = () => {
                     >
                         <div className={styles.providerItemHeader}>
                             <h2 className={styles.providerHeader}>{provider.name}</h2>
-                            <Image
-                                width={0}
-                                height={0}
-                                src={provider.logo || ""}
-                                alt="Picture of the author"
-                                style={{ height: "40px", width: "auto" }}
-                                quality={100}
-                            />
+                            {!!provider.logo && (
+                                <Image
+                                    id={provider.id}
+                                    key={provider.id}
+                                    width={150}
+                                    height={50}
+                                    src={provider.logo}
+                                    alt={provider.id}
+                                    style={{ width: "auto" }}
+                                />
+                            )}
                         </div>
 
                         <Provider type={provider.id} />

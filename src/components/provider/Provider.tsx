@@ -25,6 +25,8 @@ const fetchUrlByProvider: { [key in Provider]?: string } = {
     WBM: "wbm",
     FRIEDRICHSHEIM: "friedrichsheim",
     GEWOBAG: "gewobag",
+    DEUTSCHE_WOHNEN: "deutschewohnen",
+    STADTUNDLAND: "stadtundland",
 };
 
 export const Provider = ({ type }: { type: Provider }) => {
@@ -99,6 +101,9 @@ export const Provider = ({ type }: { type: Provider }) => {
                             {offer.region} | {offer.address}
                         </address>
                         {isNew && <div className={styles.newDot} />}
+                        {offer.blocked && (
+                            <div className={styles.blocked}>{`noch ${offer.daysUntilAccessible} Tage blockiert`}</div>
+                        )}
                     </div>
                 );
             })}

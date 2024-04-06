@@ -1,4 +1,4 @@
-import { Offer } from "@/components/provider/GEWOBAG/GEWOBAG";
+import { Offer } from "@/components/Provider/Provider";
 import puppeteer from "puppeteer";
 
 const gewobagUrl =
@@ -14,7 +14,7 @@ export const getGEWOBAGOffers = async () => {
         page.on("console", (msg) => console.log(msg.text()));
         await page.goto(gewobagUrl, { waitUntil: "networkidle2" });
 
-        let urls = await page.evaluate(() => {
+        let data = await page.evaluate(() => {
             const containsSpecificPattern = (inputString?: string) => {
                 const pattern = /,\s*WBS\s*[\w\s%]*erforderlich|Wohnaktiv! Wohnen ab.*$/;
                 return !pattern.test(inputString || "");
@@ -42,7 +42,7 @@ export const getGEWOBAGOffers = async () => {
             return results;
         });
         browser.close();
-        return urls;
+        return data;
     } catch (e: any) {
         console.log(e);
         return [];

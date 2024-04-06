@@ -26,6 +26,21 @@
     }
 }
 
+.blocked {
+    top: 0;
+    left: 0;
+    background-color: rgba(250, 0, 0, 0.2);
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: rgb(50, 6, 6);
+    font-weight: 600;
+
+}
+
 .specs {
     display: flex;
     gap: 2rem;

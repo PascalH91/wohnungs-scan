@@ -1,4 +1,4 @@
-import { Offer } from "@/components/provider/GEWOBAG/GEWOBAG";
+import { Offer } from "@/components/Provider/Provider";
 import { getGEWOBAGOffers } from "@/utils/getGEWOBAGOffers";
 import { NextResponse } from "next/server";
 
