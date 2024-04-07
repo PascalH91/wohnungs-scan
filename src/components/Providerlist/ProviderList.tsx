@@ -1,21 +1,18 @@
-// "use client";
-
 import React from "react";
-import Image from "next/image";
-
-// import { useSound } from "use-sound";
-// import ringTone from "../../../public/sounds/ring.mp3";
 
 import styles from "./providerList.module.scss";
 import { Provider } from "../Provider/Provider";
 
-const providerDetails: {
-    [key in Provider]: {
-        id: Provider;
-        name: string;
-        logo?: string;
-    };
-} = {
+export type ProviderDetails = {
+    id: Provider;
+    name: string;
+    logo?: string;
+};
+type ProviderList = {
+    [key in Provider]: ProviderDetails;
+};
+
+const providerDetails: ProviderList = {
     WBM: {
         id: "WBM",
         name: "WBM",
@@ -39,6 +36,7 @@ const providerDetails: {
     DAGEWO: {
         id: "DAGEWO",
         name: "DAGEWO",
+        logo: "/images/dagewo.png",
     },
     STADTUNDLAND: {
         id: "STADTUNDLAND",
@@ -53,34 +51,14 @@ const providerDetails: {
 };
 
 export const ProviderList = () => {
-    // const [play] = useSound(ringTone);
-
     return (
         <div className={styles.providerListWrapper}>
-            {/* <button onClick={play}>PLAY</button> */}
-            {Object.values(providerDetails).map((provider, index) => {
+            {Object.values(providerDetails).map((provider) => {
                 return (
-                    <div
+                    <Provider
                         key={provider.id}
-                        className={styles.providerItem}
-                    >
-                        <div className={styles.providerItemHeader}>
-                            <h2 className={styles.providerHeader}>{provider.name}</h2>
-                            {!!provider.logo && (
-                                <Image
-                                    id={provider.id}
-                                    key={provider.id}
-                                    width={150}
-                                    height={50}
-                                    src={provider.logo}
-                                    alt={provider.id}
-                                    style={{ width: "auto" }}
-                                />
-                            )}
-                        </div>
-
-                        <Provider type={provider.id} />
-                    </div>
+                        provider={provider}
+                    />
                 );
             })}
         </div>

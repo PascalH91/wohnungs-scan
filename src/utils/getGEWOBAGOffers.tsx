@@ -17,7 +17,7 @@ export const getGEWOBAGOffers = async () => {
         let data = await page.evaluate(() => {
             const containsSpecificPattern = (inputString?: string) => {
                 const pattern = /,\s*WBS\s*[\w\s%]*erforderlich|Wohnaktiv! Wohnen ab.*$/;
-                return !pattern.test(inputString || "");
+                return !!pattern.test(inputString || "");
             };
 
             let results: Offer[] = [];
@@ -27,11 +27,11 @@ export const getGEWOBAGOffers = async () => {
                 const address = item.querySelector("address")?.innerText;
                 const title = item.querySelector(".angebot-title")?.innerHTML;
 
-                if (address && containsSpecificPattern(title)) {
+                if (address && !containsSpecificPattern(title)) {
                     results.push({
                         address,
                         id: item.getAttribute("id") || address,
-                        title: item.querySelector(".angebot-title")?.innerHTML,
+                        title,
                         region: item.querySelector(".angebot-region > td")?.innerHTML,
                         link: item.querySelector(".angebot-address")?.getElementsByTagName("a")[0].getAttribute("href"),
                         size: item.querySelector(".angebot-area > td")?.innerText?.split("|")[1].trim(),
