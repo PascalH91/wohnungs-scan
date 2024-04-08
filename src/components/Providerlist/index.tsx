@@ -1,7 +1,7 @@
 import React from "react";
 
 import styles from "./providerList.module.scss";
-import { Provider, ProviderT } from "../Provider/Provider";
+import { Provider, ProviderT } from "../Provider";
 
 export type ProviderDetails = {
     id: ProviderT;

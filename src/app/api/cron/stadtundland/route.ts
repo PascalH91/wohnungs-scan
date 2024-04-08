@@ -1,4 +1,4 @@
-import { Offer } from "@/components/Provider/Provider";
+import { Offer } from "@/components/Provider";
 import { getSTADTUNDLANDOffers } from "@/utils/getSTADTUNDLANDOffers";
 import { NextResponse } from "next/server";
 

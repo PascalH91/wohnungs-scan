@@ -1,4 +1,4 @@
-import { ProviderList } from "@/components/Providerlist/ProviderList";
+import { ProviderList } from "@/components/Providerlist";
 
 import styles from "./page.module.css";
 

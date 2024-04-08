@@ -1,4 +1,4 @@
-import { Offer } from "@/components/Provider/Provider";
+import { Offer } from "@/components/Provider";
 import puppeteer from "puppeteer";
 
 const friedrichsheimUrl = "https://www.friedrichsheim-eg.de/category/freie-wohnungen/";

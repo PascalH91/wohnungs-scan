@@ -7,7 +7,7 @@ import ringTone from "../../../public/sounds/ring.mp3";
 import Image from "next/image";
 
 import styles from "./provider.module.scss";
-import { ProviderDetails } from "../Providerlist/ProviderList";
+import { ProviderDetails } from "../Providerlist";
 
 export type Offer = {
     id: string;

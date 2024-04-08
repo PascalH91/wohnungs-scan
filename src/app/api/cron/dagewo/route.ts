@@ -1,4 +1,4 @@
-import { Offer } from "@/components/Provider/Provider";
+import { Offer } from "@/components/Provider";
 import { getDAGEWOOffers } from "@/utils/getDAGEWOOffers";
 import { NextResponse } from "next/server";
 

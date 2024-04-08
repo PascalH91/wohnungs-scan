@@ -1,4 +1,4 @@
-import { Offer } from "@/components/Provider/Provider";
+import { Offer } from "@/components/Provider";
 import { relative } from "path";
 import puppeteer from "puppeteer";
 
