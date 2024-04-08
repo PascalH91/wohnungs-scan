@@ -24,12 +24,13 @@ export type Offer = {
 export type Provider = "WBM" | "HOWOGE" | "GEWOBAG" | "DAGEWO" | "DEUTSCHE_WOHNEN" | "FRIEDRICHSHEIM" | "STADTUNDLAND";
 
 const fetchUrlByProvider: { [key in Provider]?: string } = {
-    WBM: "wbm",
-    FRIEDRICHSHEIM: "friedrichsheim",
-    GEWOBAG: "gewobag",
-    DEUTSCHE_WOHNEN: "deutschewohnen",
-    STADTUNDLAND: "stadtundland",
-    DAGEWO: "dagewo",
+    // WBM: "wbm",
+    // FRIEDRICHSHEIM: "friedrichsheim",
+    // GEWOBAG: "gewobag",
+    // DEUTSCHE_WOHNEN: "deutschewohnen",
+    // STADTUNDLAND: "stadtundland",
+    // DAGEWO: "dagewo",
+    HOWOGE: "howoge",
 };
 
 export const Provider = ({ provider }: { provider: ProviderDetails }) => {
@@ -58,9 +59,8 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
                 const res = await fetch(`http://localhost:3000/api/cron/${fetchUrlByProvider[provider.id]}`);
                 const { data }: { data: Offer[] } = await res.json();
                 const newOffers = data.filter((data) => !offers.map((offer) => offer.id).includes(data.id));
-                // console.log({ newOffers });
+
                 if (!!newOffers.length) {
-                    console.log("plaay gewobag");
                     play();
                     setNewOfferIds((ids) => [...ids, ...newOffers.map((offer) => offer.id)]);
                 }

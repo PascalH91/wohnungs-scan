@@ -17,7 +17,6 @@ export const getWBMOffers = async () => {
         let data = await page.evaluate(() => {
             let results: Offer[] = [];
 
-            // console.log(document.querySelector("div").getInnerHTML);
             let items = document.querySelectorAll(".openimmo-search-list-item") || [];
 
             items.forEach((item) => {
