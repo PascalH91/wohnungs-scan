@@ -36,7 +36,7 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
 };
 
 export const Provider = ({ provider, url }: { provider: ProviderDetails; url: string }) => {
-    console.log(url);
+    console.log("PROVIDERURL", { url });
     const [play] = useSound(ringTone);
     const [number, setNumber] = useState<number>(0);
     const [run, setRun] = useState<boolean>(true);
@@ -59,7 +59,7 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
     useEffect(() => {
         if (run && fetchUrlByProvider[provider.id]) {
             const getOffers = async () => {
-                const res = await fetch(`${url}/api/cron/${fetchUrlByProvider[provider.id]}`);
+                const res = await fetch(`/api/cron/${fetchUrlByProvider[provider.id]}`);
                 const { data }: { data: Offer[] } = await res.json();
                 const newOffers = data.filter((data) => !offers.map((offer) => offer.id).includes(data.id));
 
