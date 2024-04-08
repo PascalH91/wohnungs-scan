@@ -1,15 +1,15 @@
 import React from "react";
 
 import styles from "./providerList.module.scss";
-import { Provider } from "../Provider/Provider";
+import { Provider, ProviderT } from "../Provider/Provider";
 
 export type ProviderDetails = {
-    id: Provider;
+    id: ProviderT;
     name: string;
     logo?: string;
 };
 type ProviderList = {
-    [key in Provider]: ProviderDetails;
+    [key in ProviderT]: ProviderDetails;
 };
 
 const providerDetails: ProviderList = {

@@ -21,9 +21,9 @@ export type Offer = {
     daysUntilAccessible?: number;
 };
 
-export type Provider = "WBM" | "HOWOGE" | "GEWOBAG" | "DAGEWO" | "DEUTSCHE_WOHNEN" | "FRIEDRICHSHEIM" | "STADTUNDLAND";
+export type ProviderT = "WBM" | "HOWOGE" | "GEWOBAG" | "DAGEWO" | "DEUTSCHE_WOHNEN" | "FRIEDRICHSHEIM" | "STADTUNDLAND";
 
-const fetchUrlByProvider: { [key in Provider]?: string } = {
+const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     // WBM: "wbm",
     FRIEDRICHSHEIM: "friedrichsheim",
     GEWOBAG: "gewobag",
