@@ -29,7 +29,7 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
 
 export const ProviderWrapper = ({ provider }: { provider: ProviderDetails }) => {
     const url = process.env.API_URL;
-
+    console.log(url);
     return url ? (
         <Provider
             provider={provider}

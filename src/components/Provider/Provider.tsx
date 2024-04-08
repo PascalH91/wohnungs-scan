@@ -36,6 +36,7 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
 };
 
 export const Provider = ({ provider, url }: { provider: ProviderDetails; url: string }) => {
+    console.log(url);
     const [play] = useSound(ringTone);
     const [number, setNumber] = useState<number>(0);
     const [run, setRun] = useState<boolean>(true);
