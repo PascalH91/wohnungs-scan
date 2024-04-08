@@ -14,7 +14,7 @@
         "clsx": "^2.1.0",
         "date-fns": "^3.6.0",
         "fs": "^0.0.1-security",
-        "next": "14.1.4",
+        "next": "13.4.12",
         "node-schedule": "^2.1.1",
         "prettier": "^3.2.5",
         "puppeteer": "^22.6.2",

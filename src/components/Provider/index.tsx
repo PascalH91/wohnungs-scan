@@ -58,7 +58,7 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
     useEffect(() => {
         if (run && fetchUrlByProvider[provider.id]) {
             const getOffers = async () => {
-                const res = await fetch(`http://localhost:3000/api/cron/${fetchUrlByProvider[provider.id]}`);
+                const res = await fetch(`/api/cron/${fetchUrlByProvider[provider.id]}`);
                 const { data }: { data: Offer[] } = await res.json();
                 const newOffers = data.filter((data) => !offers.map((offer) => offer.id).includes(data.id));
 
