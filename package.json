@@ -23,7 +23,7 @@
         "url-loader": "^4.1.1",
         "use-sound": "^4.0.1",
         "@sparticuz/chromium": "113.0.1",
-        "puppeteer-core": "20.1.1"
+        "puppeteer-core": "20.8.0"
     },
     "devDependencies": {
         "@types/node": "^20",
