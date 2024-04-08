@@ -21,7 +21,9 @@
         "react": "^18",
         "react-dom": "^18",
         "url-loader": "^4.1.1",
-        "use-sound": "^4.0.1"
+        "use-sound": "^4.0.1",
+        "@sparticuz/chromium": "113.0.1",
+        "puppeteer-core": "20.1.1"
     },
     "devDependencies": {
         "@types/node": "^20",

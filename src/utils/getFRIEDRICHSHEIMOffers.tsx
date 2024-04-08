@@ -2,13 +2,26 @@
 
 import { Offer } from "@/components/Provider";
 import puppeteer from "puppeteer";
+import chromium from "@sparticuz/chromium";
+import puppeteerCore from "puppeteer-core";
 
 const friedrichsheimUrl = "https://www.friedrichsheim-eg.de/category/freie-wohnungen/";
 
+chromium.setHeadlessMode = true;
+chromium.setGraphicsMode = false;
+
 export const getFRIEDRICHSHEIMOffers = async () => {
     try {
-        const browser = await puppeteer.launch({
-            dumpio: true,
+        // const browser = await puppeteer.launch({
+        //     dumpio: true,
+        // });
+
+        const browser = await puppeteerCore.launch({
+            args: chromium.args,
+            defaultViewport: chromium.defaultViewport,
+            executablePath:
+                process.env.CHROME_EXECUTABLE_PATH ||
+                (await chromium.executablePath("/var/task/node_modules/@sparticuz/chromium/bin")),
         });
 
         const page = await browser.newPage();
