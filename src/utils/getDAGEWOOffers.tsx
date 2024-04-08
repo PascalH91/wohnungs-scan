@@ -1,5 +1,6 @@
+//@ts-nocheck
+
 import { Offer } from "@/components/Provider";
-import { relative } from "path";
 import puppeteer from "puppeteer";
 
 const dagewoUrl =

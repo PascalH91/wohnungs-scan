@@ -2,7 +2,9 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
+//@ts-ignore
 import { useSound } from "use-sound";
+//@ts-ignore
 import ringTone from "../../../public/sounds/ring.mp3";
 import Image from "next/image";
 

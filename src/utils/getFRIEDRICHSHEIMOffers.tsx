@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import { Offer } from "@/components/Provider";
 import puppeteer from "puppeteer";
 
@@ -14,6 +16,7 @@ export const getFRIEDRICHSHEIMOffers = async () => {
         await page.goto(friedrichsheimUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            //@ts-nocheck
             let results: Offer[] = [];
             let items = document.querySelectorAll("article");
 

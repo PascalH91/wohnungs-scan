@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import { Offer } from "@/components/Provider";
 import puppeteer from "puppeteer";
 
