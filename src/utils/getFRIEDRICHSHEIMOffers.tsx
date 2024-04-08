@@ -10,20 +10,49 @@ const friedrichsheimUrl = "https://www.friedrichsheim-eg.de/category/freie-wohnu
 chromium.setHeadlessMode = true;
 chromium.setGraphicsMode = false;
 
+const CHROMIUM_PATH =
+    "https://vomrghiulbmrfvmhlflk.supabase.co/storage/v1/object/public/chromium-pack/chromium-v123.0.0-pack.tar";
+
+const getBrowser = async () => {
+    if (process.env.VERCEL_ENV === "production") {
+        console.log("production");
+        const chromium = await import("@sparticuz/chromium-min").then((mod) => mod.default);
+
+        const puppeteerCore = await import("puppeteer-core").then((mod) => mod.default);
+
+        const executablePath = await chromium.executablePath(CHROMIUM_PATH);
+
+        const browser = await puppeteerCore.launch({
+            args: chromium.args,
+            defaultViewport: chromium.defaultViewport,
+            executablePath,
+            headless: chromium.headless,
+        });
+        return browser;
+    } else {
+        const puppeteer = await import("puppeteer").then((mod) => mod.default);
+
+        const browser = await puppeteer.launch();
+        return browser;
+    }
+};    
+
 export const getFRIEDRICHSHEIMOffers = async () => {
     try {
         // const browser = await puppeteer.launch({
         //     dumpio: true,
         // });
 
-        const browser = await puppeteerCore.launch({
-            headless: "new",
-            args: [...chromium.args, "--no-sandbox"],
-            defaultViewport: chromium.defaultViewport,
-            executablePath:
-                process.env.CHROME_EXECUTABLE_PATH ||
-                (await chromium.executablePath("/var/task/node_modules/@sparticuz/chromium/bin")),
-        });
+        // const browser = await puppeteerCore.launch({
+        //     headless: "new",
+        //     args: ["--no-sandbox"],
+        //     defaultViewport: chromium.defaultViewport,
+        //     executablePath:
+        //         process.env.CHROME_EXECUTABLE_PATH ||
+        //         (await chromium.executablePath("/var/task/node_modules/@sparticuz/chromium/bin")),
+        // });
+
+        const browser = await getBrowser();
 
         const page = await browser.newPage();
         page.on("console", (msg) => console.log(msg.text()));

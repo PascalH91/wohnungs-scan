@@ -33,7 +33,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/utils/getDEUTSCHEWOHNENOffers.tsx"
+    "src/utils/getDEUTSCHEWOHNENOffers.tsx",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

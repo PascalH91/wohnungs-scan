@@ -21,6 +21,19 @@ const nextConfig = {
         };
         return config;
     },
+    reactStrictMode: true,
+    swcMinify: true,
+    logging: {
+        fetches: {
+            fullUrl: true,
+        },
+    },
+    distDir: process.env.NODE_ENV === "development" ? ".next/dev" : ".next/build",
+
+    experimental: {
+        serverComponentsExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
+        externalDir: true,
+    },
     async headers() {
         return [
             {
