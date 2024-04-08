@@ -25,11 +25,11 @@ export type Provider = "WBM" | "HOWOGE" | "GEWOBAG" | "DAGEWO" | "DEUTSCHE_WOHNE
 
 const fetchUrlByProvider: { [key in Provider]?: string } = {
     // WBM: "wbm",
-    // FRIEDRICHSHEIM: "friedrichsheim",
-    // GEWOBAG: "gewobag",
-    // DEUTSCHE_WOHNEN: "deutschewohnen",
-    // STADTUNDLAND: "stadtundland",
-    // DAGEWO: "dagewo",
+    FRIEDRICHSHEIM: "friedrichsheim",
+    GEWOBAG: "gewobag",
+    DEUTSCHE_WOHNEN: "deutschewohnen",
+    STADTUNDLAND: "stadtundland",
+    DAGEWO: "dagewo",
     HOWOGE: "howoge",
 };
 
@@ -86,7 +86,7 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
             className={styles.providerItem}
         >
             <div className={styles.providerItemHeader}>
-                <h2 className={styles.providerHeader}>{provider.name}</h2>
+                <h2 className={styles.providerHeader}>{`${provider.name} _ ${number}`}</h2>
                 {!!provider.logo && (
                     <Image
                         id={provider.id}
@@ -101,7 +101,6 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
             </div>
 
             <div className={styles.houseEntriesWrapper}>
-                {number}
                 {offers.map((offer, index) => {
                     const isNew = !visitedIds.includes(offer.id);
                     return (
