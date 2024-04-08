@@ -28,11 +28,11 @@ export type ProviderT = "WBM" | "HOWOGE" | "GEWOBAG" | "DAGEWO" | "DEUTSCHE_WOHN
 const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     // WBM: "wbm",
     FRIEDRICHSHEIM: "friedrichsheim",
-    GEWOBAG: "gewobag",
-    DEUTSCHE_WOHNEN: "deutschewohnen",
-    STADTUNDLAND: "stadtundland",
-    DAGEWO: "dagewo",
-    HOWOGE: "howoge",
+    // GEWOBAG: "gewobag",
+    // DEUTSCHE_WOHNEN: "deutschewohnen",
+    // STADTUNDLAND: "stadtundland",
+    // DAGEWO: "dagewo",
+    // HOWOGE: "howoge",
 };
 
 export const Provider = ({ provider, url }: { provider: ProviderDetails; url: string }) => {
