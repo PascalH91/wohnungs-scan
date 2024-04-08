@@ -39,19 +39,6 @@ const getBrowser = async () => {
 
 export const getFRIEDRICHSHEIMOffers = async () => {
     try {
-        // const browser = await puppeteer.launch({
-        //     dumpio: true,
-        // });
-
-        // const browser = await puppeteerCore.launch({
-        //     headless: "new",
-        //     args: ["--no-sandbox"],
-        //     defaultViewport: chromium.defaultViewport,
-        //     executablePath:
-        //         process.env.CHROME_EXECUTABLE_PATH ||
-        //         (await chromium.executablePath("/var/task/node_modules/@sparticuz/chromium/bin")),
-        // });
-
         const browser = await getBrowser();
 
         const page = await browser.newPage();
