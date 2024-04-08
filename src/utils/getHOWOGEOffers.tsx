@@ -57,7 +57,7 @@ export const getHOWOGEOffers = async () => {
                  const address = item.querySelector(".address")?.innerText;
                  const title = item.querySelector(".notice")?.innerHTML;
                  const attributes = item.querySelectorAll(".attributes > div .attributes-content");
-                 console.log({ address, title, attributes });
+console.log("address", containsRelevantCityCode(address));
                  if (address && !containsSpecificPattern(title) && containsRelevantCityCode(address)) {
                      results.push({
                          address,
