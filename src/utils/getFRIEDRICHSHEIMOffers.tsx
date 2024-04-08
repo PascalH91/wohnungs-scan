@@ -17,7 +17,8 @@ export const getFRIEDRICHSHEIMOffers = async () => {
         // });
 
         const browser = await puppeteerCore.launch({
-            args: chromium.args,
+            headless: "new",
+            args: [...chromium.args, "--no-sandbox"],
             defaultViewport: chromium.defaultViewport,
             executablePath:
                 process.env.CHROME_EXECUTABLE_PATH ||
