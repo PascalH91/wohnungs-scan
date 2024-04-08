@@ -72,9 +72,9 @@ export const getWBMOffers = async () => {
             return results;
         });
         browser.close();
-        return data;
+        return { data, errors: "" };
     } catch (e: any) {
         console.log(e);
-        return [];
+        return { data: [], errors: e };
     }
 };
