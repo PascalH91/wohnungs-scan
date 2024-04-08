@@ -18,7 +18,7 @@ export const getGEWOBAGOffers = async () => {
 
         let data = await page.evaluate(() => {
             const containsSpecificPattern = (inputString?: string) => {
-                const pattern = /,\s*WBS\s*[\w\s%]*erforderlich|Wohnaktiv! Wohnen ab.*$/;
+                const pattern = /^WBS\s*[\w\s%]*erforderlich.*|,\s*WBS\s*[\w\s%]*erforderlich|Wohnaktiv! Wohnen ab.*$/;
                 return !!pattern.test(inputString || "");
             };
 
