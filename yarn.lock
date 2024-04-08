@@ -188,12 +188,11 @@
   resolved "https://registry.yarnpkg.com/@rushstack/eslint-patch/-/eslint-patch-1.10.1.tgz#7ca168b6937818e9a74b47ac4e2112b2e1a024cf"
   integrity sha512-S3Kq8e7LqxkA9s7HKLqXGTGck1uwis5vAXan3FnU5yw1Ec5hsSGnq4s/UCaSqABPOnOTg7zASLyst7+ohgWexg==
 
-"@sparticuz/chromium@113.0.1":
-  version "113.0.1"
-  resolved "https://registry.yarnpkg.com/@sparticuz/chromium/-/chromium-113.0.1.tgz#c25f52569ea3aa29c0160fe228b5a54ef81cd3af"
-  integrity sha512-m64Nc58YObfCYkPbc8EBsnhWCFaw02dbXhWNOmx+OYoIPtIRar+reGYyAeGC0HD9RUZfPEwMHHSZ8MFxdSWXZQ==
+"@sparticuz/chromium@106.0.2":
+  version "106.0.2"
+  resolved "https://registry.yarnpkg.com/@sparticuz/chromium/-/chromium-106.0.2.tgz#87436400a8b7efdb1d460b75d4051bbb0cc54598"
+  integrity sha512-YDbwmfyzLi2WqVjAONPjxlCxAfLPjx4TE7KdDNOyITDGx6KAktgpZ9qab77ZRU/6mmCwSdg+QO+OGQTXOEY/RA==
   dependencies:
-    follow-redirects "^1.15.2"
     tar-fs "^2.1.1"
 
 "@swc/helpers@0.5.1":
@@ -1433,11 +1432,6 @@ flatted@^3.2.9:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.3.1.tgz#21db470729a6734d4997002f439cb308987f567a"
   integrity sha512-X8cqMLLie7KsNUDSdzeN8FYK9rEt4Dt67OsG/DNGnYTSDBG4uFAJFBnUeiV+zCVAvwFy56IjM9sH51jVaEhNxw==
-
-follow-redirects@^1.15.2:
-  version "1.15.6"
-  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.6.tgz#7f815c0cda4249c74ff09e95ef97c23b5fd0399b"
-  integrity sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==
 
 for-each@^0.3.3:
   version "0.3.3"
