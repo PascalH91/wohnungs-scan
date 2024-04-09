@@ -69,7 +69,7 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
             const getOffers = async () => {
                 const res = await fetch(`/api/cron/${fetchUrlByProvider[provider.id]}`);
                 const { data, errors }: { data: Offer[]; errors: string } = await res.json();
-                console.log({ type: provider.id, errors });
+                // console.log({ type: provider.id, errors });
                 const newOffers = data.filter((data) => !offers.map((offer) => offer.id).includes(data.id));
 
                 if (!!newOffers.length) {
@@ -107,15 +107,17 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
             <div className={styles.providerItemHeader}>
                 <h2 className={styles.providerHeader}>{`${provider.name} _ ${number}`}</h2>
                 {!!provider.logo && (
-                    <Image
-                        id={provider.id}
-                        key={provider.id}
-                        width={150}
-                        height={50}
-                        src={provider.logo}
-                        alt={provider.id}
-                        style={{ width: "auto" }}
-                    />
+                    <div className={styles.imageWrapper}>
+                        <Image
+                            id={provider.id}
+                            key={provider.id}
+                            width={150}
+                            height={50}
+                            src={provider.logo}
+                            alt={provider.id}
+                            style={{ width: "auto" }}
+                        />
+                    </div>
                 )}
             </div>
 
