@@ -26,13 +26,13 @@ export type Offer = {
 export type ProviderT = "WBM" | "HOWOGE" | "GEWOBAG" | "DAGEWO" | "DEUTSCHE_WOHNEN" | "FRIEDRICHSHEIM" | "STADTUNDLAND";
 
 const fetchUrlByProvider: { [key in ProviderT]?: string } = {
-    // WBM: "wbm",
+    WBM: "wbm",
     FRIEDRICHSHEIM: "friedrichsheim",
-    // GEWOBAG: "gewobag",
-    // DEUTSCHE_WOHNEN: "deutschewohnen",
-    // STADTUNDLAND: "stadtundland",
-    // DAGEWO: "dagewo",
-    // HOWOGE: "howoge",
+    GEWOBAG: "gewobag",
+    DEUTSCHE_WOHNEN: "deutschewohnen",
+    STADTUNDLAND: "stadtundland",
+    DAGEWO: "dagewo",
+    HOWOGE: "howoge",
 };
 
 export const Provider = ({ provider, url }: { provider: ProviderDetails; url: string }) => {
@@ -77,11 +77,15 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
 
     useEffect(() => {
         if (!run) {
-            setTimeout(() => {
+            const getRandomArbitrary = (min: number = 25000, max: number = 45000) => {
+             return Math.floor(Math.random() * (max - min) + min);
+            }
+
+              setTimeout(() => {
                 setRun(true);
-            }, 30000);
+            }, provider.id === 'WBM' ? 30000 : getRandomArbitrary());
         }
-    }, [run]);
+    }, [run, provider.id]);
 
     return offers.length ? (
         <div

@@ -75,6 +75,7 @@ export const getWBMOffers = async () => {
         return { data, errors: "" };
     } catch (e: any) {
         console.log(e);
+        browser.close();
         return { data: [], errors: e };
     }
 };
