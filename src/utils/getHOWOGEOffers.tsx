@@ -18,9 +18,14 @@ export const getHOWOGEOffers = async () => {
 
         let data = await page.evaluate(() => {
             const containsSpecificPattern = (inputString?: string) => {
-                const pattern = /,\s*WBS\s*[\w\s%]*erforderlich|Wohnaktiv! Wohnen ab.*$/;
+                const pattern = /^MIT\s* WBS\s*[\w\s%]*|^WBS\s*[\w\s%]*erforderlich.*|,\s*WBS\s*[\w\s%]*erforderlich|Wohnaktiv! Wohnen ab.*$/;
                 return !!pattern.test(inputString || "");
             };
+
+            const extractValidNumberSize = (inputString: string) => {
+                const match = inputString.match(/\b\d+(,\d+)?\b/);
+                return match ? parseFloat(match[0].replace(',', '.')): null
+            }
 
             const containsRelevantCityCode = (inputString: string) => {
                 const relevantCityCodes = {
@@ -59,8 +64,10 @@ export const getHOWOGEOffers = async () => {
                 const address = item.querySelector(".address")?.innerText;
                 const title = item.querySelector(".notice")?.innerHTML;
                 const attributes = item.querySelectorAll(".attributes > div .attributes-content");
-                console.log("address", containsRelevantCityCode(address));
-                if (address && !containsSpecificPattern(title) && containsRelevantCityCode(address)) {
+
+                const showItem =address && !containsSpecificPattern(title) && containsRelevantCityCode(address) && +attributes[2].innerText !== 1 && extractValidNumberSize(attributes[1].innerText) > 68;
+                
+                if (showItem) {
                     results.push({
                         address,
                         id: item.getAttribute("data-uid") || address,

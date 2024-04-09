@@ -17,6 +17,11 @@ export const getWBMOffers = async () => {
         await page.goto(wbmUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(() => {
+            const extractValidNumberSize = (inputString: string) => {
+                const match = inputString.match(/\b\d+(,\d+)?\b/);
+                return match ? parseFloat(match[0].replace(',', '.')): null
+            }
+
             const containsRelevantCityCode = (inputString: string) => {
                 const relevantCityCodes = {
                     MITTE: ["10115", "10117", "10119", "10178", "10179", "10435"],
@@ -56,16 +61,20 @@ export const getWBMOffers = async () => {
                 const address = item.querySelector(".address")?.innerText;
                 const propertylist = item.getElementsByTagName("li");
                 const isWBS = Array.from(propertylist).some((prop) => prop.innerText === "WBS");
+                const roomSize = item.querySelector(".main-property-size")?.innerText
+                const roomNumber = +item.querySelector(".main-property-rooms")?.innerText
 
-                if (title && address && !isWBS && containsRelevantCityCode(address)) {
+                const showItem = title && address && !isWBS && containsRelevantCityCode(address) && roomNumber !== 1 && extractValidNumberSize(roomSize) > 65;
+
+                if (showItem) {
                     results.push({
                         address,
                         id: `${item.getAttribute("data-id")}_${item.getAttribute("data-uid")}`,
                         title: title?.innerHTML,
                         region: containsRelevantCityCode(address)?.district || item.querySelector(".area")?.innerHTML,
                         link: `https://www.wbm.de${item.querySelector(".btn-holder")?.getElementsByTagName("a")[0].getAttribute("href")}`,
-                        size: item.querySelector(".main-property-size")?.innerText,
-                        rooms: +item.querySelector(".main-property-rooms")?.innerText,
+                        size: roomSize,
+                        rooms: roomNumber,
                     });
                 }
             });

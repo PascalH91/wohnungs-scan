@@ -17,11 +17,6 @@ export const getSTADTUNDLANDOffers = async () => {
         await page.goto(stadtUndLandUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(() => {
-            const containsSpecificPattern = (inputString?: string) => {
-                const pattern = /,\s*WBS\s*[\w\s%]*erforderlich|Wohnaktiv! Wohnen ab.*$/;
-                return !pattern.test(inputString || "");
-            };
-
             const containsRelevantCityCode = (inputString: string) => {
                 const relevantCityCodes = {
                     MITTE: ["10115", "10117", "10119", "10178", "10179", "10435"],
