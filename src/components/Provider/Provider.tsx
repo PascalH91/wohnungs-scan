@@ -23,7 +23,15 @@ export type Offer = {
     daysUntilAccessible?: number;
 };
 
-export type ProviderT = "WBM" | "HOWOGE" | "GEWOBAG" | "DAGEWO" | "DEUTSCHE_WOHNEN" | "FRIEDRICHSHEIM" | "STADTUNDLAND";
+export type ProviderT =
+    | "WBM"
+    | "HOWOGE"
+    | "GEWOBAG"
+    | "DAGEWO"
+    | "DEUTSCHE_WOHNEN"
+    | "FRIEDRICHSHEIM"
+    | "STADTUNDLAND"
+    | "GESOBAU";
 
 const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     WBM: "wbm",
@@ -33,6 +41,7 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     STADTUNDLAND: "stadtundland",
     DAGEWO: "dagewo",
     HOWOGE: "howoge",
+    GESOBAU: "gesobau",
 };
 
 export const Provider = ({ provider, url }: { provider: ProviderDetails; url: string }) => {
@@ -78,12 +87,15 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
     useEffect(() => {
         if (!run) {
             const getRandomArbitrary = (min: number = 25000, max: number = 45000) => {
-             return Math.floor(Math.random() * (max - min) + min);
-            }
+                return Math.floor(Math.random() * (max - min) + min);
+            };
 
-              setTimeout(() => {
-                setRun(true);
-            }, provider.id === 'WBM' ? 30000 : getRandomArbitrary());
+            setTimeout(
+                () => {
+                    setRun(true);
+                },
+                provider.id === "WBM" ? 30000 : getRandomArbitrary(),
+            );
         }
     }, [run, provider.id]);
 

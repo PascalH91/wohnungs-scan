@@ -16,22 +16,22 @@ const providerDetails: ProviderList = {
     WBM: {
         id: "WBM",
         name: "WBM",
-        logo: "/images/company_image_WBM_Logo_Claim_blau.jpg",
+        logo: "/images/wbm.jpg",
     },
     GEWOBAG: {
         id: "GEWOBAG",
         name: "GEWOBAG",
-        logo: "/images/Gewobag.png",
+        logo: "/images/gewobag.png",
     },
     FRIEDRICHSHEIM: {
         id: "FRIEDRICHSHEIM",
         name: "Friedrichsheim",
-        logo: "/images/logo_Wohnungsbaugenossenschaften.jpg",
+        logo: "/images/friedrichsheim.jpg",
     },
     DEUTSCHE_WOHNEN: {
         id: "DEUTSCHE_WOHNEN",
         name: "Deutsche Wohnen",
-        logo: "/images/Deutsche_Wohnen.png",
+        logo: "/images/deutsche_wohnen.png",
     },
     DAGEWO: {
         id: "DAGEWO",
@@ -41,12 +41,18 @@ const providerDetails: ProviderList = {
     STADTUNDLAND: {
         id: "STADTUNDLAND",
         name: "Stadt & Land",
-        logo: "/images/stadtundland_logo.png",
+        logo: "/images/stadt_und_land.png",
     },
 
     HOWOGE: {
         id: "HOWOGE",
         name: "HOWOGE",
+        logo: "/images/howoge.png",
+    },
+    GESOBAU: {
+        id: "GESOBAU",
+        name: "GESOBAU",
+        logo: "/images/gesobau.png",
     },
 };
 

@@ -15,17 +15,15 @@ export type Offer = {
     daysUntilAccessible?: number;
 };
 
-export type ProviderT = "WBM" | "HOWOGE" | "GEWOBAG" | "DAGEWO" | "DEUTSCHE_WOHNEN" | "FRIEDRICHSHEIM" | "STADTUNDLAND";
-
-const fetchUrlByProvider: { [key in ProviderT]?: string } = {
-    // WBM: "wbm",
-    FRIEDRICHSHEIM: "friedrichsheim",
-    GEWOBAG: "gewobag",
-    DEUTSCHE_WOHNEN: "deutschewohnen",
-    STADTUNDLAND: "stadtundland",
-    DAGEWO: "dagewo",
-    HOWOGE: "howoge",
-};
+export type ProviderT =
+    | "WBM"
+    | "HOWOGE"
+    | "GEWOBAG"
+    | "DAGEWO"
+    | "DEUTSCHE_WOHNEN"
+    | "FRIEDRICHSHEIM"
+    | "STADTUNDLAND"
+    | "GESOBAU";
 
 export const ProviderWrapper = ({ provider }: { provider: ProviderDetails }) => {
     const url = process.env.API_URL;
