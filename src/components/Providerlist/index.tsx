@@ -54,6 +54,11 @@ const providerDetails: ProviderList = {
         name: "GESOBAU",
         logo: "/images/gesobau.png",
     },
+    DPF: {
+        id: "DPF",
+        name: "dpf",
+        logo: "/images/dpf.png",
+    },
 };
 
 export const ProviderList = () => {

@@ -10,6 +10,7 @@ import Image from "next/image";
 
 import styles from "./provider.module.scss";
 import { ProviderDetails } from "../Providerlist";
+import { ProviderT } from ".";
 
 export type Offer = {
     id: string;
@@ -23,25 +24,16 @@ export type Offer = {
     daysUntilAccessible?: number;
 };
 
-export type ProviderT =
-    | "WBM"
-    | "HOWOGE"
-    | "GEWOBAG"
-    | "DAGEWO"
-    | "DEUTSCHE_WOHNEN"
-    | "FRIEDRICHSHEIM"
-    | "STADTUNDLAND"
-    | "GESOBAU";
-
 const fetchUrlByProvider: { [key in ProviderT]?: string } = {
-    WBM: "wbm",
-    FRIEDRICHSHEIM: "friedrichsheim",
-    GEWOBAG: "gewobag",
-    DEUTSCHE_WOHNEN: "deutschewohnen",
-    STADTUNDLAND: "stadtundland",
-    DAGEWO: "dagewo",
-    HOWOGE: "howoge",
-    GESOBAU: "gesobau",
+    // WBM: "wbm",
+    // FRIEDRICHSHEIM: "friedrichsheim",
+    // GEWOBAG: "gewobag",
+    // DEUTSCHE_WOHNEN: "deutschewohnen",
+    // STADTUNDLAND: "stadtundland",
+    // DAGEWO: "dagewo",
+    // HOWOGE: "howoge",
+    // GESOBAU: "gesobau",
+    DPF: "dpf",
 };
 
 export const Provider = ({ provider, url }: { provider: ProviderDetails; url: string }) => {

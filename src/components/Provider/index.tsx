@@ -23,7 +23,8 @@ export type ProviderT =
     | "DEUTSCHE_WOHNEN"
     | "FRIEDRICHSHEIM"
     | "STADTUNDLAND"
-    | "GESOBAU";
+    | "GESOBAU"
+    | "DPF";
 
 export const ProviderWrapper = ({ provider }: { provider: ProviderDetails }) => {
     const url = process.env.API_URL;
