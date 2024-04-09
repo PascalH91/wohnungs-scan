@@ -25,14 +25,14 @@ export type Offer = {
 };
 
 const fetchUrlByProvider: { [key in ProviderT]?: string } = {
-    // WBM: "wbm",
-    // FRIEDRICHSHEIM: "friedrichsheim",
-    // GEWOBAG: "gewobag",
-    // DEUTSCHE_WOHNEN: "deutschewohnen",
-    // STADTUNDLAND: "stadtundland",
-    // DAGEWO: "dagewo",
-    // HOWOGE: "howoge",
-    // GESOBAU: "gesobau",
+    WBM: "wbm",
+    FRIEDRICHSHEIM: "friedrichsheim",
+    GEWOBAG: "gewobag",
+    DEUTSCHE_WOHNEN: "deutschewohnen",
+    STADTUNDLAND: "stadtundland",
+    DAGEWO: "dagewo",
+    HOWOGE: "howoge",
+    GESOBAU: "gesobau",
     DPF: "dpf",
 };
 
