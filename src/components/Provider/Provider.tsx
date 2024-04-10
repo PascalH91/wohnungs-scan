@@ -9,9 +9,9 @@ import ringTone from "../../../public/sounds/ring.mp3";
 import Image from "next/image";
 
 import styles from "./provider.module.scss";
-import { ProviderDetails } from "../Providerlist";
-import { ProviderT } from ".";
-import { time } from "console";
+import { ProviderT } from "./index";
+import { ProviderDetails } from "../Providerlist/index";
+import { transformAddressToGoogleMapsLink } from "@/utils/transformAdressToLink";
 
 export type Offer = {
     id: string;
@@ -140,9 +140,12 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
                             <div className={styles.specs}>
                                 <h3>🚪 {offer.rooms}</h3>
                                 <h3>⛶ {offer.size}</h3>
-                                <address>
+                                <a
+                                    href={transformAddressToGoogleMapsLink(offer.address)}
+                                    target="_blank"
+                                >
                                     {offer.region} | {offer.address}
-                                </address>
+                                </a>
                             </div>
                             {isNew && <div className={styles.newDot} />}
                             {offer.blocked && (

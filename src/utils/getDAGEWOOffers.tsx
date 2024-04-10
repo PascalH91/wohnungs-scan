@@ -1,4 +1,4 @@
-import { Offer } from "@/components/Provider";
+import { Offer } from "@/components/Provider/index";
 import { generateRandomUA } from "./generateRandomUserAgents";
 import { getBrowser } from "./getBrower";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";

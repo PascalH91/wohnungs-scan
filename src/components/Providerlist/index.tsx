@@ -22,30 +22,21 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 30,
         additionalBufferInSeconds: 0,
     },
-    GEWOBAG: {
-        id: "GEWOBAG",
-        name: "GEWOBAG",
-        logo: "/images/gewobag.png",
-    },
     FRIEDRICHSHEIM: {
         id: "FRIEDRICHSHEIM",
         name: "Friedrichsheim",
         logo: "/images/friedrichsheim.jpg",
     },
+    GEWOBAG: {
+        id: "GEWOBAG",
+        name: "GEWOBAG",
+        logo: "/images/gewobag.png",
+    },
+
     DEUTSCHE_WOHNEN: {
         id: "DEUTSCHE_WOHNEN",
         name: "Deutsche Wohnen",
         logo: "/images/deutsche_wohnen.png",
-    },
-    DAGEWO: {
-        id: "DAGEWO",
-        name: "DAGEWO",
-        logo: "/images/dagewo.png",
-    },
-    STADTUNDLAND: {
-        id: "STADTUNDLAND",
-        name: "Stadt & Land",
-        logo: "/images/stadt_und_land.png",
     },
 
     HOWOGE: {
@@ -53,15 +44,26 @@ const providerDetails: ProviderList = {
         name: "HOWOGE",
         logo: "/images/howoge.png",
     },
+
+    DPF: {
+        id: "DPF",
+        name: "dpf",
+        logo: "/images/dpf.png",
+    },
+    STADTUNDLAND: {
+        id: "STADTUNDLAND",
+        name: "Stadt & Land",
+        logo: "/images/stadt_und_land.png",
+    },
     GESOBAU: {
         id: "GESOBAU",
         name: "GESOBAU",
         logo: "/images/gesobau.png",
     },
-    DPF: {
-        id: "DPF",
-        name: "dpf",
-        logo: "/images/dpf.png",
+    DAGEWO: {
+        id: "DAGEWO",
+        name: "DAGEWO",
+        logo: "/images/dagewo.png",
     },
     IMMOSCOUT: {
         id: "IMMOSCOUT",

@@ -1,4 +1,4 @@
-import { Offer } from "@/components/Provider";
+import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrower";
 import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
@@ -6,7 +6,6 @@ import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingP
 
 const gesobauUrl =
     "https://www.gesobau.de/mieten/wohnungssuche/?tx_solr[filter][]=zimmer:%272-3%27&tx_solr[filter][]=wohnflaeche:%2768-58%27";
-
 
 export const getGESOBAUOffers = async () => {
     try {

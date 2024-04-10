@@ -1,6 +1,6 @@
 //@ts-nocheck
 
-import { Offer } from "@/components/Provider";
+import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrower";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
