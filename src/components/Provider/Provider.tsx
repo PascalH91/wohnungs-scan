@@ -30,11 +30,11 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     FRIEDRICHSHEIM: "friedrichsheim",
     GEWOBAG: "gewobag",
     DEUTSCHE_WOHNEN: "deutschewohnen",
-    STADTUNDLAND: "stadtundland",
-    DAGEWO: "dagewo",
     HOWOGE: "howoge",
-    GESOBAU: "gesobau",
     DPF: "dpf",
+    STADTUNDLAND: "stadtundland",
+    GESOBAU: "gesobau",
+    DAGEWO: "dagewo",
     //IMMOSCOUT: "immoscout",
 };
 
