@@ -78,6 +78,11 @@
     font-size: small;
     gap: 2rem;
     align-items: center;
+    & > a {
+        &:hover {
+            color: rgb(250, 200, 150);
+        }
+    }
 }
 
 .redBoarder {
