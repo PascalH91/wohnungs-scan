@@ -13,7 +13,6 @@ export const containsRelevantCityCode = async (inputString: string) => {
         KREUZBERG: ["10785", "10961", "10963", "10965", "10967", "10969", "10997", "10999"],
         NEUKÖLLN: ["12045", "12059", "12057", "12055", "12043"],
         SCHOENEBERG: ["10785"],
-        TEST: [],
     };
 
     const allCityCodes = Object.values(relevantCityCodes)
