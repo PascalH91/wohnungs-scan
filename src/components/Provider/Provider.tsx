@@ -49,7 +49,6 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
     const goToPage = useCallback(
         (id: string, url?: string | null) => {
             if (!url) return;
-            setVisitedIds((ids) => [...ids, id]);
             const updatedNewIds = [...newOfferIds].filter((newId) => newId !== id);
             setNewOfferIds(updatedNewIds);
             setVisitedIds((ids) => [...ids, id]);
@@ -67,7 +66,11 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
                 const newOffers = data.filter((data) => !offers.map((offer) => offer.id).includes(data.id));
 
                 if (!!newOffers.length) {
-                    play();
+                    const newOfferIdsThatHaventBeenVisited = newOffers
+                        .map((offer) => offer.id)
+                        .filter((id) => !visitedIds.includes(id));
+
+                    !!newOfferIdsThatHaventBeenVisited.length && play();
                     setNewOfferIds((ids) => [...ids, ...newOffers.map((offer) => offer.id)]);
                 }
                 setOffers(data as Offer[]);
@@ -76,7 +79,7 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
             };
             getOffers();
         }
-    }, [offers, run, play, provider.id, url]);
+    }, [offers, run, play, provider.id, url, visitedIds]);
 
     useEffect(() => {
         if (!run) {

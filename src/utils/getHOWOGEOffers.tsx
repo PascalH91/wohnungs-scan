@@ -29,7 +29,7 @@ export const getHOWOGEOffers = async () => {
 
             const extractValidNumberSize = (inputString: string) => {
                 const match = inputString.match(/\b\d+(,\d+)?\b/);
-                return match ? parseFloat(match[0].replace(",", ".")) : null;
+                return match ? parseFloat(match[0].replace(",", ".")) : 0;
             };
 
             const containsRelevantCityCode = (inputString: string) => {
@@ -63,19 +63,25 @@ export const getHOWOGEOffers = async () => {
             };
 
             let results: Offer[] = [];
-            let items = document.querySelectorAll("#immoobject-list .flat-single-grid-item .content");
+            let items = document.querySelectorAll(".flat-single-grid-item");
 
             items.forEach((item) => {
                 const address = item.querySelector(".address")?.innerText;
-                const title = item.querySelector(".notice")?.innerHTML;
+                const title = item.querySelector(".notice")?.innerText;
+
                 const attributes = item.querySelectorAll(".attributes > div .attributes-content");
+                const isNewBuildingProject = attributes.length === 2;
+
+                const rooms = isNewBuildingProject ? 0 : +attributes[2].innerText;
+                const size = isNewBuildingProject ? "" : attributes[1].innerText;
 
                 const showItem =
                     address &&
                     !containsSpecificPattern(title) &&
                     containsRelevantCityCode(address) &&
-                    +attributes[2].innerText !== 1 &&
-                    extractValidNumberSize(attributes[1].innerText) > 68;
+                    !isNewBuildingProject &&
+                    rooms !== 1 &&
+                    extractValidNumberSize(size) > 68;
 
                 if (showItem) {
                     results.push({
@@ -86,8 +92,8 @@ export const getHOWOGEOffers = async () => {
                             containsRelevantCityCode(address)?.district ||
                             address.split(", ")[address.split(", ").length - 1],
                         link: `https://www.howoge.de${item?.getElementsByTagName("a")[0].getAttribute("href")}`,
-                        size: attributes[1].innerText,
-                        rooms: +attributes[2].innerText,
+                        size: size,
+                        rooms: rooms,
                     });
                 }
             });
@@ -96,7 +102,7 @@ export const getHOWOGEOffers = async () => {
         browser.close();
         return { data, errors: "" };
     } catch (e: any) {
-        console.log(e);
+        console.log("HOWOGE_ERROR", e);
         return { data: [], errors: e };
     }
 };
