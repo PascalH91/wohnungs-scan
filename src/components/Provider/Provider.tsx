@@ -11,6 +11,7 @@ import Image from "next/image";
 import styles from "./provider.module.scss";
 import { ProviderDetails } from "../Providerlist";
 import { ProviderT } from ".";
+import { time } from "console";
 
 export type Offer = {
     id: string;
@@ -34,6 +35,7 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     HOWOGE: "howoge",
     GESOBAU: "gesobau",
     DPF: "dpf",
+    //IMMOSCOUT: "immoscout",
 };
 
 export const Provider = ({ provider, url }: { provider: ProviderDetails; url: string }) => {
@@ -78,18 +80,23 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
 
     useEffect(() => {
         if (!run) {
-            const getRandomArbitrary = (min: number = 25000, max: number = 45000) => {
-                return Math.floor(Math.random() * (max - min) + min);
+            const getTimoutValue = (min: number = 25, maxBuffer: number = 20) => {
+                const minInMS = min * 1000;
+                const maxBufferInMS = (min + maxBuffer) * 1000;
+
+                const arbitraryFactorInMS = Math.floor(Math.random() * (maxBufferInMS - minInMS) + minInMS);
+                const timeOutValue = !!min && !!maxBuffer ? arbitraryFactorInMS : minInMS;
+                return timeOutValue;
             };
 
             setTimeout(
                 () => {
                     setRun(true);
                 },
-                provider.id === "WBM" ? 30000 : getRandomArbitrary(),
+                getTimoutValue(provider.refreshRateInSeconds, provider.additionalBufferInSeconds),
             );
         }
-    }, [run, provider.id]);
+    }, [run, provider.id, provider.refreshRateInSeconds, provider.additionalBufferInSeconds]);
 
     return offers.length ? (
         <div

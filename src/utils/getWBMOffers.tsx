@@ -1,17 +1,20 @@
-//@ts-nocheck
-
 import { Offer } from "@/components/Provider";
-import puppeteer from "puppeteer";
-// import { JSDOM } from "jsdom";
+import { getBrowser } from "./getBrower";
+import { generateRandomUA } from "./generateRandomUserAgents";
 
 const wbmUrl = "https://www.wbm.de/wohnungen-berlin/angebote/";
 
 export const getWBMOffers = async () => {
     try {
-        const browser = await puppeteer.launch({
-            dumpio: true,
-        });
+        const browser = await getBrowser();
+
         const page = await browser.newPage();
+
+        // Custom user agent from generateRandomUA() function
+        const customUA = generateRandomUA();
+
+        // Set custom user agent
+        await page.setUserAgent(customUA);
 
         page.on("console", (msg) => console.log(msg.text()));
         await page.goto(wbmUrl, { waitUntil: "networkidle2" });
@@ -19,8 +22,8 @@ export const getWBMOffers = async () => {
         let data = await page.evaluate(() => {
             const extractValidNumberSize = (inputString: string) => {
                 const match = inputString.match(/\b\d+(,\d+)?\b/);
-                return match ? parseFloat(match[0].replace(',', '.')): null
-            }
+                return match ? parseFloat(match[0].replace(",", ".")) : null;
+            };
 
             const containsRelevantCityCode = (inputString: string) => {
                 const relevantCityCodes = {
@@ -61,10 +64,16 @@ export const getWBMOffers = async () => {
                 const address = item.querySelector(".address")?.innerText;
                 const propertylist = item.getElementsByTagName("li");
                 const isWBS = Array.from(propertylist).some((prop) => prop.innerText === "WBS");
-                const roomSize = item.querySelector(".main-property-size")?.innerText
-                const roomNumber = +item.querySelector(".main-property-rooms")?.innerText
+                const roomSize = item.querySelector(".main-property-size")?.innerText;
+                const roomNumber = +item.querySelector(".main-property-rooms")?.innerText;
 
-                const showItem = title && address && !isWBS && containsRelevantCityCode(address) && roomNumber !== 1 && extractValidNumberSize(roomSize) > 65;
+                const showItem =
+                    title &&
+                    address &&
+                    !isWBS &&
+                    containsRelevantCityCode(address) &&
+                    roomNumber !== 1 &&
+                    extractValidNumberSize(roomSize) > 65;
 
                 if (showItem) {
                     results.push({
@@ -84,7 +93,6 @@ export const getWBMOffers = async () => {
         return { data, errors: "" };
     } catch (e: any) {
         console.log(e);
-        browser.close();
         return { data: [], errors: e };
     }
 };

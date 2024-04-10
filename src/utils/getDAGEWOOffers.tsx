@@ -1,24 +1,29 @@
-//@ts-nocheck
-
 import { Offer } from "@/components/Provider";
-import puppeteer from "puppeteer";
+import { generateRandomUA } from "./generateRandomUserAgents";
+import { getBrowser } from "./getBrower";
 
 const dagewoUrl =
     "https://immosuche.degewo.de/de/search?size=10&page=1&property_type_id=1&categories%5B%5D=1&lat=&lon=&area=&address%5Bstreet%5D=&address%5Bcity%5D=&address%5Bzipcode%5D=&address%5Bdistrict%5D=&district=33%2C+46%2C+3%2C+28%2C+29%2C+71%2C+7&property_number=&price_switch=true&price_radio=custom&price_from=&price_to=1400&qm_radio=custom&qm_from=68&qm_to=&rooms_radio=custom&rooms_from=2&rooms_to=&wbs_required=false&order=rent_total_without_vat_asc";
 
 export const getDAGEWOOffers = async () => {
     try {
-        const browser = await puppeteer.launch({
-            dumpio: true,
-        });
+        const browser = await getBrowser();
+
         const page = await browser.newPage();
+
+        // Custom user agent from generateRandomUA() function
+        const customUA = generateRandomUA();
+
+        // Set custom user agent
+        await page.setUserAgent(customUA);
 
         page.on("console", (msg) => console.log(msg.text()));
         await page.goto(dagewoUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(() => {
             const containsSpecificPattern = (inputString?: string) => {
-                const pattern = /^MIT\s* WBS\s*[\w\s%]*|^WBS\s*[\w\s%]*erforderlich.*|,\s*WBS\s*[\w\s%]*erforderlich|Wohnaktiv! Wohnen ab.*$/;
+                const pattern =
+                    /^MIT\s* WBS\s*[\w\s%]*|^WBS\s*[\w\s%]*erforderlich.*|,\s*WBS\s*[\w\s%]*erforderlich|Wohnaktiv! Wohnen ab.*$/;
                 return !!pattern.test(inputString || "");
             };
             const containsRelevantCityCode = (inputString: string) => {

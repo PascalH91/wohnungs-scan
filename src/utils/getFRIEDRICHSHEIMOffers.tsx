@@ -1,47 +1,23 @@
-//@ts-nocheck
-
 import { Offer } from "@/components/Provider";
-import puppeteer from "puppeteer";
-import chromium from "@sparticuz/chromium";
-import puppeteerCore from "puppeteer-core";
+import { generateRandomUA } from "./generateRandomUserAgents";
+import { getBrowser } from "./getBrower";
 
 const friedrichsheimUrl = "https://www.friedrichsheim-eg.de/category/freie-wohnungen/";
-
-chromium.setHeadlessMode = true;
-chromium.setGraphicsMode = false;
-
-const CHROMIUM_PATH =
-    "https://vomrghiulbmrfvmhlflk.supabase.co/storage/v1/object/public/chromium-pack/chromium-v123.0.0-pack.tar";
-
-const getBrowser = async () => {
-    if (process.env.VERCEL_ENV === "production") {
-        console.log("production");
-        const chromium = await import("@sparticuz/chromium-min").then((mod) => mod.default);
-
-        const puppeteerCore = await import("puppeteer-core").then((mod) => mod.default);
-
-        const executablePath = await chromium.executablePath(CHROMIUM_PATH);
-
-        const browser = await puppeteerCore.launch({
-            args: ["--no-sandbox"],
-            // defaultViewport: chromium.defaultViewport,
-            executablePath,
-            headless: true,
-        });
-        return browser;
-    } else {
-        const puppeteer = await import("puppeteer").then((mod) => mod.default);
-
-        const browser = await puppeteer.launch();
-        return browser;
-    }
-};    
 
 export const getFRIEDRICHSHEIMOffers = async () => {
     try {
         const browser = await getBrowser();
 
         const page = await browser.newPage();
+
+        //Custom user agent from generateRandomUA() function
+        const customUA = generateRandomUA();
+
+        console.log({ customUA });
+
+        //Set custom user agent
+        await page.setUserAgent(customUA);
+
         page.on("console", (msg) => console.log(msg.text()));
         await page.goto(friedrichsheimUrl, { waitUntil: "networkidle2" });
 

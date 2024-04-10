@@ -7,6 +7,8 @@ export type ProviderDetails = {
     id: ProviderT;
     name: string;
     logo?: string;
+    refreshRateInSeconds?: number;
+    additionalBufferInSeconds?: number;
 };
 type ProviderList = {
     [key in ProviderT]: ProviderDetails;
@@ -17,6 +19,8 @@ const providerDetails: ProviderList = {
         id: "WBM",
         name: "WBM",
         logo: "/images/wbm.jpg",
+        refreshRateInSeconds: 30,
+        additionalBufferInSeconds: 0,
     },
     GEWOBAG: {
         id: "GEWOBAG",
@@ -58,6 +62,13 @@ const providerDetails: ProviderList = {
         id: "DPF",
         name: "dpf",
         logo: "/images/dpf.png",
+    },
+    IMMOSCOUT: {
+        id: "IMMOSCOUT",
+        name: "ImmoScout 24",
+        logo: "/images/immoscout.png",
+        refreshRateInSeconds: 60,
+        additionalBufferInSeconds: 30,
     },
 };
 

@@ -1,16 +1,20 @@
-//@ts-nocheck
-
 import { Offer } from "@/components/Provider";
-import puppeteer from "puppeteer";
+import { getBrowser } from "./getBrower";
+import { generateRandomUA } from "./generateRandomUserAgents";
 
 const dpfUrl = "https://www.dpfonline.de/interessenten/immobilien/";
 
 export const getDPFOffers = async () => {
     try {
-        const browser = await puppeteer.launch({
-            dumpio: true,
-        });
+        const browser = await getBrowser();
+
         const page = await browser.newPage();
+
+        // Custom user agent from generateRandomUA() function
+        const customUA = generateRandomUA();
+
+        // Set custom user agent
+        await page.setUserAgent(customUA);
 
         page.on("console", (msg) => console.log(msg.text()));
         await page.goto(dpfUrl, { waitUntil: "networkidle2" });

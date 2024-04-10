@@ -1,31 +1,36 @@
-//@ts-nocheck
-
 import { Offer } from "@/components/Provider";
-import puppeteer from "puppeteer";
+import { getBrowser } from "./getBrower";
+import { generateRandomUA } from "./generateRandomUserAgents";
 
 const howogeUrl =
     "https://www.howoge.de/immobiliensuche/wohnungssuche.html?tx_howsite_json_list%5Bpage%5D=1&tx_howsite_json_list%5Blimit%5D=12&tx_howsite_json_list%5Blang%5D=&tx_howsite_json_list%5Bkiez%5D%5B%5D=Friedrichshain-Kreuzberg&tx_howsite_json_list%5Bkiez%5D%5B%5D=Mitte&tx_howsite_json_list%5Bkiez%5D%5B%5D=Lichtenberg&tx_howsite_json_list%5Bkiez%5D%5B%5D=Treptow-K%C3%B6penick&tx_howsite_json_list%5Bkiez%5D%5B%5D=Charlottenburg-Wilmersdorf&tx_howsite_json_list%5Bkiez%5D%5B%5D=Neuk%C3%B6lln&tx_howsite_json_list%5Bkiez%5D%5B%5D=Pankow&tx_howsite_json_list%5Bkiez%5D%5B%5D=Tempelhof-Sch%C3%B6neberg&tx_howsite_json_list%5Brooms%5D=2";
 
 export const getHOWOGEOffers = async () => {
     try {
-        const browser = await puppeteer.launch({
-            dumpio: true,
-        });
+        const browser = await getBrowser();
+
         const page = await browser.newPage();
+
+        // Custom user agent from generateRandomUA() function
+        const customUA = generateRandomUA();
+
+        // Set custom user agent
+        await page.setUserAgent(customUA);
 
         page.on("console", (msg) => console.log(msg.text()));
         await page.goto(howogeUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(() => {
             const containsSpecificPattern = (inputString?: string) => {
-                const pattern = /^MIT\s* WBS\s*[\w\s%]*|^WBS\s*[\w\s%]*erforderlich.*|,\s*WBS\s*[\w\s%]*erforderlich|Wohnaktiv! Wohnen ab.*$/;
+                const pattern =
+                    /^MIT\s* WBS\s*[\w\s%]*|^WBS\s*[\w\s%]*erforderlich.*|,\s*WBS\s*[\w\s%]*erforderlich|Wohnaktiv! Wohnen ab.*$/;
                 return !!pattern.test(inputString || "");
             };
 
             const extractValidNumberSize = (inputString: string) => {
                 const match = inputString.match(/\b\d+(,\d+)?\b/);
-                return match ? parseFloat(match[0].replace(',', '.')): null
-            }
+                return match ? parseFloat(match[0].replace(",", ".")) : null;
+            };
 
             const containsRelevantCityCode = (inputString: string) => {
                 const relevantCityCodes = {
@@ -65,8 +70,13 @@ export const getHOWOGEOffers = async () => {
                 const title = item.querySelector(".notice")?.innerHTML;
                 const attributes = item.querySelectorAll(".attributes > div .attributes-content");
 
-                const showItem =address && !containsSpecificPattern(title) && containsRelevantCityCode(address) && +attributes[2].innerText !== 1 && extractValidNumberSize(attributes[1].innerText) > 68;
-                
+                const showItem =
+                    address &&
+                    !containsSpecificPattern(title) &&
+                    containsRelevantCityCode(address) &&
+                    +attributes[2].innerText !== 1 &&
+                    extractValidNumberSize(attributes[1].innerText) > 68;
+
                 if (showItem) {
                     results.push({
                         address,

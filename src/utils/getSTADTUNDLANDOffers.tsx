@@ -1,17 +1,21 @@
-//@ts-nocheck
-
 import { Offer } from "@/components/Provider";
-import puppeteer from "puppeteer";
+import { getBrowser } from "./getBrower";
+import { generateRandomUA } from "./generateRandomUserAgents";
 
 const stadtUndLandUrl =
     "https://www.stadtundland.de/immobiliensuche.php?form=stadtundland-expose-search-1.form&sp%3Acategories%5B3352%5D%5B%5D=-&sp%3Acategories%5B3352%5D%5B%5D=__last__&sp%3AroomsFrom%5B%5D=2&sp%3AroomsTo%5B%5D=&sp%3ArentPriceFrom%5B%5D=&sp%3ArentPriceTo%5B%5D=&sp%3AareaFrom%5B%5D=65&sp%3AareaTo%5B%5D=&sp%3Afeature%5B%5D=__last__&action=submit";
 
 export const getSTADTUNDLANDOffers = async () => {
     try {
-        const browser = await puppeteer.launch({
-            dumpio: true,
-        });
+        const browser = await getBrowser();
+
         const page = await browser.newPage();
+
+        // Custom user agent from generateRandomUA() function
+        const customUA = generateRandomUA();
+
+        // Set custom user agent
+        await page.setUserAgent(customUA);
 
         page.on("console", (msg) => console.log(msg.text()));
         await page.goto(stadtUndLandUrl, { waitUntil: "networkidle2" });

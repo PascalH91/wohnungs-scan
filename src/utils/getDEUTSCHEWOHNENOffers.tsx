@@ -1,17 +1,21 @@
-//@ts-nocheck
-
 import { Offer } from "@/components/Provider";
-import puppeteer from "puppeteer";
+import { getBrowser } from "./getBrower";
+import { generateRandomUA } from "./generateRandomUserAgents";
 
 const deutscheWohnenUrl =
     "https://www.deutsche-wohnen.com/immobilienangebote#page=1&locale=de&commercializationType=rent&utilizationType=flat,retirement&location=10243&radius=10&area=60&rooms=2";
 
 export const getDEUTSCHEWOHNENOffers = async () => {
     try {
-        const browser = await puppeteer.launch({
-            dumpio: true,
-        });
+        const browser = await getBrowser();
+
         const page = await browser.newPage();
+
+        // Custom user agent from generateRandomUA() function
+        const customUA = generateRandomUA();
+
+        // Set custom user agent
+        await page.setUserAgent(customUA);
 
         page.on("console", (msg) => console.log(msg.text()));
         await page.goto(deutscheWohnenUrl, { waitUntil: "networkidle2" });
