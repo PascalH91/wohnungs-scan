@@ -1,6 +1,9 @@
 import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrower";
 import { generateRandomUA } from "./generateRandomUserAgents";
+import { containsRelevantCityCode } from "./containsRelevantCityCodes";
+import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
+import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 
 const dpfUrl = "https://www.dpfonline.de/interessenten/immobilien/";
 
@@ -17,59 +20,55 @@ export const getDPFOffers = async () => {
         await page.setUserAgent(customUA);
 
         page.on("console", (msg) => console.log(msg.text()));
+
+        await page.exposeFunction("isInRelevantDistrict", (cityCode: string) => containsRelevantCityCode(cityCode));
+
+        await page.exposeFunction("transformSizeIntoValidNumber", (roomSize: string) =>
+            transformSizeIntoValidNumber(roomSize),
+        );
+
         await page.goto(dpfUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
             let results: Offer[] = [];
 
-            let alertItem = document.querySelector(".uk-alert");
+            let items = document.querySelectorAll(".immo-a-info");
 
-            if (alertItem?.innerHTML !== "Momentan gibt es keine verfügbaren Wohnung") {
-                results.push({
-                    address: "testAdresse",
-                    id: "testAdresse",
-                    title: "Es gibt eine Wohnung auf DPF!!!!",
-                    region: "",
-                    link: `https://www.dpfonline.de/interessenten/immobilien/`,
-                    size: "0",
-                    rooms: 0,
-                });
-            }
+            items &&
+                (await Promise.all(
+                    Array.from(items).map(async (item) => {
+                        const title = item.querySelector("h3")?.innerText;
+                        const address = item.querySelector(".trenner li")?.innerText;
+                        const link = item.querySelector("h3")?.getElementsByTagName("a")[0].getAttribute("href");
+                        console.log(link);
+                        const relevantDistrict = await window.isInRelevantDistrict(address);
 
-            // let items = document.querySelectorAll(".article-list__item--immosearch");
+                        const attributes = item.querySelectorAll(".immo-data");
 
-            // items.forEach((item) => {
-            //     const address = item.querySelector(".article__meta")?.innerHTML;
-            //     const title = item.querySelector(".article__title")?.innerHTML;
-            //     const link = item?.getElementsByTagName("a")?.[0]?.getAttribute("href");
-            //     const size = item.querySelectorAll(".article__properties-item > span")?.[1].innerText;
-            //     const shortenedSize = +size.split(" ")[0].substr(0, 2);
-            //     const rooms = item.querySelectorAll(".article__properties-item > span")?.[0].innerText;
-            //     const shortenedRooms = +rooms.split(" ")[0];
-            //     const relevantCityCode = address ? containsRelevantCityCode(address) : undefined;
+                        const size = attributes[1].innerText.trim();
+                        const transformedSize = await window.transformSizeIntoValidNumber(size);
+                        const rooms = attributes[2].innerText.trim();
+                        const transformedRooms = await window.transformSizeIntoValidNumber(rooms);
 
-            //     const filterConditions =
-            //         address &&
-            //         relevantCityCode &&
-            //         title &&
-            //         !containsSpecificPattern(title) &&
-            //         shortenedSize > 68 &&
-            //         shortenedRooms !== 1;
+                        const showItem =
+                            address && transformedSize > 68 && transformedRooms !== 1 && relevantDistrict && link;
 
-            //     if (!!filterConditions) {
-            //         results.push({
-            //             address,
-            //             id: link || address,
-            //             title,
-            //             region: relevantCityCode.district,
-            //             link: `https://immosuche.degewo.de/${link}`,
-            //             size: shortenedSize.toString(),
-            //             rooms: shortenedRooms,
-            //         });
-            //     }
-            // });
+                        if (showItem) {
+                            results.push({
+                                address,
+                                id: link,
+                                title,
+                                region: relevantDistrict?.district || "-",
+                                link,
+                                size,
+                                rooms,
+                            });
+                        }
+                    }),
+                ));
             return results;
         });
+
         browser.close();
         return { data, errors: "" };
     } catch (e: any) {

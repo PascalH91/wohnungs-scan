@@ -19,8 +19,8 @@ const providerDetails: ProviderList = {
         id: "WBM",
         name: "WBM",
         logo: "/images/wbm.jpg",
-        refreshRateInSeconds: 30,
-        additionalBufferInSeconds: 0,
+        refreshRateInSeconds: 20,
+        additionalBufferInSeconds: 5,
     },
     FRIEDRICHSHEIM: {
         id: "FRIEDRICHSHEIM",
