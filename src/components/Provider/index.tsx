@@ -25,7 +25,18 @@ export type ProviderT =
     | "STADTUNDLAND"
     | "GESOBAU"
     | "DPF"
-    | "IMMOSCOUT";
+    | "IMMOSCOUT"
+    | "WBG_FRIEDRICHSHAIN_EG"
+    | "BEROLINA"
+    | "VINETA_89"
+    | "NEUES_BERLIN"
+    | "FORUM_KREUZBERG"
+    | "PARADIES"
+    | "WG_VORWAERTS"
+    | "EVM"
+    | "SOLIDARITAET"
+    | "VATERLAND"
+    | "1892";
 
 export const ProviderWrapper = ({ provider }: { provider: ProviderDetails }) => {
     const url = process.env.API_URL;
