@@ -77,12 +77,6 @@ const providerDetails: ProviderList = {
         logo: "/images/vonovia.jpg",
     },
 
-    HEIMSTADEN: {
-        id: "HEIMSTADEN",
-        name: "Heimstaden",
-        logo: "/images/heimstaden.png",
-    },
-
     SOLIDARITAET: {
         id: "SOLIDARITAET",
         name: "Solidarität eG",
