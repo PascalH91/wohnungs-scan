@@ -100,9 +100,16 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 400,
         additionalBufferInSeconds: 30,
     },
-    PARADIES: {
+    FORUM_KREUZBERG: {
         id: "FORUM_KREUZBERG",
         name: "Forum Kreuzberg",
+        logo: "/images/friedrichsheim.jpg",
+        refreshRateInSeconds: 900,
+        additionalBufferInSeconds: 30,
+    },
+    PARADIES: {
+        id: "PARADIES",
+        name: "Paradies",
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
