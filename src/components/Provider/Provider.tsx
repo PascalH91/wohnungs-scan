@@ -26,15 +26,15 @@ export type Offer = {
 };
 
 const fetchUrlByProvider: { [key in ProviderT]?: string } = {
-    // WBM: "wbm",
-    // FRIEDRICHSHEIM: "friedrichsheim",
-    // GEWOBAG: "gewobag",
-    // DEUTSCHE_WOHNEN: "deutschewohnen",
-    // HOWOGE: "howoge",
-    // DPF: "dpf",
-    // STADTUNDLAND: "stadtundland",
-    // DAGEWO: "dagewo",
-    //GESOBAU: "gesobau",
+    WBM: "wbm",
+    FRIEDRICHSHEIM: "friedrichsheim",
+    GEWOBAG: "gewobag",
+    DEUTSCHE_WOHNEN: "deutschewohnen",
+    HOWOGE: "howoge",
+    DPF: "dpf",
+    STADTUNDLAND: "stadtundland",
+    DAGEWO: "dagewo",
+    GESOBAU: "gesobau",
     SOLIDARITAET: "solidaritaet",
     WBG_FRIEDRICHSHAIN_EG: "friedrichshain_eg",
     BEROLINA: "berolina",
@@ -45,7 +45,7 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     EVM: "evm",
     "1892": "1892",
     VATERLAND: "vaterland",
-    //VINETA_89: "vineta_89",
+    VINETA_89: "vineta_89",
     //IMMOSCOUT: "immoscout",
 };
 
