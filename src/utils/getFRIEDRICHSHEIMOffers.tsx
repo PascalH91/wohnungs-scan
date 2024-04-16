@@ -13,8 +13,6 @@ export const getFRIEDRICHSHEIMOffers = async () => {
         //Custom user agent from generateRandomUA() function
         const customUA = generateRandomUA();
 
-        console.log({ customUA });
-
         //Set custom user agent
         await page.setUserAgent(customUA);
 

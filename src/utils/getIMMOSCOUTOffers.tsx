@@ -113,9 +113,7 @@ export const getIMMOSCOUTOffers = async () => {
         // Set custom user agent
         await page.setUserAgent(customUA);
         page.on("console", (msg) => console.log(msg.text()));
-        console.log("beforegoto");
         await page.goto(immoscoutUrl);
-        console.log("afterGoTo");
 
         // Wait for the selector to appear in the DOM
         await page.waitForSelector(".content-wrapper");

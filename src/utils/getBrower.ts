@@ -9,7 +9,6 @@ const CHROMIUM_PATH =
 
 export const getBrowser = async () => {
     if (process.env.VERCEL_ENV === "production") {
-        console.log("production");
         const chromium = await import("@sparticuz/chromium-min").then((mod) => mod.default);
 
         const puppeteerCore = await import("puppeteer-core").then((mod) => mod.default);

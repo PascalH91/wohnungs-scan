@@ -40,7 +40,6 @@ export const getDPFOffers = async () => {
                         const title = item.querySelector("h3")?.innerText;
                         const address = item.querySelector(".trenner li")?.innerText;
                         const link = item.querySelector("h3")?.getElementsByTagName("a")[0].getAttribute("href");
-                        console.log(link);
                         const relevantDistrict = await window.isInRelevantDistrict(address);
 
                         const attributes = item.querySelectorAll(".immo-data");
