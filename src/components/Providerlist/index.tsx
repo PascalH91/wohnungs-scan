@@ -22,11 +22,13 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 20,
         additionalBufferInSeconds: 5,
     },
+
     FRIEDRICHSHEIM: {
         id: "FRIEDRICHSHEIM",
         name: "Friedrichsheim",
         logo: "/images/friedrichsheim.jpg",
     },
+
     GEWOBAG: {
         id: "GEWOBAG",
         name: "GEWOBAG",
@@ -50,21 +52,37 @@ const providerDetails: ProviderList = {
         name: "dpf",
         logo: "/images/dpf.png",
     },
+
     STADTUNDLAND: {
         id: "STADTUNDLAND",
         name: "Stadt & Land",
         logo: "/images/stadt_und_land.png",
     },
+
     GESOBAU: {
         id: "GESOBAU",
         name: "GESOBAU",
         logo: "/images/gesobau.png",
     },
+
     DAGEWO: {
         id: "DAGEWO",
         name: "DAGEWO",
         logo: "/images/dagewo.png",
     },
+
+    VONOVIA: {
+        id: "VONOVIA",
+        name: "Vonovia",
+        logo: "/images/vonovia.jpg",
+    },
+
+    HEIMSTADEN: {
+        id: "HEIMSTADEN",
+        name: "Heimstaden",
+        logo: "/images/heimstaden.png",
+    },
+
     SOLIDARITAET: {
         id: "SOLIDARITAET",
         name: "Solidarität eG",
@@ -72,6 +90,7 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
     },
+
     NEUES_BERLIN: {
         id: "NEUES_BERLIN",
         name: "Neues Berlin",
@@ -79,6 +98,7 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
     },
+
     WBG_FRIEDRICHSHAIN_EG: {
         id: "WBG_FRIEDRICHSHAIN_EG",
         name: "WBG Friedrichshain eG",
@@ -86,6 +106,7 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
     },
+
     BEROLINA: {
         id: "BEROLINA",
         name: "BEROLINA",
@@ -93,6 +114,7 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 300,
         additionalBufferInSeconds: 30,
     },
+
     VINETA_89: {
         id: "VINETA_89",
         name: "VINETA 89",
@@ -100,6 +122,7 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 400,
         additionalBufferInSeconds: 30,
     },
+
     FORUM_KREUZBERG: {
         id: "FORUM_KREUZBERG",
         name: "Forum Kreuzberg",
@@ -107,6 +130,7 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
     },
+
     PARADIES: {
         id: "PARADIES",
         name: "Paradies",
@@ -114,6 +138,7 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
     },
+
     WG_VORWAERTS: {
         id: "WG_VORWAERTS",
         name: "WG Vorwärts",
@@ -121,6 +146,7 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
     },
+
     EVM: {
         id: "EVM",
         name: "EVM",
@@ -128,6 +154,7 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
     },
+
     VATERLAND: {
         id: "VATERLAND",
         name: "Vaterland eG",
@@ -135,6 +162,7 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
     },
+
     "1892": {
         id: "1892",
         name: "1892",
@@ -142,6 +170,7 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
     },
+
     IMMOSCOUT: {
         id: "IMMOSCOUT",
         name: "ImmoScout 24",

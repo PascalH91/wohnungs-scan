@@ -25,6 +25,8 @@ export type ProviderT =
     | "STADTUNDLAND"
     | "GESOBAU"
     | "DPF"
+    | "VONOVIA"
+    | "HEIMSTADEN"
     | "IMMOSCOUT"
     | "WBG_FRIEDRICHSHAIN_EG"
     | "BEROLINA"
