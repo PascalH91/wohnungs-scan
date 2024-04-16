@@ -34,10 +34,12 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     // DPF: "dpf",
     //SOLIDARITAET: "solidaritaet",
     //WBG_FRIEDRICHSHAIN_EG: "friedrichshain_eg",
-    BEROLINA: "berolina",
+    //BEROLINA: "berolina",
     // STADTUNDLAND: "stadtundland",
+    NEUES_BERLIN: "neues_berlin",
     // GESOBAU: "gesobau",
     // DAGEWO: "dagewo",
+    //VINETA_89: "vineta_89",
     //IMMOSCOUT: "immoscout",
 };
 
