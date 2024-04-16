@@ -1,6 +1,6 @@
 import { Offer } from "@/components/Provider/index";
 import { generateRandomUA } from "./generateRandomUserAgents";
-import { getBrowser } from "./getBrower";
+import { getBrowser } from "./getBrowser";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 
 const dagewoUrl =

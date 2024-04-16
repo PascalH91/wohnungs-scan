@@ -1,5 +1,5 @@
 import { Offer } from "@/components/Provider/index";
-import { getBrowser } from "./getBrower";
+import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
 const berolinaUrl = "https://berolina.info/wohnungsangebote-wenn-angebote-vorhanden/";

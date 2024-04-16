@@ -1,6 +1,6 @@
 import { Offer } from "@/components/Provider/index";
 import { generateRandomUA } from "./generateRandomUserAgents";
-import { getBrowser } from "./getBrower";
+import { getBrowser } from "./getBrowser";
 
 const friedrichsheimUrl = "https://www.friedrichsheim-eg.de/category/freie-wohnungen/";
 

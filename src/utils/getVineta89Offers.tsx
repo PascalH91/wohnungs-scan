@@ -1,5 +1,5 @@
 import { Offer } from "@/components/Provider/index";
-import { getBrowser } from "./getBrower";
+import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
 const vineta89Url = "https://vineta98.de/wohnungen/";

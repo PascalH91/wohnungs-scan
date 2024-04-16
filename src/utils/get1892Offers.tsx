@@ -1,5 +1,5 @@
 import { Offer } from "@/components/Provider/index";
-import { getBrowser } from "./getBrower";
+import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
 const eg1892Url = "https://hpm2.immosolve.eu/immosolve_presentation/pub/modern/2145111/HP/immo.jsp";
