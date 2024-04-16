@@ -23,11 +23,10 @@ export const getVineta89Offers = async () => {
         let data = await page.evaluate(async () => {
             let results: Offer[] = [];
 
-            let item = document.querySelector(".content");
-            console.log(document.innerHTML);
+            let item = document.querySelector("#content");
 
             item &&
-                !item.innerText &&
+                !!item.innerText &&
                 results.push({
                     address: "Neues Angebot",
                     id: "VINETA_89",
