@@ -26,6 +26,9 @@ export const getGESOBAUOffers = async () => {
             titleContainsDisqualifyingPattern(title),
         );
         await page.goto(gesobauUrl, { waitUntil: "networkidle2" });
+        await page.waitForSelector(".documentContent__content", {
+            visible: true,
+        });
 
         let data = await page.evaluate(async () => {
             let results: Offer[] = [];

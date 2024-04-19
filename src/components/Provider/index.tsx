@@ -37,7 +37,7 @@ export type ProviderT =
     | "EVM"
     | "SOLIDARITAET"
     | "VATERLAND"
-    | "1892";
+    | "EG_1892";
 
 export const ProviderWrapper = ({ provider }: { provider: ProviderDetails }) => {
     const url = process.env.API_URL;

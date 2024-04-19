@@ -18,7 +18,10 @@ export const get1892Offers = async () => {
 
         page.on("console", (msg) => console.log(msg.text()));
 
-        await page.goto(eg1892Url, { waitUntil: "networkidle2" });
+        await page.goto(eg1892Url, { timeout: 2000, waitUntil: "domcontentloaded" });
+        await page.waitForSelector("#locationChoices", {
+            visible: true,
+        });
 
         let data = await page.evaluate(async () => {
             let results: Offer[] = [];
@@ -26,7 +29,7 @@ export const get1892Offers = async () => {
             let item = document.querySelector("#locationChoices");
 
             item &&
-                !item.innerText.includes("Momentan sind leider keine Objekte in unserem Onlineangebot verfügbar.") &&
+                !item?.innerText.includes("Momentan sind leider keine Objekte in unserem Onlineangebot verfügbar.") &&
                 results.push({
                     address: "Neues Angebot",
                     id: "1892",

@@ -43,7 +43,7 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     WG_VORWAERTS: "wg_vorwaerts",
     FORUM_KREUZBERG: "forum_kreuzberg",
     EVM: "evm",
-    "1892": "1892",
+    EG_1892: "1892",
     VATERLAND: "vaterland",
     VINETA_89: "vineta_89",
     VONOVIA: "vonovia",

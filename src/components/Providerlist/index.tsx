@@ -157,8 +157,8 @@ const providerDetails: ProviderList = {
         additionalBufferInSeconds: 30,
     },
 
-    "1892": {
-        id: "1892",
+    EG_1892: {
+        id: "EG_1892",
         name: "1892",
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 900,

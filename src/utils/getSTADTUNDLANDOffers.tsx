@@ -2,6 +2,7 @@ import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
+import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 
 const stadtUndLandUrl =
     "https://www.stadtundland.de/immobiliensuche.php?form=stadtundland-expose-search-1.form&sp%3Acategories%5B3352%5D%5B%5D=-&sp%3Acategories%5B3352%5D%5B%5D=__last__&sp%3AroomsFrom%5B%5D=2&sp%3AroomsTo%5B%5D=&sp%3ArentPriceFrom%5B%5D=&sp%3ArentPriceTo%5B%5D=&sp%3AareaFrom%5B%5D=65&sp%3AareaTo%5B%5D=&sp%3Afeature%5B%5D=__last__&action=submit";
@@ -20,6 +21,9 @@ export const getSTADTUNDLANDOffers = async () => {
 
         page.on("console", (msg) => console.log(msg.text()));
         await page.exposeFunction("isInRelevantDistrict", (cityCode: string) => containsRelevantCityCode(cityCode));
+        await page.exposeFunction("containsDisqualifyingPattern", (title: string) =>
+            titleContainsDisqualifyingPattern(title),
+        );
         await page.goto(stadtUndLandUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
@@ -37,9 +41,13 @@ export const getSTADTUNDLANDOffers = async () => {
                         const relevantDistrict1 = await window.isInRelevantDistrict(address1);
                         const relevantDistrict2 = await window.isInRelevantDistrict(address2);
 
+                        const containsDisqualifyingPattern = await window.containsDisqualifyingPattern(title);
+
                         const relevantDistrict = relevantDistrict1 || relevantDistrict2;
 
-                        if (title && relevantDistrict) {
+                        const showItem = title && relevantDistrict && !containsDisqualifyingPattern;
+
+                        if (showItem) {
                             results.push({
                                 address: address1 || address2,
                                 id: tableEntries[0].innerText || address1 || address2,
