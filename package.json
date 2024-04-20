@@ -12,6 +12,13 @@
     "browser": {
         "vertx": false
     },
+    "chrome": {
+        "launchOptions": {
+            "args": [
+                "--no-sandbox"
+            ]
+        }
+    },
     "dependencies": {
         "@sparticuz/chromium": "^123.0.0",
         "@sparticuz/chromium-min": "^123.0.0",
