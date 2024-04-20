@@ -26,6 +26,7 @@ export const getParadiesOffers = async () => {
             let item = document.querySelector("p");
 
             item &&
+                //@ts-ignore
                 !item.innerText.includes("Versuchen Sie es zu einem späteren Zeitpunkt nochmals.") &&
                 results.push({
                     address: "Neues Angebot",

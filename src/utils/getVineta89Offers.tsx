@@ -26,6 +26,7 @@ export const getVineta89Offers = async () => {
             let item = document.querySelector("#content");
 
             item &&
+                //@ts-ignore
                 !!item.innerText &&
                 results.push({
                     address: "Neues Angebot",

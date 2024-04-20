@@ -26,6 +26,7 @@ export const getBerolinaOffers = async () => {
             let item = document.querySelector(".entrytext");
 
             item &&
+                //@ts-ignore
                 !item.innerText.includes("Leider haben wir derzeit keine freien Wohnungen im Angebot") &&
                 results.push({
                     address: "Neues Angebot",

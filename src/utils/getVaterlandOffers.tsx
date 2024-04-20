@@ -24,8 +24,9 @@ export const getVaterlandOffers = async () => {
             let results: Offer[] = [];
 
             let item = document.querySelector("#content");
-
-            !item.innerText.includes("Momentan können wir Ihnen keine freien Wohnungen anbieten.") &&
+            item &&
+                //@ts-ignore
+                !item.innerText.includes("Momentan können wir Ihnen keine freien Wohnungen anbieten.") &&
                 results.push({
                     address: "Neues Angebot",
                     id: "VATERLAND",

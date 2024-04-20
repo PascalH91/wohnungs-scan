@@ -25,9 +25,11 @@ export const getEVMOffers = async () => {
 
             let item = document.querySelector(".note-attention");
 
-            !item.innerText.includes(
-                "Da wir zusätz­lich unse­re EDV umstel­len und an die wach­sen­den digi­ta­len Ansprü­chen anpas­sen, ist in die­ser Umstel­lungs­pha­se eine Auf­nah­me von neu­en Woh­nungs­in­ter­es­sen­ten nicht mög­lich.",
-            ) &&
+            item &&
+                //@ts-ignore
+                !item.innerText.includes(
+                    "Da wir zusätz­lich unse­re EDV umstel­len und an die wach­sen­den digi­ta­len Ansprü­chen anpas­sen, ist in die­ser Umstel­lungs­pha­se eine Auf­nah­me von neu­en Woh­nungs­in­ter­es­sen­ten nicht mög­lich.",
+                ) &&
                 results.push({
                     address: "Neues Angebot",
                     id: "EVM",

@@ -29,7 +29,8 @@ export const get1892Offers = async () => {
             let item = document.querySelector("#locationChoices");
 
             item &&
-                !item?.innerText.includes("Momentan sind leider keine Objekte in unserem Onlineangebot verfügbar.") &&
+                //@ts-ignore
+                !item.innerText.includes("Momentan sind leider keine Objekte in unserem Onlineangebot verfügbar.") &&
                 results.push({
                     address: "Neues Angebot",
                     id: "1892",
