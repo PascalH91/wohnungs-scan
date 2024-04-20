@@ -21,7 +21,7 @@
     },
     "dependencies": {
         "@sparticuz/chromium": "^123.0.0",
-        "@sparticuz/chromium-min": "^123.0.0",
+        "@sparticuz/chromium-min": "^123.0.1",
         "@types/locate-chrome": "^0.1.2",
         "@types/node-schedule": "^2.1.6",
         "@vertx/core": "^4.5.1",
