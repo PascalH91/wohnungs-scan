@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
+    chrome: {
+        launchOptions: {
+            args: ["--no-sandbox"],
+        },
+    },
     webpack(config, options) {
         config.module.rules.push({
             test: /\.(ogg|mp3|wav|mpe?g)$/i,
