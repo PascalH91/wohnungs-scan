@@ -12,6 +12,10 @@ const nextConfig = {
                 },
             ],
         });
+        config.externals.push({
+            "utf-8-validate": "commonjs utf-8-validate",
+            bufferutil: "commonjs bufferutil",
+        });
         config.resolve.fallback = {
             // if you miss it, all the other options in fallback, specified
             // by next.js will be dropped.
