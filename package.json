@@ -9,6 +9,9 @@
         "start": "next start",
         "lint": "next lint"
     },
+    "browser": {
+        "vertx": false
+    },
     "dependencies": {
         "@sparticuz/chromium": "^123.0.0",
         "@sparticuz/chromium-min": "^123.0.0",
