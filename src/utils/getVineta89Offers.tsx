@@ -23,10 +23,9 @@ export const getVineta89Offers = async () => {
         let data = await page.evaluate(async () => {
             let results: Offer[] = [];
 
-            let item = document.querySelector("#content");
+            let item = document.querySelector("#content") as HTMLElement | undefined;
 
             item &&
-                //@ts-ignore
                 !!item.innerText &&
                 results.push({
                     address: "Neues Angebot",

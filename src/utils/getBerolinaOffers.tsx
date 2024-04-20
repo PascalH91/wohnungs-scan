@@ -23,10 +23,9 @@ export const getBerolinaOffers = async () => {
         let data = await page.evaluate(async () => {
             let results: Offer[] = [];
 
-            let item = document.querySelector(".entrytext");
+            let item = document.querySelector(".entrytext") as HTMLElement | undefined;
 
             item &&
-                //@ts-ignore
                 !item.innerText.includes("Leider haben wir derzeit keine freien Wohnungen im Angebot") &&
                 results.push({
                     address: "Neues Angebot",

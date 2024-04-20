@@ -38,11 +38,11 @@ export const getDAGEWOOffers = async () => {
                         const containsDisqualifyingPattern = await window.containsDisqualifyingPattern(title);
                         const link = item?.getElementsByTagName("a")?.[0]?.getAttribute("href");
                         const properties = item.querySelectorAll(".article__properties-item > span");
-                        const isWBS = properties?.[3]?.innerText === "mit WBS";
-                        const size = properties?.[1]?.innerText;
-                        const shortenedSize = +size.split(" ")[0].substr(0, 2);
-                        const rooms = properties?.[0]?.innerText;
-                        const shortenedRooms = +rooms.split(" ")[0];
+                        const isWBS = (properties?.[3] as HTMLElement | undefined)?.innerText === "mit WBS";
+                        const size = (properties?.[1] as HTMLElement | undefined)?.innerText;
+                        const shortenedSize = size ? +size.split(" ")[0].substr(0, 2) : 0;
+                        const rooms = (properties?.[0] as HTMLElement | undefined)?.innerText;
+                        const shortenedRooms = rooms ? +rooms.split(" ")[0] : 0;
 
                         const filterConditions =
                             address &&

@@ -23,10 +23,9 @@ export const getForumKreuzbergOffers = async () => {
         let data = await page.evaluate(async () => {
             let results: Offer[] = [];
 
-            let item = document.querySelector(".content");
+            let item = document.querySelector(".content") as HTMLElement | undefined;
 
             item &&
-                //@ts-ignore
                 !item.innerText.includes("Es sind auf absehbare Zeit leider keine Wohnungen verfübar") &&
                 results.push({
                     address: "Neues Angebot",

@@ -26,10 +26,9 @@ export const get1892Offers = async () => {
         let data = await page.evaluate(async () => {
             let results: Offer[] = [];
 
-            let item = document.querySelector("#locationChoices");
+            let item = document.querySelector("#locationChoices") as HTMLElement | undefined;
 
             item &&
-                //@ts-ignore
                 !item.innerText.includes("Momentan sind leider keine Objekte in unserem Onlineangebot verfügbar.") &&
                 results.push({
                     address: "Neues Angebot",

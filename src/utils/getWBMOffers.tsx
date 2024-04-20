@@ -33,13 +33,16 @@ export const getWBMOffers = async () => {
                 (await Promise.all(
                     Array.from(items).map(async (item) => {
                         const title = item.querySelector("h2");
-                        const address = item.querySelector(".address")?.innerText;
+                        const address = (item.querySelector(".address") as HTMLElement | undefined)?.innerText;
                         const relevantDistrict = await window.isInRelevantDistrict(address);
                         const propertylist = item.getElementsByTagName("li");
                         const isWBS = Array.from(propertylist).some((prop) => prop.innerText === "WBS");
-                        const roomSize = item.querySelector(".main-property-size")?.innerText;
-                        const transformedSize = await window.transformSizeIntoValidNumber(roomSize);
-                        const roomNumber = +item.querySelector(".main-property-rooms")?.innerText;
+                        const roomSize = (item.querySelector(".main-property-size") as HTMLElement | undefined)
+                            ?.innerText;
+                        const transformedSize = (await window.transformSizeIntoValidNumber(roomSize)) || 0;
+                        const roomNumber = Number(
+                            (item.querySelector(".main-property-rooms") as HTMLElement | undefined)?.innerText,
+                        );
 
                         const showItem =
                             title && address && !isWBS && relevantDistrict && roomNumber !== 1 && transformedSize > 65;

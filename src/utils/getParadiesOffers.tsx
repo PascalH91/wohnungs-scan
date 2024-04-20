@@ -23,10 +23,9 @@ export const getParadiesOffers = async () => {
         let data = await page.evaluate(async () => {
             let results: Offer[] = [];
 
-            let item = document.querySelector("p");
+            let item = document.querySelector("p") as HTMLElement | undefined;
 
             item &&
-                //@ts-ignore
                 !item.innerText.includes("Versuchen Sie es zu einem späteren Zeitpunkt nochmals.") &&
                 results.push({
                     address: "Neues Angebot",

@@ -37,10 +37,11 @@ export const getGESOBAUOffers = async () => {
             items &&
                 (await Promise.all(
                     Array.from(items).map(async (item) => {
-                        const address = item.querySelector(".basicTeaser__text > span")?.innerText;
+                        const address = (item.querySelector(".basicTeaser__text > span") as HTMLElement | undefined)
+                            ?.innerText;
                         const relevantDistrict = await window.isInRelevantDistrict(address);
 
-                        const title = item.querySelector(".basicTeaser__title")?.innerText;
+                        const title = (item.querySelector(".basicTeaser__title") as HTMLElement | undefined)?.innerText;
                         const containsDisqualifyingPattern = await window.containsDisqualifyingPattern(title);
                         const attributes = item.querySelectorAll(".apartment__info > span");
 

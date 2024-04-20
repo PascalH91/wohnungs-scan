@@ -37,12 +37,12 @@ export const getVonoviaOffers = async () => {
             items &&
                 (await Promise.all(
                     Array.from(items).map(async (item) => {
-                        const address = item.querySelector(".rte")?.innerText;
+                        const address = (item.querySelector(".rte") as HTMLElement | undefined)?.innerText;
                         const relevantDistrict = await window.isInRelevantDistrict(address);
                         const title = item.querySelector("h2")?.innerText;
                         const containsDisqualifyingPattern = await window.containsDisqualifyingPattern(title);
-                        const price = item.querySelector(".price")?.innerText;
-                        const transformedPrice = await window.transformPriceIntoValidNumber(price);
+                        const price = (item.querySelector(".price") as HTMLElement | undefined)?.innerText;
+                        const transformedPrice = (await window.transformPriceIntoValidNumber(price)) || 0;
 
                         if (address && !containsDisqualifyingPattern && !!relevantDistrict && transformedPrice < 1250) {
                             results.push({
@@ -51,8 +51,12 @@ export const getVonoviaOffers = async () => {
                                 title,
                                 region: relevantDistrict?.district || "-",
                                 link: `https://www.vonovia.de${item.querySelector(".links")?.getElementsByTagName("a")[0].getAttribute("href")}`,
-                                size: item.querySelectorAll(".features-wrap .badge")[0]?.innerText,
-                                rooms: +item.querySelectorAll(".features-wrap .badge")[1]?.innerText[0],
+                                size: (item.querySelectorAll(".features-wrap .badge")[0] as HTMLElement | undefined)
+                                    ?.innerText,
+                                rooms: Number(
+                                    (item.querySelectorAll(".features-wrap .badge")[1] as HTMLElement | undefined)
+                                        ?.innerText[0],
+                                ),
                             });
                         }
                     }),

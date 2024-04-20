@@ -51,7 +51,7 @@ export const getFRIEDRICHSHEIMOffers = async () => {
 
             items.forEach(async (item) => {
                 const title = item.querySelector("h2");
-                const blockageBanner = item.querySelector(".eins");
+                const blockageBanner = item.querySelector(".eins") as HTMLElement | undefined;
 
                 if (title && +title.innerText[0] > 1) {
                     results.push({

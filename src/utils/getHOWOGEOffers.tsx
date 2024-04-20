@@ -37,16 +37,18 @@ export const getHOWOGEOffers = async () => {
             items &&
                 (await Promise.all(
                     Array.from(items).map(async (item: Element) => {
-                        const address = item.querySelector(".address")?.innerText;
-                        const title = item.querySelector(".notice")?.innerText;
+                        const address = (item.querySelector(".address") as HTMLElement | undefined)?.innerText;
+                        const title = (item.querySelector(".notice") as HTMLElement | undefined)?.innerText;
                         const relevantDistrict = await window.isInRelevantDistrict(address);
                         const containsDisqualifyingPattern = await window.containsDisqualifyingPattern(title);
                         const attributes = item.querySelectorAll(".attributes > div .attributes-content");
                         const isNewBuildingProject = attributes.length === 2;
 
-                        const rooms = isNewBuildingProject ? 0 : +attributes[2].innerText;
-                        const size = isNewBuildingProject ? "" : attributes[1].innerText;
-                        const transformedSize = await window.transformSizeIntoValidNumber(size);
+                        const rooms = isNewBuildingProject
+                            ? 0
+                            : Number((attributes[2] as HTMLElement | undefined)?.innerText || 0);
+                        const size = isNewBuildingProject ? "" : (attributes[1] as HTMLElement | undefined)?.innerText;
+                        const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 0;
 
                         const showItem =
                             address &&

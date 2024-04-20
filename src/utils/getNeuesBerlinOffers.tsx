@@ -23,10 +23,9 @@ export const getNeuesBerlinOffers = async () => {
         let data = await page.evaluate(async () => {
             let results: Offer[] = [];
 
-            let item = document.querySelector("#areaMain");
+            let item = document.querySelector("#areaMain") as HTMLElement | undefined;
 
             item &&
-                //@ts-ignore
                 !item.innerText.includes("Derzeit verfügen wir über keine aktuellen Wohnungsangebote.") &&
                 results.push({
                     address: "Neues Angebot",

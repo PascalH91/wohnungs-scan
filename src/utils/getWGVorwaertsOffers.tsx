@@ -23,10 +23,9 @@ export const getWGVorwaertsOffers = async () => {
         let data = await page.evaluate(async () => {
             let results: Offer[] = [];
 
-            let item = document.querySelector("#ContentContainer");
+            let item = document.querySelector("#ContentContainer") as HTMLElement | undefined;
 
             item &&
-                //@ts-ignore
                 !item.innerText.includes("Sofern eine Wohnung verfügbar ist, wird sie hier eingestellt.") &&
                 results.push({
                     address: "Neues Angebot",

@@ -34,12 +34,14 @@ export const getDEUTSCHEWOHNENOffers = async () => {
                 (await Promise.all(
                     Array.from(items).map(async (item) => {
                         const title = item.querySelector("h2")?.innerText;
-                        const address = item.querySelector(".object-list__address").innerText;
+                        const address = (item.querySelector(".object-list__address") as HTMLElement).innerText;
                         const relevantDistrict = await window.isInRelevantDistrict(address);
 
-                        const specs = item.querySelector(".object-list__detail-items").innerText?.split("|");
+                        const specs = (
+                            item.querySelector(".object-list__detail-items") as HTMLElement
+                        ).innerText?.split("|");
                         const size = specs[0];
-                        const transformedSize = await window.transformSizeIntoValidNumber(size);
+                        const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 0;
 
                         const showItem = title && address && relevantDistrict && transformedSize > 65;
 

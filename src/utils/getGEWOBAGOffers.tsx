@@ -51,8 +51,13 @@ export const getGEWOBAGOffers = async () => {
                                     .querySelector(".angebot-address")
                                     ?.getElementsByTagName("a")[0]
                                     .getAttribute("href"),
-                                size: item.querySelector(".angebot-area > td")?.innerText?.split("|")[1].trim(),
-                                rooms: +item.querySelector(".angebot-area > td")?.innerText?.[0],
+                                size: (item.querySelector(".angebot-area > td") as HTMLElement | undefined)?.innerText
+                                    ?.split("|")[1]
+                                    .trim(),
+                                rooms: Number(
+                                    (item.querySelector(".angebot-area > td") as HTMLElement | undefined)
+                                        ?.innerText?.[0] || 0,
+                                ),
                             });
                         }
                     }),
