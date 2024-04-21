@@ -19,12 +19,10 @@ export const getFRIEDRICHSHEIMOffers = async () => {
         page.on("console", (msg) => console.log(msg.text()));
 
         await page.goto(friedrichsheimUrl, { waitUntil: "networkidle2" });
-
         let data = await page.evaluate(async () => {
             //@ts-nocheck
             let results: Offer[] = [];
             let items = document.querySelectorAll("article");
-
             const calculateDaysDifference = (targetDateStr: string) => {
                 const [targetDay, targetMonth, targetYear] = targetDateStr.split(".").map(Number);
                 const targetDate = new Date(targetYear, targetMonth - 1, targetDay);
@@ -33,7 +31,6 @@ export const getFRIEDRICHSHEIMOffers = async () => {
                 const differenceDays = Math.floor(differenceMs / (1000 * 60 * 60 * 24));
                 return differenceDays;
             };
-
             const convertDateFromBanner = async (text?: string) => {
                 if (!text) {
                     return undefined;
@@ -48,11 +45,9 @@ export const getFRIEDRICHSHEIMOffers = async () => {
                     return undefined;
                 }
             };
-
             items.forEach(async (item) => {
                 const title = item.querySelector("h2");
                 const blockageBanner = item.querySelector(".eins") as HTMLElement | undefined;
-
                 if (title && +title.innerText[0] > 1) {
                     results.push({
                         address: title.innerText,
@@ -72,7 +67,7 @@ export const getFRIEDRICHSHEIMOffers = async () => {
         browser.close();
         return { data, errors: "" };
     } catch (e: any) {
-        console.log(e);
+        console.log("e =>", e);
         return { data: [], errors: e };
     }
 };

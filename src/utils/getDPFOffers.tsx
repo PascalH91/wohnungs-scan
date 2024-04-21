@@ -71,7 +71,7 @@ export const getDPFOffers = async () => {
         browser.close();
         return { data, errors: "" };
     } catch (e: any) {
-        console.log(e);
+        console.log("e =>", e);
         return { data: [], errors: e };
     }
 };
