@@ -37,6 +37,7 @@ export type ProviderT =
     | "EVM"
     | "SOLIDARITAET"
     | "VATERLAND"
+    | "EBAY_KLEINANZEIGEN"
     | "EG_1892";
 
 export const ProviderWrapper = ({ provider }: { provider: ProviderDetails }) => {

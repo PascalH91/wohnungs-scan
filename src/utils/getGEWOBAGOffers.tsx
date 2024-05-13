@@ -43,12 +43,12 @@ export const getGEWOBAGOffers = async () => {
                         if (address && !containsDisqualifyingPattern && relevantDistrict) {
                             results.push({
                                 address,
-                                id: item.getAttribute("id") || address,
+                                id: item?.getAttribute("id") || address,
                                 title,
                                 region:
                                     relevantDistrict?.district || item.querySelector(".angebot-region > td")?.innerHTML,
                                 link: item
-                                    .querySelector(".angebot-address")
+                                    .querySelector(".angebot-footer")
                                     ?.getElementsByTagName("a")[0]
                                     .getAttribute("href"),
                                 size: (item.querySelector(".angebot-area > td") as HTMLElement | undefined)?.innerText
@@ -68,6 +68,6 @@ export const getGEWOBAGOffers = async () => {
         return { data, errors: "" };
     } catch (e: any) {
         console.log("e =>", e);
-        return { data: [], errors: e };
+        return { data: [], errors: e.toString() };
     }
 };

@@ -47,6 +47,7 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     VATERLAND: "vaterland",
     VINETA_89: "vineta_89",
     VONOVIA: "vonovia",
+    EBAY_KLEINANZEIGEN: "ebay_kleinanzeigen",
     //IMMOSCOUT: "immoscout",
 };
 
@@ -57,6 +58,7 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
     const [visitedIds, setVisitedIds] = useState<string[]>([]);
     const [newOfferIds, setNewOfferIds] = useState<string[]>([]);
     const [offers, setOffers] = useState<Offer[]>([]);
+    const [errorToShow, setErrorToShow] = useState<any | undefined>(undefined);
 
     const goToPage = useCallback(
         (id: string, url?: string | null) => {
@@ -74,9 +76,11 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
             const getOffers = async () => {
                 const res = await fetch(`/api/cron/${fetchUrlByProvider[provider.id]}`);
                 const { data, errors }: { data: Offer[]; errors: string } = await res.json();
-                // console.log({ type: provider.id, errors });
-                const newOffers = data.filter((data) => !offers.map((offer) => offer.id).includes(data.id));
 
+                const newOffers = data.filter((data) => !offers.map((offer) => offer.id).includes(data.id));
+                if (!errors && !!errorToShow) {
+                    play();
+                }
                 if (!!newOffers.length) {
                     const newOfferIdsThatHaventBeenVisited = newOffers
                         .map((offer) => offer.id)
@@ -85,13 +89,14 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
                     !!newOfferIdsThatHaventBeenVisited.length && play();
                     setNewOfferIds((ids) => [...ids, ...newOffers.map((offer) => offer.id)]);
                 }
+                setErrorToShow(errors);
                 setOffers(data as Offer[]);
                 setNumber(Math.floor(Math.random() * 10));
                 setRun(false);
             };
             getOffers();
         }
-    }, [offers, run, play, provider.id, url, visitedIds]);
+    }, [errorToShow, offers, play, provider.id, run, visitedIds]);
 
     useEffect(() => {
         if (!run) {
@@ -113,7 +118,7 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
         }
     }, [run, provider.id, provider.refreshRateInSeconds, provider.additionalBufferInSeconds]);
 
-    return offers.length ? (
+    return errorToShow ? (
         <div
             key={provider.id}
             className={styles.providerItem}
@@ -126,7 +131,37 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
                             id={provider.id}
                             key={provider.id}
                             width={150}
-                            height={50}
+                            height={30}
+                            src={provider.logo}
+                            alt={provider.id}
+                            style={{ width: "auto" }}
+                        />
+                    </div>
+                )}
+            </div>
+            <div className={styles.houseEntriesWrapper}>
+                <div
+                    key={`error_${provider.name}`}
+                    className={clsx(styles.houseEntry, { [styles.redBoarder]: true })}
+                >
+                    <div className={styles.blocked}>{`ERROR => ${errorToShow.name}`}</div>
+                </div>
+            </div>
+        </div>
+    ) : offers.length ? (
+        <div
+            key={provider.id}
+            className={styles.providerItem}
+        >
+            <div className={styles.providerItemHeader}>
+                <h2 className={styles.providerHeader}>{`${provider.name} _ ${number}`}</h2>
+                {!!provider.logo && (
+                    <div className={styles.imageWrapper}>
+                        <Image
+                            id={provider.id}
+                            key={provider.id}
+                            width={150}
+                            height={30}
                             src={provider.logo}
                             alt={provider.id}
                             style={{ width: "auto" }}

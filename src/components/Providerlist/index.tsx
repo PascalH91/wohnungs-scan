@@ -46,7 +46,13 @@ const providerDetails: ProviderList = {
         name: "HOWOGE",
         logo: "/images/howoge.png",
     },
-
+    EBAY_KLEINANZEIGEN: {
+        id: "EBAY_KLEINANZEIGEN",
+        name: "Ebay Kleinanzeigen",
+        logo: "/images/ebay_kleinanzeigen.jpg",
+        refreshRateInSeconds: 60,
+        additionalBufferInSeconds: 30,
+    },
     DPF: {
         id: "DPF",
         name: "dpf",
@@ -164,7 +170,6 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
     },
-
     IMMOSCOUT: {
         id: "IMMOSCOUT",
         name: "ImmoScout 24",
