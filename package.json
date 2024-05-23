@@ -4,9 +4,9 @@
     "private": true,
     "scripts": {
         "dev": "npm run open-browser && cross-env NODE_OPTIONS='--inspect' next dev -p 8080",
-        "open-browser": "open-cli http://localhost:3000/",
+        "open-browser": "open-cli http://localhost:8080/",
         "build": "next build",
-        "start": "next start -p 8080",
+        "start": "npm run open-browser && cross-env NODE_OPTIONS='--inspect' next start -p 8080",
         "lint": "next lint"
     },
     "browser": {
