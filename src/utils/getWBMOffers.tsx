@@ -45,7 +45,7 @@ export const getWBMOffers = async () => {
                         );
 
                         const showItem =
-                            title && address && !isWBS && relevantDistrict && roomNumber !== 1 && transformedSize > 65;
+                            title && address && !isWBS && relevantDistrict && roomNumber !== 1 && transformedSize > 58;
 
                         if (showItem) {
                             results.push({

@@ -56,7 +56,7 @@ export const getHOWOGEOffers = async () => {
                             relevantDistrict &&
                             !isNewBuildingProject &&
                             rooms !== 1 &&
-                            transformedSize > 68;
+                            transformedSize > 62;
 
                         if (showItem) {
                             results.push({

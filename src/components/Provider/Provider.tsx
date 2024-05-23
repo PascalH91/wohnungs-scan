@@ -78,7 +78,7 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
                 const { data, errors }: { data: Offer[]; errors: string } = await res.json();
 
                 const newOffers = data.filter((data) => !offers.map((offer) => offer.id).includes(data.id));
-                if (!errors && !!errorToShow) {
+                if (!!errors && !errorToShow) {
                     play();
                 }
                 if (!!newOffers.length) {
