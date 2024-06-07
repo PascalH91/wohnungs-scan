@@ -23,5 +23,5 @@ export const containsRelevantCityCode = async (inputString: string) => {
             return { district, code };
         });
 
-    return !!allCityCodes.find((entry) => !!inputString?.includes(entry.code));
+    return allCityCodes.find((entry) => !!inputString?.includes(entry.code));
 };

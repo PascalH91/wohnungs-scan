@@ -26,6 +26,7 @@ export type Offer = {
 };
 
 const fetchUrlByProvider: { [key in ProviderT]?: string } = {
+    BERLINOVO: "berlinovo",
     WBM: "wbm",
     FRIEDRICHSHEIM: "friedrichsheim",
     GEWOBAG: "gewobag",

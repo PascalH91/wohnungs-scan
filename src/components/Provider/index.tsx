@@ -38,7 +38,8 @@ export type ProviderT =
     | "SOLIDARITAET"
     | "VATERLAND"
     | "EBAY_KLEINANZEIGEN"
-    | "EG_1892";
+    | "EG_1892"
+    | "BERLINOVO";
 
 export const ProviderWrapper = ({ provider }: { provider: ProviderDetails }) => {
     const url = process.env.API_URL;

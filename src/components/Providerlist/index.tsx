@@ -130,7 +130,13 @@ const providerDetails: ProviderList = {
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
     },
-
+    BERLINOVO: {
+        id: "BERLINOVO",
+        name: "Berlinovo",
+        logo: "/images/berlinovo.svg",
+        refreshRateInSeconds: 900,
+        additionalBufferInSeconds: 30,
+    },
     PARADIES: {
         id: "PARADIES",
         name: "Paradies",
