@@ -124,7 +124,7 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
             className={styles.providerItem}
         >
             <div className={styles.providerItemHeader}>
-                <h2 className={styles.providerHeader}>{`${provider.name} _ ${number}`}</h2>
+                <h3 className={styles.providerHeader}>{`${provider.name} _ ${number}`}</h3>
                 {!!provider.logo && (
                     <div className={styles.imageWrapper}>
                         <Image
@@ -176,7 +176,7 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
                     return (
                         <div
                             key={offer.id}
-                            className={clsx(styles.houseEntry, { [styles.redBoarder]: isNew })}
+                            className={clsx(styles.houseEntry, { [styles.isNew]: isNew })}
                         >
                             <h2
                                 className={styles.entryTitle}
@@ -184,9 +184,12 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
                             >
                                 📍 {offer.region} | {offer.title}
                             </h2>
-                            <div className={styles.specs}>
-                                <h3>🚪 {offer.rooms}</h3>
-                                <h3>⛶ {offer.size}</h3>
+                            <div className={styles.specsWrapper}>
+                                <div className={styles.specs}>
+                                    <h3>🚪 {offer.rooms}</h3>
+                                    <h3>{offer.size}</h3>
+                                    {/* <h3>⛶ {offer.size}</h3> */}
+                                </div>
                                 <a
                                     href={transformAddressToGoogleMapsLink(offer.address)}
                                     target="_blank"

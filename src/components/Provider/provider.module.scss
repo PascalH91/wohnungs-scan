@@ -1,8 +1,8 @@
 .providerItem {
     border: 1px solid white;
-    background-color: rgba(200, 210, 220, 0.1);
+    background-color: rgba(74, 176, 220, 0.072);
     border-radius: 20px;
-    padding: 1rem;
+    padding: 0.7rem 0.5rem;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -22,7 +22,7 @@
 }
 
 .providerHeader {
-    // border-bottom: 1px solid white
+    font-size: 1.1rem;
 }
 
 .houseEntriesWrapper {
@@ -35,13 +35,13 @@
 
 .houseEntry {
     width: 100%;
-    background-color: rgba(220, 220, 220, 0.5);
+    background-color: rgba(148, 148, 148, 0.5);
     border-radius: 10px;
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
     position: relative;
-    gap: 0.2rem;
+    gap: 0.3rem;
     min-height: 3rem;
 }
 
@@ -50,7 +50,7 @@
     cursor: pointer;
     color: white;
     &:hover {
-        color: rgb(250, 200, 150);
+        color: rgb(89, 209, 86);
     }
 }
 
@@ -77,20 +77,40 @@
     font-weight: 600;
 }
 
-.specs {
+.specsWrapper {
     display: flex;
-    font-size: small;
-    gap: 2rem;
+    font-size: 11px;
+    justify-content: space-between;
+    gap: 0.5rem;
     align-items: center;
     & > a {
+        border-radius: 4px;
+        padding: 0.3rem;
+        background-color: rgba(32, 52, 63, 0.4);
+        color: rgb(192, 235, 255);
+        font-weight: 600;
         &:hover {
-            color: rgb(250, 200, 150);
+            background-color: rgba(20, 75, 104, 0.4);
+            color: rgb(0, 221, 255);
         }
     }
 }
+.specs {
+    display: flex;
+    font-size: 12px;
+    gap: 0.5rem;
+    align-items: center;
+}
 
-.redBoarder {
+.isNew {
     border: 1px solid red;
+    background-color: rgb(10, 45, 59);
+    .entryTitle {
+        color: rgb(89, 209, 86);
+        &:hover {
+           color: rgb(89, 255, 48); 
+        }
+    }
 }
 
 .newDot {

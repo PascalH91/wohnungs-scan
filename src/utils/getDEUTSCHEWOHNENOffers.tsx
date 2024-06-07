@@ -52,8 +52,8 @@ export const getDEUTSCHEWOHNENOffers = async () => {
                                 title,
                                 region: relevantDistrict?.district,
                                 link: `https://www.deutsche-wohnen.com${item?.getElementsByTagName("a")[0].getAttribute("href")}`,
-                                size: specs[0],
-                                rooms: specs[1],
+                                size: transformedSize + "m²",
+                                rooms: specs[1][1],
                             });
                         }
                     }),

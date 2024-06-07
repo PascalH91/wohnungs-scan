@@ -1,11 +1,12 @@
 .providerListWrapper {
     // height: 100%;
     width: 100%;
-    display: flex;
+    display: grid;
+    grid-template-columns: 25% 25% 25% 25%;
     flex-direction: column;
     justify-content: flex-start;
     align-items: flex-start;
     gap: 1rem;
-    padding: 2rem 0;
+    padding: 0.5rem 0;
     overflow-y: auto;
 }
