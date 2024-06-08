@@ -169,6 +169,13 @@ const providerDetails: ProviderList = {
         additionalBufferInSeconds: 30,
     },
 
+    ADLERGROUP: {
+        id: "ADLERGROUP",
+        name: "Adler Gruppe",
+        logo: "/images/adlergroup.png",
+        refreshRateInSeconds: 60,
+        additionalBufferInSeconds: 30,
+    },
     EG_1892: {
         id: "EG_1892",
         name: "1892",
