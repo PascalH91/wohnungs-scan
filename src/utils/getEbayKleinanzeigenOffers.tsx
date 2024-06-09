@@ -33,7 +33,7 @@ export const getEbayKleinanzeigenOffers = async () => {
         await page.goto(ebayKleinanzeigenUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
-            let isMultiPages = false;
+            const isMultiPages = Array.from(document.querySelectorAll(".pagination span")).length > 1;
             let results: Offer[] = [];
             let items = document.querySelectorAll("div.position-relative > ul.itemlist article");
 

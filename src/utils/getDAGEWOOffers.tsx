@@ -60,7 +60,7 @@ export const getDAGEWOOffers = async () => {
                                 title,
                                 region: "-",
                                 link: `https://immosuche.degewo.de/${link}`,
-                                size: shortenedSize.toString(),
+                                size: shortenedSize + " m²",
                                 rooms: shortenedRooms,
                             });
                         }
