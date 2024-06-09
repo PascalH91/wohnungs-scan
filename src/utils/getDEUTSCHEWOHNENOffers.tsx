@@ -4,7 +4,7 @@ import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 
-const deutscheWohnenUrl =
+export const deutscheWohnenUrl =
     "https://www.deutsche-wohnen.com/immobilienangebote#page=1&locale=de&commercializationType=rent&utilizationType=flat,retirement&location=10243&radius=10&area=60&rooms=2";
 
 export const getDEUTSCHEWOHNENOffers = async () => {
@@ -27,6 +27,7 @@ export const getDEUTSCHEWOHNENOffers = async () => {
         await page.goto(deutscheWohnenUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            const isMultiPages = Array.from(document.querySelectorAll(".pagination li")).length > 3;
             let results: Offer[] = [];
             let items = document.querySelectorAll(".object-list__item");
 
@@ -43,7 +44,7 @@ export const getDEUTSCHEWOHNENOffers = async () => {
                         const size = specs[0];
                         const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 0;
 
-                        const showItem = title && address && relevantDistrict && transformedSize > 65;
+                        const showItem = title && address && relevantDistrict && transformedSize > 62;
 
                         if (showItem) {
                             results.push({
@@ -58,7 +59,7 @@ export const getDEUTSCHEWOHNENOffers = async () => {
                         }
                     }),
                 ));
-            return results;
+            return { offers: results, isMultiPages };
         });
         browser.close();
         return { data, errors: "" };

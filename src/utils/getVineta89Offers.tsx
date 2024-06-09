@@ -2,7 +2,7 @@ import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
-const vineta89Url = "https://vineta98.de/wohnungen/";
+export const vineta89Url = "https://vineta98.de/wohnungen/";
 
 export const getVineta89Offers = async () => {
     try {
@@ -21,6 +21,7 @@ export const getVineta89Offers = async () => {
         await page.goto(vineta89Url, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
 
             let item = document.querySelector("#content") as HTMLElement | undefined;
@@ -37,7 +38,7 @@ export const getVineta89Offers = async () => {
                     rooms: 0,
                 });
 
-            return results;
+            return { offers: results, isMultiPages };
         });
 
         browser.close();

@@ -5,7 +5,7 @@ import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 
-const howogeUrl =
+export const howogeUrl =
     "https://www.howoge.de/immobiliensuche/wohnungssuche.html?tx_howsite_json_list%5Bpage%5D=1&tx_howsite_json_list%5Blimit%5D=12&tx_howsite_json_list%5Blang%5D=&tx_howsite_json_list%5Bkiez%5D%5B%5D=Friedrichshain-Kreuzberg&tx_howsite_json_list%5Bkiez%5D%5B%5D=Mitte&tx_howsite_json_list%5Bkiez%5D%5B%5D=Lichtenberg&tx_howsite_json_list%5Bkiez%5D%5B%5D=Treptow-K%C3%B6penick&tx_howsite_json_list%5Bkiez%5D%5B%5D=Charlottenburg-Wilmersdorf&tx_howsite_json_list%5Bkiez%5D%5B%5D=Neuk%C3%B6lln&tx_howsite_json_list%5Bkiez%5D%5B%5D=Pankow&tx_howsite_json_list%5Bkiez%5D%5B%5D=Tempelhof-Sch%C3%B6neberg&tx_howsite_json_list%5Brooms%5D=2";
 
 export const getHOWOGEOffers = async () => {
@@ -31,6 +31,7 @@ export const getHOWOGEOffers = async () => {
         await page.goto(howogeUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
             let items = document.querySelectorAll(".flat-single-grid-item");
 
@@ -72,7 +73,7 @@ export const getHOWOGEOffers = async () => {
                         }
                     }),
                 ));
-            return results;
+            return { offers: results, isMultiPages };
         });
         browser.close();
         return { data, errors: "" };

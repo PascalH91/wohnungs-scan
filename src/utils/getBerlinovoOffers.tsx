@@ -5,7 +5,7 @@ import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 
-const berlinovoUrl =
+export const berlinovoUrl =
     "https://www.berlinovo.de/de/wohnungen/suche?w%5B0%5D=wohnungen_wohnflaeche%3A%28min%3A67%2Cmax%3A105%2Call_min%3A67%2Call_max%3A105%29&w%5B1%5D=wohungen_region%3A6";
 
 export const getBerlinovoOffers = async () => {
@@ -33,6 +33,7 @@ export const getBerlinovoOffers = async () => {
         await page.goto(berlinovoUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
             let items = document.querySelectorAll(".view-content article");
 
@@ -70,7 +71,7 @@ export const getBerlinovoOffers = async () => {
                         }
                     }),
                 ));
-            return results;
+            return { offers: results, isMultiPages };
         });
         browser.close();
         return { data, errors: "" };

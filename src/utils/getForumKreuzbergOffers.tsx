@@ -2,7 +2,7 @@ import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
-const forumKreuzbergUrl = "https://forumkreuzberg.de/s/wohnen/wohnungsangebote/";
+export const forumKreuzbergUrl = "https://forumkreuzberg.de/s/wohnen/wohnungsangebote/";
 
 export const getForumKreuzbergOffers = async () => {
     try {
@@ -21,6 +21,7 @@ export const getForumKreuzbergOffers = async () => {
         await page.goto(forumKreuzbergUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
 
             let item = document.querySelector(".content") as HTMLElement | undefined;
@@ -37,7 +38,7 @@ export const getForumKreuzbergOffers = async () => {
                     rooms: 0,
                 });
 
-            return results;
+            return { offers: results, isMultiPages };
         });
 
         browser.close();

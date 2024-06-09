@@ -5,7 +5,7 @@ import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 
-const dpfUrl = "https://www.dpfonline.de/interessenten/immobilien/";
+export const dpfUrl = "https://www.dpfonline.de/interessenten/immobilien/";
 
 export const getDPFOffers = async () => {
     try {
@@ -30,6 +30,7 @@ export const getDPFOffers = async () => {
         await page.goto(dpfUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
 
             let items = document.querySelectorAll(".immo-a-info");
@@ -50,7 +51,7 @@ export const getDPFOffers = async () => {
                         const transformedRooms = (await window.transformSizeIntoValidNumber(rooms)) || 0;
 
                         const showItem =
-                            address && transformedSize > 68 && transformedRooms !== 1 && relevantDistrict && link;
+                            address && transformedSize > 62 && transformedRooms !== 1 && relevantDistrict && link;
 
                         if (showItem) {
                             results.push({
@@ -65,7 +66,7 @@ export const getDPFOffers = async () => {
                         }
                     }),
                 ));
-            return results;
+            return { offers: results, isMultiPages };
         });
 
         browser.close();

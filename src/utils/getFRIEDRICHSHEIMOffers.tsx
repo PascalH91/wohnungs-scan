@@ -2,7 +2,7 @@ import { Offer } from "@/components/Provider/index";
 import { generateRandomUA } from "./generateRandomUserAgents";
 import { getBrowser } from "./getBrowser";
 
-const friedrichsheimUrl = "https://www.friedrichsheim-eg.de/category/freie-wohnungen/";
+export const friedrichsheimUrl = "https://www.friedrichsheim-eg.de/category/freie-wohnungen/";
 
 export const getFRIEDRICHSHEIMOffers = async () => {
     try {
@@ -20,7 +20,7 @@ export const getFRIEDRICHSHEIMOffers = async () => {
 
         await page.goto(friedrichsheimUrl, { waitUntil: "networkidle2" });
         let data = await page.evaluate(async () => {
-            //@ts-nocheck
+            let isMultiPages = false;
             let results: Offer[] = [];
             let items = document.querySelectorAll("article");
             const calculateDaysDifference = (targetDateStr: string) => {
@@ -62,7 +62,7 @@ export const getFRIEDRICHSHEIMOffers = async () => {
                     });
                 }
             });
-            return results;
+            return { offers: results, isMultiPages };
         });
         browser.close();
         return { data, errors: "" };

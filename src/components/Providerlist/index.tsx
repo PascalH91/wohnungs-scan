@@ -2,6 +2,31 @@ import React from "react";
 
 import styles from "./providerList.module.scss";
 import { ProviderWrapper, ProviderT } from "../Provider/index";
+import { wbmUrl } from "@/utils/getWBMOffers";
+import { friedrichsheimUrl } from "@/utils/getFRIEDRICHSHEIMOffers";
+import { gewobagUrl } from "@/utils/getGEWOBAGOffers";
+import { deutscheWohnenUrl } from "@/utils/getDEUTSCHEWOHNENOffers";
+import { howogeUrl } from "@/utils/getHOWOGEOffers";
+import { ebayKleinanzeigenUrl } from "@/utils/getEbayKleinanzeigenOffers";
+import { dpfUrl } from "@/utils/getDPFOffers";
+import { stadtUndLandUrl } from "@/utils/getSTADTUNDLANDOffers";
+import { gesobauUrl } from "@/utils/getGESOBAUOffers";
+import { dagewoUrl } from "@/utils/getDAGEWOOffers";
+import { vonoviaUrl } from "@/utils/getVonoviaOffers";
+import { solidariaetUrl } from "@/utils/getSolidaritaetOffers";
+import { neuesBerlinUrl } from "@/utils/getNeuesBerlinOffers";
+import { FriedrichshainEGUrl } from "@/utils/getFriedrichshainEGOffers";
+import { berolinaUrl } from "@/utils/getBerolinaOffers";
+import { vineta89Url } from "@/utils/getVineta89Offers";
+import { forumKreuzbergUrl } from "@/utils/getForumKreuzbergOffers";
+import { berlinovoUrl } from "@/utils/getBerlinovoOffers";
+import { paradiesUrl } from "@/utils/getParadiesOffers";
+import { wgVorwaertsUrl } from "@/utils/getWGVorwaertsOffers";
+import { evmUrl } from "@/utils/getEVMOffers";
+import { vaterlandUrl } from "@/utils/getVaterlandOffers";
+import { adlergroupUrl } from "@/utils/getADLERGROUPOffers";
+import { eg1892Url } from "@/utils/get1892Offers";
+import { immoscoutUrl } from "@/utils/getIMMOSCOUTOffers";
 
 export type ProviderDetails = {
     id: ProviderT;
@@ -9,6 +34,7 @@ export type ProviderDetails = {
     logo?: string;
     refreshRateInSeconds?: number;
     additionalBufferInSeconds?: number;
+    url?: string;
 };
 type ProviderList = {
     [key in ProviderT]: ProviderDetails;
@@ -21,30 +47,35 @@ const providerDetails: ProviderList = {
         logo: "/images/wbm.jpg",
         refreshRateInSeconds: 20,
         additionalBufferInSeconds: 5,
+        url: wbmUrl,
     },
 
     FRIEDRICHSHEIM: {
         id: "FRIEDRICHSHEIM",
         name: "Friedrichsheim",
         logo: "/images/friedrichsheim.jpg",
+        url: friedrichsheimUrl,
     },
 
     GEWOBAG: {
         id: "GEWOBAG",
         name: "GEWOBAG",
         logo: "/images/gewobag.png",
+        url: gewobagUrl,
     },
 
     DEUTSCHE_WOHNEN: {
         id: "DEUTSCHE_WOHNEN",
         name: "Deutsche Wohnen",
         logo: "/images/deutsche_wohnen.png",
+        url: deutscheWohnenUrl,
     },
 
     HOWOGE: {
         id: "HOWOGE",
         name: "HOWOGE",
         logo: "/images/howoge.png",
+        url: howogeUrl,
     },
     EBAY_KLEINANZEIGEN: {
         id: "EBAY_KLEINANZEIGEN",
@@ -52,35 +83,41 @@ const providerDetails: ProviderList = {
         logo: "/images/ebay_kleinanzeigen.jpg",
         refreshRateInSeconds: 60,
         additionalBufferInSeconds: 30,
+        url: ebayKleinanzeigenUrl,
     },
     DPF: {
         id: "DPF",
         name: "dpf",
         logo: "/images/dpf.png",
+        url: dpfUrl,
     },
 
     STADTUNDLAND: {
         id: "STADTUNDLAND",
         name: "Stadt & Land",
         logo: "/images/stadt_und_land.png",
+        url: stadtUndLandUrl,
     },
 
     GESOBAU: {
         id: "GESOBAU",
         name: "GESOBAU",
         logo: "/images/gesobau.png",
+        url: gesobauUrl,
     },
 
     DAGEWO: {
         id: "DAGEWO",
         name: "DAGEWO",
         logo: "/images/dagewo.png",
+        url: dagewoUrl,
     },
 
     VONOVIA: {
         id: "VONOVIA",
         name: "Vonovia",
         logo: "/images/vonovia.jpg",
+        url: vonoviaUrl,
     },
 
     SOLIDARITAET: {
@@ -89,6 +126,7 @@ const providerDetails: ProviderList = {
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
+        url: solidariaetUrl,
     },
 
     NEUES_BERLIN: {
@@ -97,6 +135,7 @@ const providerDetails: ProviderList = {
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
+        url: neuesBerlinUrl,
     },
 
     WBG_FRIEDRICHSHAIN_EG: {
@@ -105,6 +144,7 @@ const providerDetails: ProviderList = {
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
+        url: FriedrichshainEGUrl,
     },
 
     BEROLINA: {
@@ -113,6 +153,7 @@ const providerDetails: ProviderList = {
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 300,
         additionalBufferInSeconds: 30,
+        url: berolinaUrl,
     },
 
     VINETA_89: {
@@ -121,6 +162,7 @@ const providerDetails: ProviderList = {
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 400,
         additionalBufferInSeconds: 30,
+        url: vineta89Url,
     },
 
     FORUM_KREUZBERG: {
@@ -129,13 +171,15 @@ const providerDetails: ProviderList = {
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
+        url: forumKreuzbergUrl,
     },
     BERLINOVO: {
         id: "BERLINOVO",
         name: "Berlinovo",
         logo: "/images/berlinovo.svg",
-        refreshRateInSeconds: 900,
+        refreshRateInSeconds: 300,
         additionalBufferInSeconds: 30,
+        url: berlinovoUrl,
     },
     PARADIES: {
         id: "PARADIES",
@@ -143,6 +187,7 @@ const providerDetails: ProviderList = {
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
+        url: paradiesUrl,
     },
 
     WG_VORWAERTS: {
@@ -151,6 +196,7 @@ const providerDetails: ProviderList = {
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
+        url: wgVorwaertsUrl,
     },
 
     EVM: {
@@ -159,6 +205,7 @@ const providerDetails: ProviderList = {
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
+        url: evmUrl,
     },
 
     VATERLAND: {
@@ -167,6 +214,7 @@ const providerDetails: ProviderList = {
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
+        url: vaterlandUrl,
     },
 
     ADLERGROUP: {
@@ -175,6 +223,7 @@ const providerDetails: ProviderList = {
         logo: "/images/adlergroup.png",
         refreshRateInSeconds: 60,
         additionalBufferInSeconds: 30,
+        url: adlergroupUrl,
     },
     EG_1892: {
         id: "EG_1892",
@@ -182,6 +231,7 @@ const providerDetails: ProviderList = {
         logo: "/images/friedrichsheim.jpg",
         refreshRateInSeconds: 900,
         additionalBufferInSeconds: 30,
+        url: eg1892Url,
     },
     IMMOSCOUT: {
         id: "IMMOSCOUT",
@@ -189,6 +239,7 @@ const providerDetails: ProviderList = {
         logo: "/images/immoscout.png",
         refreshRateInSeconds: 60,
         additionalBufferInSeconds: 30,
+        url: immoscoutUrl,
     },
 };
 

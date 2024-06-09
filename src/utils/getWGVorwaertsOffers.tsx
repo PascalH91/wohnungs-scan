@@ -2,7 +2,7 @@ import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
-const wgVorwaertsUrl = "https://www.wg-vorwaerts.de/wohnungssuche/";
+export const wgVorwaertsUrl = "https://www.wg-vorwaerts.de/wohnungssuche/";
 
 export const getWGVorwaertsOffers = async () => {
     try {
@@ -21,6 +21,7 @@ export const getWGVorwaertsOffers = async () => {
         await page.goto(wgVorwaertsUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
 
             let item = document.querySelector("#ContentContainer") as HTMLElement | undefined;
@@ -37,7 +38,7 @@ export const getWGVorwaertsOffers = async () => {
                     rooms: 0,
                 });
 
-            return results;
+            return { offers: results, isMultiPages };
         });
 
         browser.close();

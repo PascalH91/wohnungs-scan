@@ -5,7 +5,7 @@ import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingP
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 
-const neuesBerlinUrl = "https://www.neues-berlin.de/wohnen/wohnungsangebote";
+export const neuesBerlinUrl = "https://www.neues-berlin.de/wohnen/wohnungsangebote";
 
 export const getNeuesBerlinOffers = async () => {
     try {
@@ -31,6 +31,7 @@ export const getNeuesBerlinOffers = async () => {
         await page.goto(neuesBerlinUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
 
             let items = document.querySelectorAll(".frame-type-nbtheme_openimmo");
@@ -54,7 +55,7 @@ export const getNeuesBerlinOffers = async () => {
                         const size = (specs[2] as HTMLElement | undefined)?.innerText;
                         const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 0;
 
-                        const showItem = address && relevantDistrict && transformedRooms !== 1 && transformedSize > 68;
+                        const showItem = address && relevantDistrict && transformedRooms !== 1 && transformedSize > 62;
 
                         if (showItem) {
                             results.push({
@@ -70,7 +71,7 @@ export const getNeuesBerlinOffers = async () => {
                         }
                     }),
                 ));
-            return results;
+            return { offers: results, isMultiPages };
         });
 
         browser.close();

@@ -2,7 +2,7 @@ import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
-const paradiesUrl = "https://abg-paradies.de/wohnungsangebote/";
+export const paradiesUrl = "https://abg-paradies.de/wohnungsangebote/";
 
 export const getParadiesOffers = async () => {
     try {
@@ -21,6 +21,7 @@ export const getParadiesOffers = async () => {
         await page.goto(paradiesUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
 
             let item = document.querySelector("p") as HTMLElement | undefined;
@@ -37,7 +38,7 @@ export const getParadiesOffers = async () => {
                     rooms: 0,
                 });
 
-            return results;
+            return { offers: results, isMultiPages };
         });
 
         browser.close();

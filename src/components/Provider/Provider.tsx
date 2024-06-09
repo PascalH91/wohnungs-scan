@@ -53,7 +53,7 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     //IMMOSCOUT: "immoscout",
 };
 
-export const Provider = ({ provider, url }: { provider: ProviderDetails; url: string }) => {
+export const Provider = ({ provider }: { provider: ProviderDetails }) => {
     const [play] = useSound(ringTone);
     const [number, setNumber] = useState<number>(0);
     const [run, setRun] = useState<boolean>(true);
@@ -61,6 +61,7 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
     const [newOfferIds, setNewOfferIds] = useState<string[]>([]);
     const [offers, setOffers] = useState<Offer[]>([]);
     const [errorToShow, setErrorToShow] = useState<any | undefined>(undefined);
+    const [isMultiPages, setIsMultiPages] = useState<boolean>(false);
 
     const goToPage = useCallback(
         (id: string, url?: string | null) => {
@@ -77,12 +78,19 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
         if (run && fetchUrlByProvider[provider.id]) {
             const getOffers = async () => {
                 const res = await fetch(`/api/cron/${fetchUrlByProvider[provider.id]}`);
-                const { data, errors }: { data: Offer[]; errors: string } = await res.json();
+                const {
+                    data: { offers: offersRes, isMultiPages: isMultiPagesRes },
+                    errors,
+                }: { data: { offers: Offer[]; isMultiPages: boolean }; errors: string } = await res.json();
 
-                const newOffers = data.filter((data) => !offers.map((offer) => offer.id).includes(data.id));
-                if (!!errors && !errorToShow) {
+                const newOffers = offersRes.filter((oRes) => !offers.map((offer) => offer.id).includes(oRes.id));
+
+                if ((!!errors && !errorToShow) || (!isMultiPages && isMultiPagesRes)) {
                     play();
                 }
+
+                setIsMultiPages(isMultiPagesRes);
+
                 if (!!newOffers.length) {
                     const newOfferIdsThatHaventBeenVisited = newOffers
                         .map((offer) => offer.id)
@@ -92,13 +100,13 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
                     setNewOfferIds((ids) => [...ids, ...newOffers.map((offer) => offer.id)]);
                 }
                 setErrorToShow(errors);
-                setOffers(data as Offer[]);
+                setOffers(offersRes as Offer[]);
                 setNumber(Math.floor(Math.random() * 10));
                 setRun(false);
             };
             getOffers();
         }
-    }, [errorToShow, offers, play, provider.id, run, visitedIds]);
+    }, [errorToShow, isMultiPages, offers, play, provider.id, run, visitedIds]);
 
     useEffect(() => {
         if (!run) {
@@ -150,7 +158,7 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
                 </div>
             </div>
         </div>
-    ) : offers.length ? (
+    ) : offers.length || isMultiPages ? (
         <div
             key={provider.id}
             className={styles.providerItem}
@@ -167,11 +175,11 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
                             src={provider.logo}
                             alt={provider.id}
                             style={{ width: "auto" }}
+                            onClick={() => goToPage(`${provider.id}_icon`, provider.url)}
                         />
                     </div>
                 )}
             </div>
-
             <div className={styles.houseEntriesWrapper}>
                 {offers.map((offer, index) => {
                     const isNew = !visitedIds.includes(offer.id);
@@ -209,6 +217,19 @@ export const Provider = ({ provider, url }: { provider: ProviderDetails; url: st
                     );
                 })}
             </div>
+            {isMultiPages && (
+                <div
+                    className={clsx(styles.houseEntry, { [styles.isNew]: true })}
+                    style={{ justifyContent: "center" }}
+                >
+                    <h2
+                        className={styles.entryTitle}
+                        onClick={() => goToPage(`${provider.id}_multiPage`, provider.url)}
+                    >
+                        📖 multiple pages
+                    </h2>
+                </div>
+            )}
         </div>
     ) : null;
 };

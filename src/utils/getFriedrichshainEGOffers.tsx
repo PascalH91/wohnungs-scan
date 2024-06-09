@@ -2,7 +2,7 @@ import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
-const FriedrichshainEGUrl = "https://www.wbg-friedrichshain-eg.de/wohnungssuche/wohnungsangebote";
+export const FriedrichshainEGUrl = "https://www.wbg-friedrichshain-eg.de/wohnungssuche/wohnungsangebote";
 
 export const getFriedrichshainEGOffers = async () => {
     try {
@@ -21,6 +21,7 @@ export const getFriedrichshainEGOffers = async () => {
         await page.goto(FriedrichshainEGUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
 
             let items = document.querySelectorAll("h3");
@@ -36,7 +37,7 @@ export const getFriedrichshainEGOffers = async () => {
                     rooms: 0,
                 });
 
-            return results;
+            return { offers: results, isMultiPages };
         });
 
         browser.close();

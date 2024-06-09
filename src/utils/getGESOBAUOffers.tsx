@@ -4,7 +4,7 @@ import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 
-const gesobauUrl =
+export const gesobauUrl =
     "https://www.gesobau.de/mieten/wohnungssuche/?tx_solr[filter][]=zimmer:%272-3%27&tx_solr[filter][]=wohnflaeche:%2768-58%27";
 
 export const getGESOBAUOffers = async () => {
@@ -31,6 +31,7 @@ export const getGESOBAUOffers = async () => {
         });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
             let items = document.querySelectorAll(".basicTeaser__wrapper");
 
@@ -68,7 +69,7 @@ export const getGESOBAUOffers = async () => {
                         }
                     }),
                 ));
-            return results;
+            return { offers: results, isMultiPages };
         });
         browser.close();
         return { data, errors: "" };

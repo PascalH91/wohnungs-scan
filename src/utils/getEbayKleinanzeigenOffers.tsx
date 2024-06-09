@@ -5,7 +5,7 @@ import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { titleContainsDisqualifyingPatternExtended } from "./titleContainsDisqualifyingPattern_extended";
 
-const ebayKleinanzeigenUrl =
+export const ebayKleinanzeigenUrl =
     "https://www.kleinanzeigen.de/s-wohnung-mieten/friedrichshain-kreuzberg/anzeige:angebote/preis:700:1400/c203l26918r5+wohnung_mieten.qm_d:68%2C+wohnung_mieten.swap_s:nein+wohnung_mieten.zimmer_d:2%2C";
 
 export const getEbayKleinanzeigenOffers = async () => {
@@ -33,6 +33,7 @@ export const getEbayKleinanzeigenOffers = async () => {
         await page.goto(ebayKleinanzeigenUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
             let items = document.querySelectorAll("div.position-relative > ul.itemlist article");
 
@@ -69,7 +70,7 @@ export const getEbayKleinanzeigenOffers = async () => {
                         }
                     }),
                 ));
-            return results;
+            return { offers: results, isMultiPages };
         });
         browser.close();
         return { data, errors: "" };

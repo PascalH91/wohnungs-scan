@@ -2,7 +2,7 @@ import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
-const evmUrl = "https://www.evmberlin.de/wohnungsbestand/";
+export const evmUrl = "https://www.evmberlin.de/wohnungsbestand/";
 
 export const getEVMOffers = async () => {
     try {
@@ -21,8 +21,8 @@ export const getEVMOffers = async () => {
         await page.goto(evmUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
-
             let item = document.querySelector(".note-attention") as HTMLElement | undefined;
 
             item &&
@@ -39,7 +39,7 @@ export const getEVMOffers = async () => {
                     rooms: 0,
                 });
 
-            return results;
+            return { offers: results, isMultiPages };
         });
 
         browser.close();

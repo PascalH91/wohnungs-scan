@@ -2,7 +2,7 @@ import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
-const berolinaUrl = "https://berolina.info/wohnungsangebote-wenn-angebote-vorhanden/";
+export const berolinaUrl = "https://berolina.info/wohnungsangebote-wenn-angebote-vorhanden/";
 
 export const getBerolinaOffers = async () => {
     try {
@@ -21,6 +21,7 @@ export const getBerolinaOffers = async () => {
         await page.goto(berolinaUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
 
             let item = document.querySelector(".entrytext") as HTMLElement | undefined;
@@ -37,7 +38,7 @@ export const getBerolinaOffers = async () => {
                     rooms: 0,
                 });
 
-            return results;
+            return { offers: results, isMultiPages };
         });
 
         browser.close();

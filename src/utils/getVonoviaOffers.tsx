@@ -5,7 +5,7 @@ import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { transformPrice } from "./transformPrice";
 
-const vonoviaUrl =
+export const vonoviaUrl =
     "https://www.vonovia.de/zuhause-finden/immobilien?rentType=miete&city=Berlin&lift=0&parking=0&cellar=0&immoType=wohnung&priceMax=1300&sizeMin=65&minRooms=2&floor=Beliebig&bathtub=0&bathwindow=0&bathshower=0&furnished=0&kitchenEBK=0&toiletSeparate=0&disabilityAccess=egal&seniorFriendly=0&balcony=egal&garden=0&subsidizedHousingPermit=egal&scroll=true";
 
 export const getVonoviaOffers = async () => {
@@ -31,6 +31,7 @@ export const getVonoviaOffers = async () => {
         await page.goto(vonoviaUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
             let items = document.querySelectorAll(".teasers .content-card");
 
@@ -44,7 +45,7 @@ export const getVonoviaOffers = async () => {
                         const price = (item.querySelector(".price") as HTMLElement | undefined)?.innerText;
                         const transformedPrice = (await window.transformPriceIntoValidNumber(price)) || 0;
 
-                        if (address && !containsDisqualifyingPattern && !!relevantDistrict && transformedPrice < 1250) {
+                        if (address && !containsDisqualifyingPattern && !!relevantDistrict && transformedPrice < 1300) {
                             results.push({
                                 address,
                                 id: item.getAttribute("id") || address,
@@ -61,7 +62,7 @@ export const getVonoviaOffers = async () => {
                         }
                     }),
                 ));
-            return results;
+            return { offers: results, isMultiPages };
         });
         browser.close();
         return { data, errors: "" };

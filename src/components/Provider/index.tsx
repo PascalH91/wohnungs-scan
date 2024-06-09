@@ -44,10 +44,5 @@ export type ProviderT =
 
 export const ProviderWrapper = ({ provider }: { provider: ProviderDetails }) => {
     const url = process.env.API_URL;
-    return url ? (
-        <Provider
-            provider={provider}
-            url={url}
-        />
-    ) : null;
+    return url ? <Provider provider={provider} /> : null;
 };

@@ -5,7 +5,7 @@ import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 
-const adlergroupUrl =
+export const adlergroupUrl =
     "https://www.adler-group.com/suche/wohnung?geocodes=1276003001&livingspace=62&numberofrooms=2-4&page=1&price=1500&sortby=price";
 
 export const getADLERGROUPOffers = async () => {
@@ -33,6 +33,7 @@ export const getADLERGROUPOffers = async () => {
         await page.goto(adlergroupUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
             let items = document.querySelectorAll("#search-results .row > div");
 
@@ -62,7 +63,7 @@ export const getADLERGROUPOffers = async () => {
                         }
                     }),
                 ));
-            return results;
+            return { offers: results, isMultiPages };
         });
         browser.close();
         return { data, errors: "" };

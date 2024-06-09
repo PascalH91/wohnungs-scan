@@ -4,7 +4,7 @@ import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 
-const wbmUrl = "https://www.wbm.de/wohnungen-berlin/angebote/";
+export const wbmUrl = "https://www.wbm.de/wohnungen-berlin/angebote/";
 
 export const getWBMOffers = async () => {
     try {
@@ -26,6 +26,8 @@ export const getWBMOffers = async () => {
         await page.goto(wbmUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            const isMultiPages = Array.from(document.querySelectorAll(".pagination li")).length > 3;
+
             let results: Offer[] = [];
             let items = document.querySelectorAll(".openimmo-search-list-item");
 
@@ -60,7 +62,7 @@ export const getWBMOffers = async () => {
                         }
                     }),
                 ));
-            return results;
+            return { offers: results, isMultiPages };
         });
         browser.close();
         return { data, errors: "" };

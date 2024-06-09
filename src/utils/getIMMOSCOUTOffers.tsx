@@ -4,7 +4,7 @@ import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
-const immoscoutUrl =
+export const immoscoutUrl =
     "https://www.immobilienscout24.de/Suche/de/berlin/berlin/wohnung-mieten?haspromotion=false&numberofrooms=2.5-&price=-1400.0&livingspace=68.0-&apartmenttypes=penthouse,other,loft,terracedflat,roofstorey,apartment,maisonette&exclusioncriteria=swapflat&pricetype=calculatedtotalrent&geocodes=110000000307,110000000201,110000000102,110000001103,110000000202,110000000301,110000000106&enteredFrom=result_list#/";
 
 export const getIMMOSCOUTOffers = async () => {
@@ -122,6 +122,8 @@ export const getIMMOSCOUTOffers = async () => {
             let test = document.getElementsByTagName("div")[0].innerText.trim();
             console.log(test);
         });
+
+        return { offers: results, isMultiPages };
 
         return { data: [], errors: "" };
     } catch (e: any) {

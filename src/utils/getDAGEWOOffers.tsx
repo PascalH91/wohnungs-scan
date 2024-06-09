@@ -3,7 +3,7 @@ import { generateRandomUA } from "./generateRandomUserAgents";
 import { getBrowser } from "./getBrowser";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 
-const dagewoUrl =
+export const dagewoUrl =
     "https://immosuche.degewo.de/de/search?size=10&page=1&property_type_id=1&categories%5B%5D=1&lat=&lon=&area=&address%5Bstreet%5D=&address%5Bcity%5D=&address%5Bzipcode%5D=&address%5Bdistrict%5D=&district=33%2C+46%2C+3%2C+28%2C+29%2C+71%2C+7&property_number=&price_switch=true&price_radio=custom&price_from=&price_to=1400&qm_radio=custom&qm_from=68&qm_to=&rooms_radio=custom&rooms_from=2&rooms_to=&wbs_required=false&order=rent_total_without_vat_asc";
 
 export const getDAGEWOOffers = async () => {
@@ -26,6 +26,7 @@ export const getDAGEWOOffers = async () => {
         await page.goto(dagewoUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
             let items = document.querySelectorAll(".article-list__item--immosearch");
 
@@ -49,7 +50,7 @@ export const getDAGEWOOffers = async () => {
                             title &&
                             !containsDisqualifyingPattern &&
                             !isWBS &&
-                            shortenedSize > 68 &&
+                            shortenedSize > 62 &&
                             shortenedRooms !== 1;
 
                         if (!!filterConditions) {
@@ -65,7 +66,7 @@ export const getDAGEWOOffers = async () => {
                         }
                     }),
                 ));
-            return results;
+            return { offers: results, isMultiPages };
         });
         browser.close();
         return { data, errors: "" };

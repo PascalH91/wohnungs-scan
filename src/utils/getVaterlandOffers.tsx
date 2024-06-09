@@ -2,7 +2,7 @@ import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
-const vaterlandUrl = "https://www.bg-vaterland.de/index.php?id=31";
+export const vaterlandUrl = "https://www.bg-vaterland.de/index.php?id=31";
 
 export const getVaterlandOffers = async () => {
     try {
@@ -21,6 +21,7 @@ export const getVaterlandOffers = async () => {
         await page.goto(vaterlandUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
 
             let item = document.querySelector("#content") as HTMLElement | undefined;
@@ -36,7 +37,7 @@ export const getVaterlandOffers = async () => {
                     rooms: 0,
                 });
 
-            return results;
+            return { offers: results, isMultiPages };
         });
 
         browser.close();

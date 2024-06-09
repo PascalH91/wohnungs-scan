@@ -2,7 +2,7 @@ import { Offer } from "@/components/Provider/index";
 import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 
-const solidariaetUrl = "https://wg-solidaritaet.de/wohnen/mietangebote/";
+export const solidariaetUrl = "https://wg-solidaritaet.de/wohnen/mietangebote/";
 
 export const getSolidaritaetOffers = async () => {
     try {
@@ -21,6 +21,7 @@ export const getSolidaritaetOffers = async () => {
         await page.goto(solidariaetUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
+            let isMultiPages = false;
             let results: Offer[] = [];
 
             let items = document.querySelectorAll(".frm_no_entries");
@@ -36,7 +37,7 @@ export const getSolidaritaetOffers = async () => {
                     rooms: 0,
                 });
 
-            return results;
+            return { offers: results, isMultiPages };
         });
 
         browser.close();
