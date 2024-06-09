@@ -4,9 +4,9 @@ import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { titleContainsDisqualifyingPatternExtended } from "./titleContainsDisqualifyingPattern_extended";
+import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
-export const ebayKleinanzeigenUrl =
-    "https://www.kleinanzeigen.de/s-wohnung-mieten/friedrichshain-kreuzberg/anzeige:angebote/preis:700:1400/c203l26918r5+wohnung_mieten.qm_d:68%2C+wohnung_mieten.swap_s:nein+wohnung_mieten.zimmer_d:2%2C";
+export const ebayKleinanzeigenUrl = `https://www.kleinanzeigen.de/s-wohnung-mieten/friedrichshain-kreuzberg/anzeige:angebote/preis:700:${maxWarmRent}/c203l26918r5+wohnung_mieten.qm_d:${minRoomSize}%2C+wohnung_mieten.swap_s:nein+wohnung_mieten.zimmer_d:${minRoomNumber}%2C`;
 
 export const getEbayKleinanzeigenOffers = async () => {
     try {
@@ -29,6 +29,11 @@ export const getEbayKleinanzeigenOffers = async () => {
         await page.exposeFunction("containsDisqualifyingPatternExtended", (title: string) =>
             titleContainsDisqualifyingPatternExtended(title),
         );
+
+        await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
+        await page.exposeFunction("getMinRoomSize", () => minRoomSize);
+        await page.exposeFunction("getMaxColdRent", () => maxColdRent);
+        await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
         await page.goto(ebayKleinanzeigenUrl, { waitUntil: "networkidle2" });
 

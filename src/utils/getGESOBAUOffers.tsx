@@ -3,9 +3,9 @@ import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
+import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
-export const gesobauUrl =
-    "https://www.gesobau.de/mieten/wohnungssuche/?tx_solr[filter][]=zimmer:%272-3%27&tx_solr[filter][]=wohnflaeche:%2768-58%27";
+export const gesobauUrl = `https://www.gesobau.de/mieten/wohnungssuche/?tx_solr[filter][]=zimmer:%27${minRoomNumber}-3%27&tx_solr[filter][]=wohnflaeche:%27${minRoomSize}-58%27`;
 
 export const getGESOBAUOffers = async () => {
     try {
@@ -29,6 +29,11 @@ export const getGESOBAUOffers = async () => {
         await page.waitForSelector(".documentContent__content", {
             visible: true,
         });
+
+        await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
+        await page.exposeFunction("getMinRoomSize", () => minRoomSize);
+        await page.exposeFunction("getMaxColdRent", () => maxColdRent);
+        await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;

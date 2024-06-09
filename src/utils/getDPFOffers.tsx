@@ -4,6 +4,7 @@ import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
+import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
 export const dpfUrl = "https://www.dpfonline.de/interessenten/immobilien/";
 
@@ -27,6 +28,11 @@ export const getDPFOffers = async () => {
             transformSizeIntoValidNumber(roomSize),
         );
 
+        await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
+        await page.exposeFunction("getMinRoomSize", () => minRoomSize);
+        await page.exposeFunction("getMaxColdRent", () => maxColdRent);
+        await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
+
         await page.goto(dpfUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
@@ -46,12 +52,19 @@ export const getDPFOffers = async () => {
                         const attributes = item.querySelectorAll(".immo-data");
 
                         const size = (attributes[1] as HTMLElement | undefined)?.innerText.trim();
-                        const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 0;
+                        const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 1000;
                         const rooms = (attributes[2] as HTMLElement | undefined)?.innerText.trim();
-                        const transformedRooms = (await window.transformSizeIntoValidNumber(rooms)) || 0;
+                        const transformedRooms = (await window.transformSizeIntoValidNumber(rooms)) || 100;
+
+                        const minRoomNumber = await window.getMinRoomNumber();
+                        const minRoomSize = await window.getMinRoomSize();
 
                         const showItem =
-                            address && transformedSize > 62 && transformedRooms !== 1 && relevantDistrict && link;
+                            address &&
+                            transformedSize >= minRoomSize &&
+                            transformedRooms >= minRoomNumber &&
+                            relevantDistrict &&
+                            link;
 
                         if (showItem) {
                             results.push({

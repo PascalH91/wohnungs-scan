@@ -4,9 +4,9 @@ import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
+import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
-export const adlergroupUrl =
-    "https://www.adler-group.com/suche/wohnung?geocodes=1276003001&livingspace=62&numberofrooms=2-4&page=1&price=1500&sortby=price";
+export const adlergroupUrl = `https://www.adler-group.com/suche/wohnung?geocodes=1276003001&livingspace=${minRoomSize}&numberofrooms=${minRoomNumber}-4&page=1&price=${maxWarmRent}&sortby=price`;
 
 export const getADLERGROUPOffers = async () => {
     try {
@@ -29,6 +29,11 @@ export const getADLERGROUPOffers = async () => {
         await page.exposeFunction("transformSizeIntoValidNumber", (roomSize: string) =>
             transformSizeIntoValidNumber(roomSize),
         );
+
+        await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
+        await page.exposeFunction("getMinRoomSize", () => minRoomSize);
+        await page.exposeFunction("getMaxColdRent", () => maxColdRent);
+        await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
         await page.goto(adlergroupUrl, { waitUntil: "networkidle2" });
 

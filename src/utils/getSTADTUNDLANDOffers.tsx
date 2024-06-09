@@ -3,9 +3,9 @@ import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
+import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
-export const stadtUndLandUrl =
-    "https://www.stadtundland.de/immobiliensuche.php?form=stadtundland-expose-search-1.form&sp%3Acategories%5B3352%5D%5B%5D=-&sp%3Acategories%5B3352%5D%5B%5D=__last__&sp%3AroomsFrom%5B%5D=2&sp%3AroomsTo%5B%5D=&sp%3ArentPriceFrom%5B%5D=&sp%3ArentPriceTo%5B%5D=&sp%3AareaFrom%5B%5D=65&sp%3AareaTo%5B%5D=&sp%3Afeature%5B%5D=__last__&action=submit";
+export const stadtUndLandUrl = `https://www.stadtundland.de/immobiliensuche.php?form=stadtundland-expose-search-1.form&sp%3Acategories%5B3352%5D%5B%5D=-&sp%3Acategories%5B3352%5D%5B%5D=__last__&sp%3AroomsFrom%5B%5D=${minRoomNumber}&sp%3AroomsTo%5B%5D=&sp%3ArentPriceFrom%5B%5D=&sp%3ArentPriceTo%5B%5D=&sp%3AareaFrom%5B%5D=${minRoomSize}&sp%3AareaTo%5B%5D=&sp%3Afeature%5B%5D=__last__&action=submit`;
 
 export const getSTADTUNDLANDOffers = async () => {
     try {
@@ -24,6 +24,12 @@ export const getSTADTUNDLANDOffers = async () => {
         await page.exposeFunction("containsDisqualifyingPattern", (title: string) =>
             titleContainsDisqualifyingPattern(title),
         );
+
+        await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
+        await page.exposeFunction("getMinRoomSize", () => minRoomSize);
+        await page.exposeFunction("getMaxColdRent", () => maxColdRent);
+        await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
+
         await page.goto(stadtUndLandUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {

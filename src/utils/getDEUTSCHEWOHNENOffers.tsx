@@ -3,9 +3,9 @@ import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
+import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
-export const deutscheWohnenUrl =
-    "https://www.deutsche-wohnen.com/immobilienangebote#page=1&locale=de&commercializationType=rent&utilizationType=flat,retirement&location=10243&radius=10&area=60&rooms=2";
+export const deutscheWohnenUrl = `https://www.deutsche-wohnen.com/immobilienangebote#page=1&locale=de&commercializationType=rent&utilizationType=flat,retirement&location=10243&radius=10&area=${minRoomSize}&rooms=${minRoomNumber}`;
 
 export const getDEUTSCHEWOHNENOffers = async () => {
     try {
@@ -24,6 +24,11 @@ export const getDEUTSCHEWOHNENOffers = async () => {
         await page.exposeFunction("transformSizeIntoValidNumber", (roomSize: string) =>
             transformSizeIntoValidNumber(roomSize),
         );
+        await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
+        await page.exposeFunction("getMinRoomSize", () => minRoomSize);
+        await page.exposeFunction("getMaxColdRent", () => maxColdRent);
+        await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
+
         await page.goto(deutscheWohnenUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
@@ -42,9 +47,10 @@ export const getDEUTSCHEWOHNENOffers = async () => {
                             item.querySelector(".object-list__detail-items") as HTMLElement
                         ).innerText?.split("|");
                         const size = specs[0];
-                        const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 0;
+                        const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 1000;
+                        const minRoomSize = await window.getMinRoomSize();
 
-                        const showItem = title && address && relevantDistrict && transformedSize > 62;
+                        const showItem = title && address && relevantDistrict && transformedSize > minRoomSize;
 
                         if (showItem) {
                             results.push({

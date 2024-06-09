@@ -4,9 +4,9 @@ import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
+import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
-export const howogeUrl =
-    "https://www.howoge.de/immobiliensuche/wohnungssuche.html?tx_howsite_json_list%5Bpage%5D=1&tx_howsite_json_list%5Blimit%5D=12&tx_howsite_json_list%5Blang%5D=&tx_howsite_json_list%5Bkiez%5D%5B%5D=Friedrichshain-Kreuzberg&tx_howsite_json_list%5Bkiez%5D%5B%5D=Mitte&tx_howsite_json_list%5Bkiez%5D%5B%5D=Lichtenberg&tx_howsite_json_list%5Bkiez%5D%5B%5D=Treptow-K%C3%B6penick&tx_howsite_json_list%5Bkiez%5D%5B%5D=Charlottenburg-Wilmersdorf&tx_howsite_json_list%5Bkiez%5D%5B%5D=Neuk%C3%B6lln&tx_howsite_json_list%5Bkiez%5D%5B%5D=Pankow&tx_howsite_json_list%5Bkiez%5D%5B%5D=Tempelhof-Sch%C3%B6neberg&tx_howsite_json_list%5Brooms%5D=2";
+export const howogeUrl = `https://www.howoge.de/immobiliensuche/wohnungssuche.html?tx_howsite_json_list%5Bpage%5D=1&tx_howsite_json_list%5Blimit%5D=12&tx_howsite_json_list%5Blang%5D=&tx_howsite_json_list%5Bkiez%5D%5B%5D=Friedrichshain-Kreuzberg&tx_howsite_json_list%5Bkiez%5D%5B%5D=Mitte&tx_howsite_json_list%5Bkiez%5D%5B%5D=Lichtenberg&tx_howsite_json_list%5Bkiez%5D%5B%5D=Treptow-K%C3%B6penick&tx_howsite_json_list%5Bkiez%5D%5B%5D=Charlottenburg-Wilmersdorf&tx_howsite_json_list%5Bkiez%5D%5B%5D=Neuk%C3%B6lln&tx_howsite_json_list%5Bkiez%5D%5B%5D=Pankow&tx_howsite_json_list%5Bkiez%5D%5B%5D=Tempelhof-Sch%C3%B6neberg&tx_howsite_json_list%5Brooms%5D=${minRoomSize}`;
 
 export const getHOWOGEOffers = async () => {
     try {
@@ -28,6 +28,12 @@ export const getHOWOGEOffers = async () => {
         await page.exposeFunction("transformSizeIntoValidNumber", (roomSize: string) =>
             transformSizeIntoValidNumber(roomSize),
         );
+
+        await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
+        await page.exposeFunction("getMinRoomSize", () => minRoomSize);
+        await page.exposeFunction("getMaxColdRent", () => maxColdRent);
+        await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
+
         await page.goto(howogeUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
@@ -49,15 +55,18 @@ export const getHOWOGEOffers = async () => {
                             ? 0
                             : Number((attributes[2] as HTMLElement | undefined)?.innerText || 0);
                         const size = isNewBuildingProject ? "" : (attributes[1] as HTMLElement | undefined)?.innerText;
-                        const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 0;
+                        const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 1000;
+
+                        const minRoomNumber = await window.getMinRoomNumber();
+                        const minRoomSize = await window.getMinRoomSize();
 
                         const showItem =
                             address &&
                             !containsDisqualifyingPattern &&
                             relevantDistrict &&
                             !isNewBuildingProject &&
-                            rooms !== 1 &&
-                            transformedSize > 62;
+                            rooms >= minRoomNumber &&
+                            transformedSize >= minRoomSize;
 
                         if (showItem) {
                             results.push({

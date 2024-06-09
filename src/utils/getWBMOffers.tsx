@@ -3,6 +3,7 @@ import { getBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
+import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
 export const wbmUrl = "https://www.wbm.de/wohnungen-berlin/angebote/";
 
@@ -23,6 +24,11 @@ export const getWBMOffers = async () => {
         await page.exposeFunction("transformSizeIntoValidNumber", (roomSize: string) =>
             transformSizeIntoValidNumber(roomSize),
         );
+        await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
+        await page.exposeFunction("getMinRoomSize", () => minRoomSize);
+        await page.exposeFunction("getMaxColdRent", () => maxColdRent);
+        await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
+
         await page.goto(wbmUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
@@ -46,8 +52,16 @@ export const getWBMOffers = async () => {
                             (item.querySelector(".main-property-rooms") as HTMLElement | undefined)?.innerText,
                         );
 
+                        const minRoomNumber = await window.getMinRoomNumber();
+                        const minRoomSize = await window.getMinRoomSize();
+
                         const showItem =
-                            title && address && !isWBS && relevantDistrict && roomNumber !== 1 && transformedSize > 58;
+                            title &&
+                            address &&
+                            !isWBS &&
+                            relevantDistrict &&
+                            roomNumber >= minRoomNumber &&
+                            transformedSize >= minRoomSize;
 
                         if (showItem) {
                             results.push({

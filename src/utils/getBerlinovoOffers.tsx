@@ -4,9 +4,9 @@ import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
+import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
-export const berlinovoUrl =
-    "https://www.berlinovo.de/de/wohnungen/suche?w%5B0%5D=wohnungen_wohnflaeche%3A%28min%3A67%2Cmax%3A105%2Call_min%3A67%2Call_max%3A105%29&w%5B1%5D=wohungen_region%3A6";
+export const berlinovoUrl = `https://www.berlinovo.de/de/wohnungen/suche?w%5B0%5D=wohnungen_wohnflaeche%3A%28min%3A${minRoomSize}%2Cmax%3A105%2Call_min%3A${minRoomSize}%2Call_max%3A105%29&w%5B1%5D=wohungen_region%3A6`;
 
 export const getBerlinovoOffers = async () => {
     try {
@@ -30,6 +30,11 @@ export const getBerlinovoOffers = async () => {
             transformSizeIntoValidNumber(roomSize),
         );
 
+        await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
+        await page.exposeFunction("getMinRoomSize", () => minRoomSize);
+        await page.exposeFunction("getMaxColdRent", () => maxColdRent);
+        await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
+
         await page.goto(berlinovoUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
@@ -51,9 +56,16 @@ export const getBerlinovoOffers = async () => {
                             item.querySelector(".block-field-blocknodeapartmentfield-rooms") as HTMLElement | undefined
                         )?.innerText.split(" ")[1];
 
-                        const transformedRooms = (await window.transformSizeIntoValidNumber(rooms)) || 0;
+                        const transformedRooms = (await window.transformSizeIntoValidNumber(rooms)) || 100;
 
-                        if (address && !containsDisqualifyingPattern && relevantDistrict && transformedRooms > 1) {
+                        const minRoomNumber = await window.getMinRoomNumber();
+
+                        if (
+                            address &&
+                            !containsDisqualifyingPattern &&
+                            relevantDistrict &&
+                            transformedRooms >= minRoomNumber
+                        ) {
                             results.push({
                                 address,
                                 id: item?.getAttribute("data-history-node-id") || address,

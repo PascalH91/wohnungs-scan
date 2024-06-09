@@ -13,5 +13,9 @@ declare global {
               }
             | undefined
         >;
+        getMinRoomSize(): Promise<number>;
+        getMinRoomNumber(): Promise<number>;
+        getMaxColdRent(): Promise<number>;
+        getMaxWarmRent(): Promise<number>;
     }
 }

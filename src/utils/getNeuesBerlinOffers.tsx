@@ -4,6 +4,7 @@ import { generateRandomUA } from "./generateRandomUserAgents";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
+import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
 export const neuesBerlinUrl = "https://www.neues-berlin.de/wohnen/wohnungsangebote";
 
@@ -28,6 +29,11 @@ export const getNeuesBerlinOffers = async () => {
             transformSizeIntoValidNumber(roomSize),
         );
 
+        await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
+        await page.exposeFunction("getMinRoomSize", () => minRoomSize);
+        await page.exposeFunction("getMaxColdRent", () => maxColdRent);
+        await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
+
         await page.goto(neuesBerlinUrl, { waitUntil: "networkidle2" });
 
         let data = await page.evaluate(async () => {
@@ -51,11 +57,18 @@ export const getNeuesBerlinOffers = async () => {
                         const address = (specs[0] as HTMLElement | undefined)?.innerText;
                         const relevantDistrict = await window.isInRelevantDistrict(address);
                         const rooms = (specs[1] as HTMLElement | undefined)?.innerText.split(" ")[0];
-                        const transformedRooms = (await window.transformSizeIntoValidNumber(rooms)) || 0;
+                        const transformedRooms = (await window.transformSizeIntoValidNumber(rooms)) || 100;
                         const size = (specs[2] as HTMLElement | undefined)?.innerText;
-                        const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 0;
+                        const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 1000;
 
-                        const showItem = address && relevantDistrict && transformedRooms !== 1 && transformedSize > 62;
+                        const minRoomNumber = await window.getMinRoomNumber();
+                        const minRoomSize = await window.getMinRoomSize();
+
+                        const showItem =
+                            address &&
+                            relevantDistrict &&
+                            transformedRooms >= minRoomNumber &&
+                            transformedSize >= minRoomSize;
 
                         if (showItem) {
                             results.push({
