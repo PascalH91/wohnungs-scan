@@ -244,6 +244,10 @@ const providerDetails: ProviderList = {
 };
 
 export const ProviderList = () => {
+    Object.values(providerDetails).map((provider) => {
+        console.log("=> ", provider.name.toUpperCase(), " url => " + provider.url);
+    });
+
     return (
         <div className={styles.providerListWrapper}>
             {Object.values(providerDetails).map((provider) => {
