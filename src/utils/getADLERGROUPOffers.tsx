@@ -36,6 +36,7 @@ export const getADLERGROUPOffers = async () => {
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
         await page.goto(adlergroupUrl, { waitUntil: "networkidle2" });
+        await page.waitForSelector("#search-results", { visible: true });
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;

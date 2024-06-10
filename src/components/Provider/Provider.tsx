@@ -76,6 +76,7 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
 
     useEffect(() => {
         if (run && fetchUrlByProvider[provider.id]) {
+            console.log(provider.url);
             const getOffers = async () => {
                 const res = await fetch(`/api/cron/${fetchUrlByProvider[provider.id]}`);
                 const {
@@ -226,7 +227,7 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
                         className={styles.entryTitle}
                         onClick={() => goToPage(`${provider.id}_multiPage`, provider.url)}
                     >
-                        📖 multiple pages
+                        📖📖📖📖📖📖 multiple pages 📖📖📖📖📖📖
                     </h2>
                 </div>
             )}

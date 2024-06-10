@@ -30,6 +30,7 @@ export const getDEUTSCHEWOHNENOffers = async () => {
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
         await page.goto(deutscheWohnenUrl, { waitUntil: "networkidle2" });
+        await page.waitForSelector(".object-list__items", { visible: true });
 
         let data = await page.evaluate(async () => {
             const isMultiPages = Array.from(document.querySelectorAll(".pagination li")).length > 3;
