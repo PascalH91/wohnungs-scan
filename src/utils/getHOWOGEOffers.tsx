@@ -35,6 +35,7 @@ export const getHOWOGEOffers = async () => {
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
         await page.goto(howogeUrl, { waitUntil: "networkidle2" });
+        await page.waitForSelector(".flat-search", { visible: true });
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;

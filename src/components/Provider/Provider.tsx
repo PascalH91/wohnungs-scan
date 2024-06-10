@@ -76,7 +76,7 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
 
     useEffect(() => {
         if (run && fetchUrlByProvider[provider.id]) {
-            console.log(provider.url);
+            // console.log(provider.url);
             const getOffers = async () => {
                 const res = await fetch(`/api/cron/${fetchUrlByProvider[provider.id]}`);
                 const {
@@ -84,7 +84,7 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
                     errors,
                 }: { data: { offers: Offer[]; isMultiPages: boolean }; errors: string } = await res.json();
 
-                const newOffers = offersRes.filter((oRes) => !offers.map((offer) => offer.id).includes(oRes.id));
+                const newOffers = offersRes?.filter((oRes) => !offers.map((offer) => offer.id).includes(oRes.id));
 
                 if ((!!errors && !errorToShow) || (!isMultiPages && isMultiPagesRes)) {
                     play();
@@ -92,7 +92,7 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
 
                 setIsMultiPages(isMultiPagesRes);
 
-                if (!!newOffers.length) {
+                if (!!newOffers?.length) {
                     const newOfferIdsThatHaventBeenVisited = newOffers
                         .map((offer) => offer.id)
                         .filter((id) => !visitedIds.includes(id));

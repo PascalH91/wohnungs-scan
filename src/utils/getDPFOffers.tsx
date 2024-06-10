@@ -58,17 +58,17 @@ export const getDPFOffers = async () => {
                         const rooms = (attributes[2] as HTMLElement | undefined)?.innerText.trim();
                         const transformedRooms = (await window.transformSizeIntoValidNumber(rooms)) || 100;
                         const price = (attributes[0] as HTMLElement | undefined)?.innerText.trim();
-                        const transformedPrice = (await window.transformPriceIntoValidNumber(price)) || 0;
+                        const transformedColdPrice = (await window.transformPriceIntoValidNumber(price)) || 0;
 
                         const minRoomNumber = await window.getMinRoomNumber();
                         const minRoomSize = await window.getMinRoomSize();
-                        const maxWarmRent = await window.getMaxWarmRent();
+                        const maxColdRent = await window.getMaxColdRent();
 
                         const showItem =
                             address &&
                             transformedSize >= minRoomSize &&
                             transformedRooms >= minRoomNumber &&
-                            transformedPrice <= maxWarmRent &&
+                            transformedColdPrice <= maxColdRent &&
                             relevantDistrict &&
                             link;
 

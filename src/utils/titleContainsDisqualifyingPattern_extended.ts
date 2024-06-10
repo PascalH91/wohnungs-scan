@@ -1,6 +1,6 @@
 export const titleContainsDisqualifyingPatternExtended = (inputString?: string) => {
     const pattern =
-        /ntermiete| befristet|ntervermietung|nterzuvermiete|Möbliert| möbliert|Befristet|UNTERMIETE|ZWISCHENMIETE|furnished|Furnished|subletting|Subletting|wischenmiete|wir suchen|WG Bewohner|WG-Wohnung|Kurzzeitmiete|Wir suchen/;
+        /ntermiete| befristet|ntervermietung|nterzuvermiete|Möbliert| möbliert| möbiliert|Befristet|UNTERMIETE|ZWISCHENMIETE|furnished|Furnished|subletting|Subletting|wischenmiete|wir suchen|WG Bewohner|WG-Wohnung|Kurzzeitmiete|Wir suchen/;
     const datumPattern =
         /(?:\bvom?\b|\b(?:vermieten|von|bis)\b)\s*(\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?)\s*(?:bis|-)\s*(\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?)/i;
 
