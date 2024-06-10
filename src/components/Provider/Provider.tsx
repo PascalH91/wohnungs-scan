@@ -107,7 +107,7 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
             };
             getOffers();
         }
-    }, [errorToShow, isMultiPages, offers, play, provider.id, run, visitedIds]);
+    }, [errorToShow, isMultiPages, offers, play, provider.id, provider.url, run, visitedIds]);
 
     useEffect(() => {
         if (!run) {

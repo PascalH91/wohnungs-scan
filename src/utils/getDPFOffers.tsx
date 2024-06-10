@@ -5,6 +5,7 @@ import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
+import { transformPrice } from "./transformPrice";
 
 export const dpfUrl = "https://www.dpfonline.de/interessenten/immobilien/";
 
@@ -27,6 +28,7 @@ export const getDPFOffers = async () => {
         await page.exposeFunction("transformSizeIntoValidNumber", (roomSize: string) =>
             transformSizeIntoValidNumber(roomSize),
         );
+        await page.exposeFunction("transformPriceIntoValidNumber", (price: string) => transformPrice(price));
 
         await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
         await page.exposeFunction("getMinRoomSize", () => minRoomSize);
@@ -55,14 +57,18 @@ export const getDPFOffers = async () => {
                         const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 1000;
                         const rooms = (attributes[2] as HTMLElement | undefined)?.innerText.trim();
                         const transformedRooms = (await window.transformSizeIntoValidNumber(rooms)) || 100;
+                        const price = (attributes[0] as HTMLElement | undefined)?.innerText.trim();
+                        const transformedPrice = (await window.transformPriceIntoValidNumber(price)) || 0;
 
                         const minRoomNumber = await window.getMinRoomNumber();
                         const minRoomSize = await window.getMinRoomSize();
+                        const maxWarmRent = await window.getMaxWarmRent();
 
                         const showItem =
                             address &&
                             transformedSize >= minRoomSize &&
                             transformedRooms >= minRoomNumber &&
+                            transformedPrice <= maxWarmRent &&
                             relevantDistrict &&
                             link;
 
