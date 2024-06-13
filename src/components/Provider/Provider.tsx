@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
 //@ts-ignore
 import { useSound } from "use-sound";
@@ -26,13 +26,13 @@ export type Offer = {
 };
 
 const fetchUrlByProvider: { [key in ProviderT]?: string } = {
+    HOWOGE: "howoge",
+    DEUTSCHE_WOHNEN: "deutschewohnen",
     WBM: "wbm",
     ADLERGROUP: "adlergroup",
     BERLINOVO: "berlinovo",
     FRIEDRICHSHEIM: "friedrichsheim",
     GEWOBAG: "gewobag",
-    DEUTSCHE_WOHNEN: "deutschewohnen",
-    HOWOGE: "howoge",
     DPF: "dpf",
     STADTUNDLAND: "stadtundland",
     DAGEWO: "dagewo",
@@ -50,12 +50,14 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     VINETA_89: "vineta_89",
     VONOVIA: "vonovia",
     EBAY_KLEINANZEIGEN: "ebay_kleinanzeigen",
-    IMMOSCOUT: "immoscout",
+    //IMMOSCOUT: "immoscout",
 };
 
-export const Provider = ({ provider }: { provider: ProviderDetails }) => {
+const Provider = ({ provider }: { provider: ProviderDetails }) => {
     const [play] = useSound(ringTone);
     const [number, setNumber] = useState<number>(0);
+    const [isInitialRender, setIsInitialRender] = useState<boolean>(true);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [run, setRun] = useState<boolean>(true);
     const [visitedIds, setVisitedIds] = useState<string[]>([]);
     const [newOfferIds, setNewOfferIds] = useState<string[]>([]);
@@ -75,7 +77,12 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
     );
 
     useEffect(() => {
-        if (run && fetchUrlByProvider[provider.id]) {
+        setIsInitialRender(false);
+    }, []);
+
+    useEffect(() => {
+        if (run && fetchUrlByProvider[provider.id] && !isLoading && !isInitialRender) {
+            setIsLoading(true);
             const getOffers = async () => {
                 const res = await fetch(`/api/cron/${fetchUrlByProvider[provider.id]}`);
                 const {
@@ -106,14 +113,13 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
             };
             getOffers();
         }
-    }, [errorToShow, isMultiPages, offers, play, provider.id, provider.url, run, visitedIds]);
+    }, [errorToShow, isLoading, isMultiPages, offers, play, provider.id, provider.url, run, visitedIds]);
 
     useEffect(() => {
         if (!run) {
             const getTimoutValue = (min: number = 25, maxBuffer: number = 20) => {
                 const minInMS = min * 1000;
                 const maxBufferInMS = (min + maxBuffer) * 1000;
-
                 const arbitraryFactorInMS = Math.floor(Math.random() * (maxBufferInMS - minInMS) + minInMS);
                 const timeOutValue = !!min && !!maxBuffer ? arbitraryFactorInMS : minInMS;
                 return timeOutValue;
@@ -122,6 +128,7 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
             setTimeout(
                 () => {
                     setRun(true);
+                    setIsLoading(false);
                 },
                 getTimoutValue(provider.refreshRateInSeconds, provider.additionalBufferInSeconds),
             );
@@ -233,3 +240,5 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
         </div>
     ) : null;
 };
+
+export default Provider;

@@ -34,12 +34,12 @@ export const getHOWOGEOffers = async () => {
         await page.exposeFunction("getMaxColdRent", () => maxColdRent);
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
-       const response = await page.goto(howogeUrl, { waitUntil: "networkidle2" });
+       const response = await page.goto(howogeUrl, { waitUntil: "networkidle2", timeout: 0 });
        if (response?.status() !== 200) {
            throw new Error(`${response?.status()} ${response?.statusText()}`);
        }
 
-        await page.waitForSelector(".flat-search", { visible: true });
+       await page.waitForSelector(".flat-search", { visible: true, timeout: 0 });
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;

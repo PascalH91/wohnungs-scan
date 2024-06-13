@@ -1,7 +1,7 @@
 import React from "react";
 
 import { ProviderDetails } from "../Providerlist";
-import { Provider } from "./Provider";
+import Provider from "./Provider";
 
 export type Offer = {
     id: string;
@@ -44,5 +44,6 @@ export type ProviderT =
 
 export const ProviderWrapper = ({ provider }: { provider: ProviderDetails }) => {
     const url = process.env.API_URL;
+    console.log("URL", url);
     return url ? <Provider provider={provider} /> : null;
 };

@@ -26,6 +26,7 @@ export const getBrowser = async () => {
             // "--ignore-certificate-errors",
             // "--ignore-certificate-errors-spki-list ",
         ],
+        // protocolTimeout: 10 * 60 * 1000,
         headless: true,
     });
     return browser;

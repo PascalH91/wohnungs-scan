@@ -35,7 +35,6 @@ export const getWBMOffers = async () => {
         }
 
         let data = await page.evaluate(async () => {
-            console.log(JSON.stringify(document, null, 2));
             const isMultiPages = Array.from(document.querySelectorAll(".pagination li")).length > 3;
 
             let results: Offer[] = [];
