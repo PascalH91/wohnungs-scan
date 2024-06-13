@@ -45,8 +45,8 @@ const providerDetails: ProviderList = {
         id: "WBM",
         name: "WBM",
         logo: "/images/wbm.jpg",
-        refreshRateInSeconds: 20,
-        additionalBufferInSeconds: 5,
+        refreshRateInSeconds: 45,
+        additionalBufferInSeconds: 10,
         url: wbmUrl,
     },
 
@@ -77,7 +77,7 @@ const providerDetails: ProviderList = {
         logo: "/images/howoge.png",
         url: howogeUrl,
     },
-    
+
     DPF: {
         id: "DPF",
         name: "dpf",
