@@ -12,6 +12,7 @@ export const getDEUTSCHEWOHNENOffers = async () => {
         const browser = await getBrowser();
 
         const page = await browser.newPage();
+        page.setDefaultNavigationTimeout(10 * 60 * 1000);
 
         // Custom user agent from generateRandomUA() function
         const customUA = generateRandomUA();
@@ -29,7 +30,10 @@ export const getDEUTSCHEWOHNENOffers = async () => {
         await page.exposeFunction("getMaxColdRent", () => maxColdRent);
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
-        await page.goto(deutscheWohnenUrl, { waitUntil: "networkidle2" });
+        const response = await page.goto(deutscheWohnenUrl, { waitUntil: "networkidle2" });
+        if (response?.status() !== 200) {
+            throw new Error(`${response?.status()} ${response?.statusText()}`);
+        }
         await page.waitForSelector(".object-list__items", { visible: true });
 
         let data = await page.evaluate(async () => {
@@ -71,7 +75,7 @@ export const getDEUTSCHEWOHNENOffers = async () => {
         browser.close();
         return { data, errors: "" };
     } catch (e: any) {
-        console.log("e =>", e);
-        return { data: [], errors: e };
+        console.log("e =>", e.message);
+        return { data: [], errors: e.message };
     }
 };

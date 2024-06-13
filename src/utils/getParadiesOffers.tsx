@@ -18,7 +18,10 @@ export const getParadiesOffers = async () => {
 
         page.on("console", (msg) => console.log(msg.text()));
 
-        await page.goto(paradiesUrl, { waitUntil: "networkidle2" });
+       const response = await page.goto(paradiesUrl, { waitUntil: "networkidle2" });
+       if (response?.status() !== 200) {
+           throw new Error(`${response?.status()} ${response?.statusText()}`);
+       }
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;
@@ -45,6 +48,6 @@ export const getParadiesOffers = async () => {
         return { data, errors: "" };
     } catch (e: any) {
         console.log("e =>", e);
-        return { data: [], errors: e };
+        return { data: [], errors: e.message };
     }
 };

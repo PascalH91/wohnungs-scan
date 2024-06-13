@@ -35,7 +35,10 @@ export const getADLERGROUPOffers = async () => {
         await page.exposeFunction("getMaxColdRent", () => maxColdRent);
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
-        await page.goto(adlergroupUrl, { waitUntil: "networkidle2" });
+       const response = await page.goto(adlergroupUrl, { waitUntil: "networkidle2" });
+       if (response?.status() !== 200) {
+           throw new Error(`${response?.status()} ${response?.statusText()}`);
+       }
         await page.waitForSelector("#search-results", { visible: true });
 
         let data = await page.evaluate(async () => {
@@ -75,6 +78,6 @@ export const getADLERGROUPOffers = async () => {
         return { data, errors: "" };
     } catch (e: any) {
         console.log("e =>", e);
-        return { data: [], errors: e.toString() };
+        return { data: [], errors: e.message };
     }
 };

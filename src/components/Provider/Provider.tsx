@@ -26,9 +26,9 @@ export type Offer = {
 };
 
 const fetchUrlByProvider: { [key in ProviderT]?: string } = {
+    WBM: "wbm",
     ADLERGROUP: "adlergroup",
     BERLINOVO: "berlinovo",
-    WBM: "wbm",
     FRIEDRICHSHEIM: "friedrichsheim",
     GEWOBAG: "gewobag",
     DEUTSCHE_WOHNEN: "deutschewohnen",
@@ -50,7 +50,7 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     VINETA_89: "vineta_89",
     VONOVIA: "vonovia",
     EBAY_KLEINANZEIGEN: "ebay_kleinanzeigen",
-    //IMMOSCOUT: "immoscout",
+    IMMOSCOUT: "immoscout",
 };
 
 export const Provider = ({ provider }: { provider: ProviderDetails }) => {
@@ -60,7 +60,7 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
     const [visitedIds, setVisitedIds] = useState<string[]>([]);
     const [newOfferIds, setNewOfferIds] = useState<string[]>([]);
     const [offers, setOffers] = useState<Offer[]>([]);
-    const [errorToShow, setErrorToShow] = useState<any | undefined>(undefined);
+    const [errorToShow, setErrorToShow] = useState<string | undefined>(undefined);
     const [isMultiPages, setIsMultiPages] = useState<boolean>(false);
 
     const goToPage = useCallback(
@@ -76,7 +76,6 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
 
     useEffect(() => {
         if (run && fetchUrlByProvider[provider.id]) {
-            // console.log(provider.url);
             const getOffers = async () => {
                 const res = await fetch(`/api/cron/${fetchUrlByProvider[provider.id]}`);
                 const {
@@ -84,7 +83,7 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
                     errors,
                 }: { data: { offers: Offer[]; isMultiPages: boolean }; errors: string } = await res.json();
 
-                const newOffers = offersRes?.filter((oRes) => !offers.map((offer) => offer.id).includes(oRes.id));
+                const newOffers = offersRes?.filter((oRes) => !offers?.map((offer) => offer.id).includes(oRes.id));
 
                 if ((!!errors && !errorToShow) || (!isMultiPages && isMultiPagesRes)) {
                     play();
@@ -155,7 +154,7 @@ export const Provider = ({ provider }: { provider: ProviderDetails }) => {
                     key={`error_${provider.name}`}
                     className={clsx(styles.houseEntry, { [styles.redBoarder]: true })}
                 >
-                    <div className={styles.blocked}>{`ERROR => ${errorToShow.name}`}</div>
+                    <div className={styles.blocked}>{`ERROR => ${errorToShow}`}</div>
                 </div>
             </div>
         </div>

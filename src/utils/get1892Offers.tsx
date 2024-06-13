@@ -9,7 +9,7 @@ export const get1892Offers = async () => {
         const browser = await getBrowser();
 
         const page = await browser.newPage();
-
+        page.setDefaultNavigationTimeout(10 * 60 * 1000);
         // Custom user agent from generateRandomUA() function
         const customUA = generateRandomUA();
 
@@ -18,7 +18,12 @@ export const get1892Offers = async () => {
 
         page.on("console", (msg) => console.log(msg.text()));
 
-        await page.goto(eg1892Url, { timeout: 2000, waitUntil: "domcontentloaded" });
+        const response = await page.goto(eg1892Url, { waitUntil: "networkidle2" });
+        if (response?.status() !== 200) {
+            throw new Error(`${response?.status()} ${response?.statusText()}`);
+        }
+
+        await page.waitForNavigation();
         await page.waitForSelector("#locationChoices", {
             visible: true,
         });
@@ -48,6 +53,6 @@ export const get1892Offers = async () => {
         return { data, errors: "" };
     } catch (e: any) {
         console.log("e =>", e);
-        return { data: [], errors: e };
+        return { data: [], errors: e.message };
     }
 };

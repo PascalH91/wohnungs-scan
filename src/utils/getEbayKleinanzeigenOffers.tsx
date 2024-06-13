@@ -35,7 +35,10 @@ export const getEbayKleinanzeigenOffers = async () => {
         await page.exposeFunction("getMaxColdRent", () => maxColdRent);
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
-        await page.goto(ebayKleinanzeigenUrl, { waitUntil: "networkidle2" });
+       const response = await page.goto(ebayKleinanzeigenUrl, { waitUntil: "networkidle2" });
+       if (response?.status() !== 200) {
+           throw new Error(`${response?.status()} ${response?.statusText()}`);
+       }
 
         let data = await page.evaluate(async () => {
             const isMultiPages = Array.from(document.querySelectorAll(".pagination span")).length > 1;
@@ -81,6 +84,6 @@ export const getEbayKleinanzeigenOffers = async () => {
         return { data, errors: "" };
     } catch (e: any) {
         console.log("e =>", e);
-        return { data: [], errors: e };
+        return { data: [], errors: e.message };
     }
 };

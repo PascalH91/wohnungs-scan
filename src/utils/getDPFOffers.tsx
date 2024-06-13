@@ -35,7 +35,10 @@ export const getDPFOffers = async () => {
         await page.exposeFunction("getMaxColdRent", () => maxColdRent);
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
-        await page.goto(dpfUrl, { waitUntil: "networkidle2" });
+       const response = await page.goto(dpfUrl, { waitUntil: "networkidle2" });
+       if (response?.status() !== 200) {
+           throw new Error(`${response?.status()} ${response?.statusText()}`);
+       }
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;
@@ -92,6 +95,6 @@ export const getDPFOffers = async () => {
         return { data, errors: "" };
     } catch (e: any) {
         console.log("e =>", e);
-        return { data: [], errors: e };
+        return { data: [], errors: e.message };
     }
 };

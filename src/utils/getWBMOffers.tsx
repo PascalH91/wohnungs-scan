@@ -29,9 +29,13 @@ export const getWBMOffers = async () => {
         await page.exposeFunction("getMaxColdRent", () => maxColdRent);
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
-        await page.goto(wbmUrl, { waitUntil: "networkidle2" });
+        const response = await page.goto(wbmUrl, { waitUntil: "networkidle2" });
+        if (response?.status() !== 200) {
+            throw new Error(`${response?.status()} ${response?.statusText()}`);
+        }
 
         let data = await page.evaluate(async () => {
+            console.log(JSON.stringify(document, null, 2));
             const isMultiPages = Array.from(document.querySelectorAll(".pagination li")).length > 3;
 
             let results: Offer[] = [];
@@ -76,12 +80,13 @@ export const getWBMOffers = async () => {
                         }
                     }),
                 ));
+
             return { offers: results, isMultiPages };
         });
         browser.close();
-        return { data, errors: "" };
+        return { data, errors: undefined };
     } catch (e: any) {
         console.log("e =>", e);
-        return { data: [], errors: e };
+        return { data: [], errors: e.message };
     }
 };

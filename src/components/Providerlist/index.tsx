@@ -45,8 +45,8 @@ const providerDetails: ProviderList = {
         id: "WBM",
         name: "WBM",
         logo: "/images/wbm.jpg",
-        refreshRateInSeconds: 45,
-        additionalBufferInSeconds: 10,
+        refreshRateInSeconds: 50,
+        additionalBufferInSeconds: 20,
         url: wbmUrl,
     },
 

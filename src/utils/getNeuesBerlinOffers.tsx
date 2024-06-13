@@ -34,7 +34,10 @@ export const getNeuesBerlinOffers = async () => {
         await page.exposeFunction("getMaxColdRent", () => maxColdRent);
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
-        await page.goto(neuesBerlinUrl, { waitUntil: "networkidle2" });
+       const response = await page.goto(neuesBerlinUrl, { waitUntil: "networkidle2" });
+       if (response?.status() !== 200) {
+           throw new Error(`${response?.status()} ${response?.statusText()}`);
+       }
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;
@@ -91,6 +94,6 @@ export const getNeuesBerlinOffers = async () => {
         return { data, errors: "" };
     } catch (e: any) {
         console.log("e =>", e);
-        return { data: [], errors: e };
+        return { data: [], errors: e.message };
     }
 };

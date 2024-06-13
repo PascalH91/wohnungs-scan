@@ -25,7 +25,11 @@ export const getGESOBAUOffers = async () => {
         await page.exposeFunction("containsDisqualifyingPattern", (title: string) =>
             titleContainsDisqualifyingPattern(title),
         );
-        await page.goto(gesobauUrl, { waitUntil: "networkidle2" });
+       const response = await page.goto(gesobauUrl, { waitUntil: "networkidle2" });
+       if (response?.status() !== 200) {
+           throw new Error(`${response?.status()} ${response?.statusText()}`);
+       }
+
         await page.waitForSelector(".documentContent__content", {
             visible: true,
         });
@@ -80,6 +84,6 @@ export const getGESOBAUOffers = async () => {
         return { data, errors: "" };
     } catch (e: any) {
         console.log("e =>", e);
-        return { data: [], errors: e };
+        return { data: [], errors: e.message };
     }
 };
