@@ -113,7 +113,18 @@ const Provider = ({ provider }: { provider: ProviderDetails }) => {
             };
             getOffers();
         }
-    }, [errorToShow, isLoading, isMultiPages, offers, play, provider.id, provider.url, run, visitedIds]);
+    }, [
+        errorToShow,
+        isInitialRender,
+        isLoading,
+        isMultiPages,
+        offers,
+        play,
+        provider.id,
+        provider.url,
+        run,
+        visitedIds,
+    ]);
 
     useEffect(() => {
         if (!run) {

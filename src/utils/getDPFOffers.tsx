@@ -7,7 +7,7 @@ import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 import { transformPrice } from "./transformPrice";
 
-export const dpfUrl = "https://www.dpfonline.de/interessenten/immobilien/";
+export const dpfUrl = "https://www.dpfonline.de/interessenten/angebote/";
 
 export const getDPFOffers = async () => {
     try {
@@ -35,10 +35,10 @@ export const getDPFOffers = async () => {
         await page.exposeFunction("getMaxColdRent", () => maxColdRent);
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
-       const response = await page.goto(dpfUrl, { waitUntil: "networkidle2" });
-       if (response?.status() !== 200) {
-           throw new Error(`${response?.status()} ${response?.statusText()}`);
-       }
+        const response = await page.goto(dpfUrl, { waitUntil: "networkidle2" });
+        if (response?.status() !== 200) {
+            throw new Error(`${response?.status()} ${response?.statusText()}`);
+        }
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;
