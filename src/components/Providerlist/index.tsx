@@ -135,7 +135,7 @@ const providerDetails: ProviderList = {
         id: "WBG_FRIEDRICHSHAIN_EG",
         name: "WBG Friedrichshain eG",
         logo: "/images/friedrichsheim.jpg",
-        refreshRateInSeconds: 900,
+        refreshRateInSeconds: 60,
         additionalBufferInSeconds: 30,
         url: FriedrichshainEGUrl,
     },
