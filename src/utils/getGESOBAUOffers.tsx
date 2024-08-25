@@ -5,7 +5,7 @@ import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
-export const gesobauUrl = `https://www.gesobau.de/mieten/wohnungssuche/?tx_solr[filter][]=zimmer:%27${minRoomNumber}-3%27&tx_solr[filter][]=wohnflaeche:%27${minRoomSize}-58%27`;
+export const gesobauUrl = `https://www.gesobau.de/mieten/wohnungssuche/?tx_solr[filter][]=zimmer:%27${minRoomNumber}-3%27&tx_solr[filter][]=wohnflaeche:%27${minRoomSize}-58%27&tx_solr[filter][]=warmmiete:%270-${maxWarmRent}%27`;
 
 export const getGESOBAUOffers = async () => {
     try {
@@ -25,10 +25,10 @@ export const getGESOBAUOffers = async () => {
         await page.exposeFunction("containsDisqualifyingPattern", (title: string) =>
             titleContainsDisqualifyingPattern(title),
         );
-       const response = await page.goto(gesobauUrl, { waitUntil: "networkidle2" });
-       if (response?.status() !== 200) {
-           throw new Error(`${response?.status()} ${response?.statusText()}`);
-       }
+        const response = await page.goto(gesobauUrl, { waitUntil: "networkidle2" });
+        if (response?.status() !== 200) {
+            throw new Error(`${response?.status()} ${response?.statusText()}`);
+        }
 
         await page.waitForSelector(".documentContent__content", {
             visible: true,
@@ -40,9 +40,9 @@ export const getGESOBAUOffers = async () => {
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
         let data = await page.evaluate(async () => {
-            let isMultiPages = false;
+            const isMultiPages = Array.from(document.querySelectorAll(".pagination li")).length > 1;
             let results: Offer[] = [];
-            let items = document.querySelectorAll(".basicTeaser__wrapper");
+            let items = document.querySelectorAll(".results-list .basicTeaser__wrapper");
 
             items &&
                 (await Promise.all(
