@@ -34,16 +34,16 @@ export const getNeuesBerlinOffers = async () => {
         await page.exposeFunction("getMaxColdRent", () => maxColdRent);
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
-       const response = await page.goto(neuesBerlinUrl, { waitUntil: "networkidle2" });
-       if (response?.status() !== 200) {
-           throw new Error(`${response?.status()} ${response?.statusText()}`);
-       }
+        const response = await page.goto(neuesBerlinUrl, { waitUntil: "networkidle2" });
+        if (response?.status() !== 200) {
+            throw new Error(`${response?.status()} ${response?.statusText()}`);
+        }
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;
             let results: Offer[] = [];
 
-            let items = document.querySelectorAll(".frame-type-nbtheme_openimmo");
+            let items = document.querySelectorAll(".frame-type-list");
 
             items &&
                 (await Promise.all(
@@ -80,7 +80,12 @@ export const getNeuesBerlinOffers = async () => {
                                 title,
                                 region:
                                     relevantDistrict?.district || address.split(", ")[address.split(", ").length - 1],
-                                link: `https://www.neues-berlin.de/wohnen/wohnungsangebote`,
+                                link:
+                                    `https://www.neues-berlin.de` +
+                                    item
+                                        .querySelector(".oi-wa-info")
+                                        ?.getElementsByTagName("a")[0]
+                                        .getAttribute("href"),
                                 size,
                                 rooms,
                             });

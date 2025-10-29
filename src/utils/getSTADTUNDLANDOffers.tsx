@@ -30,10 +30,10 @@ export const getSTADTUNDLANDOffers = async () => {
         await page.exposeFunction("getMaxColdRent", () => maxColdRent);
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
-       const response = await page.goto(stadtUndLandUrl, { waitUntil: "networkidle2" });
-       if (response?.status() !== 200) {
-           throw new Error(`${response?.status()} ${response?.statusText()}`);
-       }
+        const response = await page.goto(stadtUndLandUrl, { waitUntil: "networkidle2" });
+        if (response?.status() !== 200) {
+            throw new Error(`${response?.status()} ${response?.statusText()}`);
+        }
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;

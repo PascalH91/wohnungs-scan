@@ -5,7 +5,7 @@ import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
-export const deutscheWohnenUrl = `https://www.deutsche-wohnen.com/immobilienangebote#page=1&locale=de&commercializationType=rent&utilizationType=flat,retirement&location=10243&radius=10&area=${minRoomSize}&rooms=${minRoomNumber}`;
+export const deutscheWohnenUrl = `https://www.deutsche-wohnen.com/mieten/mietangebote?city=Berlin&furnished=0&seniorFriendly=0&subsidizedHousingPermit=egal&immoType=wohnung&priceMax=${maxColdRent}&sizeMin=${minRoomSize}&minRooms=${minRoomNumber}&floor=Beliebig&bathtub=0&bathwindow=0&bathshower=0&kitchenEBK=0&toiletSeparate=0&disabilityAccess=egal&balcony=egal&rentType=miete`;
 
 export const getDEUTSCHEWOHNENOffers = async () => {
     try {
@@ -34,23 +34,23 @@ export const getDEUTSCHEWOHNENOffers = async () => {
         if (response?.status() !== 200) {
             throw new Error(`${response?.status()} ${response?.statusText()}`);
         }
-        await page.waitForSelector(".object-list__items", { visible: true, timeout: 0 });
+        await page.waitForSelector(".teaser-xl-real-estate", { visible: true, timeout: 2000 });
 
         let data = await page.evaluate(async () => {
-            const isMultiPages = Array.from(document.querySelectorAll(".pagination li")).length > 3;
+            const isMultiPages = Number(document.querySelector(".pagination input")?.getAttribute("max")) > 3;
             let results: Offer[] = [];
-            let items = document.querySelectorAll(".object-list__item");
+            let items = document.querySelectorAll(".content-card");
 
             items &&
                 (await Promise.all(
                     Array.from(items).map(async (item) => {
                         const title = item.querySelector("h2")?.innerText;
-                        const address = (item.querySelector(".object-list__address") as HTMLElement).innerText;
+                        const address = (item.querySelector(".rte") as HTMLElement).innerText;
                         const relevantDistrict = await window.isInRelevantDistrict(address);
 
-                        const specs = (
-                            item.querySelector(".object-list__detail-items") as HTMLElement
-                        ).innerText?.split("|");
+                        const specs = (item.querySelector(".features-wrap .badge") as HTMLElement).innerText?.split(
+                            " ",
+                        );
                         const size = specs[0];
                         const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 1000;
                         const minRoomSize = await window.getMinRoomSize();

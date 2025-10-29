@@ -6,7 +6,7 @@ import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingP
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
-export const adlergroupUrl = `https://www.adler-group.com/suche/wohnung?geocodes=1276003001&livingspace=${minRoomSize}&numberofrooms=${minRoomNumber}-4&page=1&price=${maxWarmRent}&sortby=price`;
+export const adlergroupUrl = `https://www.adler-group.com/suche/wohnung?tx_adleropenimmo_filterbig%5Bsearch%5D%5BmaxPrice%5D=${maxWarmRent}&tx_adleropenimmo_filterbig%5Bsearch%5D%5Brooms%5D=${minRoomNumber}&tx_adleropenimmo_filterbig%5Bsearch%5D%5Bcity%5D=Berlin&tx_adleropenimmo_filterbig%5Bsearch%5D%5BminSurface%5D=${minRoomSize}`;
 
 export const getADLERGROUPOffers = async () => {
     try {
@@ -35,10 +35,10 @@ export const getADLERGROUPOffers = async () => {
         await page.exposeFunction("getMaxColdRent", () => maxColdRent);
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
-       const response = await page.goto(adlergroupUrl, { waitUntil: "networkidle2" });
-       if (response?.status() !== 200) {
-           throw new Error(`${response?.status()} ${response?.statusText()}`);
-       }
+        const response = await page.goto(adlergroupUrl, { waitUntil: "networkidle2" });
+        if (response?.status() !== 200) {
+            throw new Error(`${response?.status()} ${response?.statusText()}`);
+        }
         await page.waitForSelector("#search-results", { visible: true });
 
         let data = await page.evaluate(async () => {
@@ -62,10 +62,12 @@ export const getADLERGROUPOffers = async () => {
                                 id: item?.getAttribute("data-object-id") || address,
                                 title,
                                 region: relevantDistrict?.district || "",
-                                link: item
-                                    .querySelector(".object-headline")
-                                    ?.getElementsByTagName("a")[0]
-                                    .getAttribute("href"),
+                                link:
+                                    "https://www.adler-group.com/" +
+                                    item
+                                        .querySelector(".object-headline")
+                                        ?.getElementsByTagName("a")[0]
+                                        .getAttribute("href"),
                                 size: infoMap[1].split(" ")[0],
                                 rooms: infoMap[3].split(" ")[0],
                             });

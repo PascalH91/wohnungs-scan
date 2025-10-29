@@ -18,19 +18,19 @@ export const getWGVorwaertsOffers = async () => {
 
         page.on("console", (msg) => console.log(msg.text()));
 
-       const response = await page.goto(wgVorwaertsUrl, { waitUntil: "networkidle2" });
-       if (response?.status() !== 200) {
-           throw new Error(`${response?.status()} ${response?.statusText()}`);
-       }
+        const response = await page.goto(wgVorwaertsUrl, { waitUntil: "networkidle2" });
+        if (response?.status() !== 200) {
+            throw new Error(`${response?.status()} ${response?.statusText()}`);
+        }
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;
             let results: Offer[] = [];
 
-            let item = document.querySelector("#ContentContainer") as HTMLElement | undefined;
+            let item = document.querySelector(".entry-content") as HTMLElement | undefined;
 
             item &&
-                !item.innerText.includes("Sofern eine Wohnung verfügbar ist, wird sie hier eingestellt.") &&
+                !item.innerText.includes("Derzeit haben wir leider keine freien Wohnungen zur Verfügung.") &&
                 results.push({
                     address: "Neues Angebot",
                     id: "WG_VORWAERTS",

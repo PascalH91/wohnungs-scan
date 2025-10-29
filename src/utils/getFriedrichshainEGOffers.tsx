@@ -5,7 +5,7 @@ import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
 
-export const FriedrichshainEGUrl = "https://www.wbg-friedrichshain-eg.de/wohnungssuche/wohnungsangebote";
+export const FriedrichshainEGUrl = "https://wgf.berlin/services/wohnung-finden/#wohnung";
 
 export const getFriedrichshainEGOffers = async () => {
     try {
@@ -38,15 +38,16 @@ export const getFriedrichshainEGOffers = async () => {
             let isMultiPages = false;
             let results: Offer[] = [];
 
-            let items = document.querySelectorAll(".jea_item");
+            let items = document.querySelectorAll(".wohnungsangebot-card");
             items &&
                 (await Promise.all(
                     Array.from(items).map(async (item) => {
                         const itemInnerText = (item as HTMLElement).innerText;
-                        const title = item.querySelector("h3")?.innerText;
+                        const title = item.querySelector("h4")?.innerText;
                         const address = (item.querySelector("p") as HTMLElement | undefined)?.innerText;
 
                         const relevantDistrict = await window.isInRelevantDistrict(address);
+
                         const isWBS = itemInnerText.includes("- WBS erforderlich");
                         const roomNumber = itemInnerText.split("Zimmer:")[1][1];
                         const transformedRoomNumber = (await window.transformSizeIntoValidNumber(roomNumber)) || 0;
@@ -71,7 +72,7 @@ export const getFriedrichshainEGOffers = async () => {
                                 id: `${title.split(" ").join("_")}_${address.split(" ").join("_")}`,
                                 title: title,
                                 region: relevantDistrict?.district,
-                                link: `https://www.wbg-friedrichshain-eg.de${item.querySelector(".jea-list-text")?.getElementsByTagName("a")[0].getAttribute("href")}`,
+                                link: item.querySelector(".details-button")?.getAttribute("href"),
                                 size: roomSize,
                                 rooms: roomNumber,
                             });

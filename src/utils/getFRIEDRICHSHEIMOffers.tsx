@@ -2,7 +2,7 @@ import { Offer } from "@/components/Provider/index";
 import { generateRandomUA } from "./generateRandomUserAgents";
 import { getBrowser } from "./getBrowser";
 
-export const friedrichsheimUrl = "https://www.friedrichsheim-eg.de/category/freie-wohnungen/";
+export const friedrichsheimUrl = "https://www.friedrichsheim-eg.de/category/wohnungsangebote-fuer-alle/";
 
 export const getFRIEDRICHSHEIMOffers = async () => {
     try {
@@ -18,10 +18,10 @@ export const getFRIEDRICHSHEIMOffers = async () => {
 
         page.on("console", (msg) => console.log(msg.text()));
 
-       const response = await page.goto(friedrichsheimUrl, { waitUntil: "networkidle2" });
-       if (response?.status() !== 200) {
-           throw new Error(`${response?.status()} ${response?.statusText()}`);
-       }
+        const response = await page.goto(friedrichsheimUrl, { waitUntil: "networkidle2" });
+        if (response?.status() !== 200) {
+            throw new Error(`${response?.status()} ${response?.statusText()}`);
+        }
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;

@@ -42,13 +42,16 @@ export const getGESOBAUOffers = async () => {
         let data = await page.evaluate(async () => {
             const isMultiPages = Array.from(document.querySelectorAll(".pagination li")).length > 1;
             let results: Offer[] = [];
-            let items = document.querySelectorAll(".results-list .basicTeaser__wrapper");
+            let items = document.querySelectorAll(".basicTeaser__content");
+
+            console.log("LENGTH", items.length);
 
             items &&
                 (await Promise.all(
                     Array.from(items).map(async (item) => {
                         const address = (item.querySelector(".basicTeaser__text > span") as HTMLElement | undefined)
                             ?.innerText;
+
                         const relevantDistrict = await window.isInRelevantDistrict(address);
 
                         const title = (item.querySelector(".basicTeaser__title") as HTMLElement | undefined)?.innerText;
@@ -60,7 +63,7 @@ export const getGESOBAUOffers = async () => {
                             ?.getElementsByTagName("a")[0]
                             .getAttribute("href");
 
-                        const showItem = address && !containsDisqualifyingPattern && relevantDistrict && link;
+                        const showItem = !!(address && !containsDisqualifyingPattern && relevantDistrict && link);
 
                         if (showItem) {
                             results.push({
@@ -68,10 +71,12 @@ export const getGESOBAUOffers = async () => {
                                 id: item.getAttribute("id") || link,
                                 title,
                                 region: relevantDistrict?.district || "-",
-                                link: item
-                                    .querySelector(".basicTeaser__title")
-                                    ?.getElementsByTagName("a")[0]
-                                    .getAttribute("href"),
+                                link:
+                                    "https://www.gesobau.de" +
+                                    item
+                                        .querySelector(".basicTeaser__title")
+                                        ?.getElementsByTagName("a")[0]
+                                        .getAttribute("href"),
                                 size: attributes[1]?.innerHTML,
                                 rooms: +attributes[0]?.innerHTML.trim()[0],
                             });

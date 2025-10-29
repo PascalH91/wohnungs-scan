@@ -33,20 +33,24 @@ export const getVonoviaOffers = async () => {
         await page.exposeFunction("getMaxColdRent", () => maxColdRent);
         await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
 
-       const response = await page.goto(vonoviaUrl, { waitUntil: "networkidle2" });
-       if (response?.status() !== 200) {
-           throw new Error(`${response?.status()} ${response?.statusText()}`);
-       }
+        const response = await page.goto(vonoviaUrl, { waitUntil: "networkidle2" });
+        if (response?.status() !== 200) {
+            throw new Error(`${response?.status()} ${response?.statusText()}`);
+        }
+
+        await page.waitForSelector(".teasers", { visible: true });
 
         let data = await page.evaluate(async () => {
             let isMultiPages = false;
             let results: Offer[] = [];
-            let items = document.querySelectorAll(".teasers .content-card");
+
+            let items = document.querySelectorAll(".teasers .item");
 
             items &&
                 (await Promise.all(
                     Array.from(items).map(async (item) => {
                         const address = (item.querySelector(".rte") as HTMLElement | undefined)?.innerText;
+                        console.log(address);
                         const relevantDistrict = await window.isInRelevantDistrict(address);
                         const title = item.querySelector("h2")?.innerText;
                         const containsDisqualifyingPattern = await window.containsDisqualifyingPattern(title);

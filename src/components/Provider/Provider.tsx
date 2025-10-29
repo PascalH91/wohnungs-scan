@@ -34,7 +34,6 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     FRIEDRICHSHEIM: "friedrichsheim",
     GEWOBAG: "gewobag",
     DPF: "dpf",
-    STADTUNDLAND: "stadtundland",
     DAGEWO: "dagewo",
     GESOBAU: "gesobau",
     SOLIDARITAET: "solidaritaet",
@@ -44,12 +43,15 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     PARADIES: "paradies",
     WG_VORWAERTS: "wg_vorwaerts",
     FORUM_KREUZBERG: "forum_kreuzberg",
-    EVM: "evm",
     EG_1892: "1892",
     VATERLAND: "vaterland",
     VINETA_89: "vineta_89",
     VONOVIA: "vonovia",
     EBAY_KLEINANZEIGEN: "ebay_kleinanzeigen",
+
+    //TODO: check Stadt und Land
+    //STADTUNDLAND: "stadtundland",
+    // EVM: "evm",
     //IMMOSCOUT: "immoscout",
 };
 
