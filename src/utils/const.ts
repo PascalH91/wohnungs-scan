@@ -2,7 +2,7 @@
 export const minRoomSize = 80;
 export const minRoomNumber = 3;
 export const maxColdRent = 1900;
-export const maxWarmRent = 2300;
+export const maxWarmRent = 2000;
 
 // TEST
 // export const minRoomSize = 30;
