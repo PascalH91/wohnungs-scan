@@ -165,6 +165,7 @@ const Provider = ({ provider }: { provider: ProviderDetails }) => {
                             src={provider.logo}
                             alt={provider.id}
                             style={{ width: "auto" }}
+                            onClick={() => goToPage(`${provider.id}_icon`, provider.url)}
                         />
                     </div>
                 )}
