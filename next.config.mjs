@@ -21,7 +21,9 @@ const nextConfig = {
                 "puppeteer-core": false,
                 puppeteer: false,
                 "@sparticuz/chromium": false,
+                "@sparticuz/chromium-min": false,
                 "locate-chrome": false,
+                "@vertx/core": false,
             };
         }
 
@@ -38,6 +40,7 @@ const nextConfig = {
             child_process: false,
             net: false,
             tls: false,
+            vertx: false,
         };
         return config;
     },

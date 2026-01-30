@@ -13,6 +13,9 @@ chromium.setGraphicsMode = false;
 const CHROMIUM_PATH =
     "https://vomrghiulbmrfvmhlflk.supabase.co/storage/v1/object/public/chromium-pack/chromium-v123.0.0-pack.tar";
 
+// Detect if running in Vercel or other serverless environment
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+
 interface BrowserInstance {
     browser: Browser;
     inUse: boolean;
@@ -35,15 +38,24 @@ class BrowserPool {
     }
 
     private async createBrowserInstance(): Promise<BrowserInstance> {
-        const executablePath: string | undefined = await new Promise((resolve) =>
-            locateChrome((arg: any) => resolve(arg)),
-        );
+        let executablePath: string | undefined;
+
+        if (isServerless) {
+            // Use @sparticuz/chromium in serverless environments
+            executablePath = await chromium.executablePath(CHROMIUM_PATH);
+            logger.info("Using @sparticuz/chromium for serverless environment");
+        } else {
+            // Use locate-chrome in local development
+            executablePath = await new Promise((resolve) => locateChrome((arg: any) => resolve(arg)));
+        }
 
         logger.info("Creating new browser instance", { currentPoolSize: this.instances.length });
 
         const browser = await puppeteerCore.launch({
             executablePath,
-            args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
+            args: isServerless
+                ? chromium.args
+                : ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
             headless: true,
             timeout: config.browserPool.acquireTimeoutMillis,
         });
