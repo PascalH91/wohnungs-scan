@@ -53,6 +53,10 @@ const nextConfig = {
     },
     distDir: process.env.NODE_ENV === "development" ? ".next/dev" : ".next/build",
 
+    // Skip static generation for API routes - they should only run at runtime
+    skipTrailingSlashRedirect: true,
+    skipMiddlewareUrlNormalize: true,
+
     experimental: {
         serverComponentsExternalPackages: [
             "puppeteer-core",

@@ -1,3 +1,6 @@
+// Force dynamic rendering - prevent static generation during build
+export const dynamic = "force-dynamic";
+
 import { ScraperResponse } from "@/types";
 import { getEbayKleinanzeigenOffers } from "@/utils/getEbayKleinanzeigenOffers";
 import { NextResponse } from "next/server";

@@ -1,3 +1,6 @@
+// Force dynamic rendering - prevent static generation during build
+export const dynamic = "force-dynamic";
+
 import { ScraperResponse } from "@/types";
 import { getVineta89Offers } from "@/utils/getVineta89Offers";
 import { NextResponse } from "next/server";

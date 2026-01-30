@@ -1,3 +1,6 @@
+// Force dynamic rendering - prevent static generation during build
+export const dynamic = "force-dynamic";
+
 import { ScraperResponse } from "@/types";
 import { getParadiesOffers } from "@/utils/getParadiesOffers";
 import { NextResponse } from "next/server";
