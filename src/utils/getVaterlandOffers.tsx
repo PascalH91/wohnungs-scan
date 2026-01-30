@@ -1,52 +1,35 @@
-import { Offer } from "@/components/Provider/index";
-import { getBrowser } from "./getBrowser";
-import { generateRandomUA } from "./generateRandomUserAgents";
+import { Offer } from "@/types";
+import { config } from "@/config";
+import { createScraper } from "./baseScraper";
+import { Page } from "puppeteer-core";
+import { vaterlandUrl } from "./providerUrls";
 
-export const vaterlandUrl = "https://www.bg-vaterland.de/index.php?id=31";
+const { minRoomSize, minRoomNumber, maxColdRent, maxWarmRent } = config.apartment;
 
-export const getVaterlandOffers = async () => {
-    try {
-        const browser = await getBrowser();
+async function extractVaterlandOffers(page: Page): Promise<{ offers: Offer[]; isMultiPages: boolean }> {
+    return await page.evaluate(async () => {
+        let isMultiPages = false;
+        let results: Offer[] = [];
 
-        const page = await browser.newPage();
+        let item = document.querySelector("#content") as HTMLElement | undefined;
+        item &&
+            !item.innerText.includes("Momentan können wir Ihnen keine freien Wohnungen anbieten.") &&
+            results.push({
+                address: "Neues Angebot",
+                id: "VATERLAND",
+                title: "Neues Angebot",
+                region: "-",
+                link: "https://www.bg-vaterland.de/index.php?id=31",
+                size: "0",
+                rooms: 0,
+            });
 
-        // Custom user agent from generateRandomUA() function
-        const customUA = generateRandomUA();
+        return { offers: results, isMultiPages };
+    });
+}
 
-        // Set custom user agent
-        await page.setUserAgent(customUA);
-
-        page.on("console", (msg) => console.log(msg.text()));
-
-       const response = await page.goto(vaterlandUrl, { waitUntil: "networkidle2" });
-       if (response?.status() !== 200) {
-           throw new Error(`${response?.status()} ${response?.statusText()}`);
-       }
-
-        let data = await page.evaluate(async () => {
-            let isMultiPages = false;
-            let results: Offer[] = [];
-
-            let item = document.querySelector("#content") as HTMLElement | undefined;
-            item &&
-                !item.innerText.includes("Momentan können wir Ihnen keine freien Wohnungen anbieten.") &&
-                results.push({
-                    address: "Neues Angebot",
-                    id: "VATERLAND",
-                    title: "Neues Angebot",
-                    region: "-",
-                    link: "https://www.bg-vaterland.de/index.php?id=31",
-                    size: "0",
-                    rooms: 0,
-                });
-
-            return { offers: results, isMultiPages };
-        });
-
-        browser.close();
-        return { data, errors: "" };
-    } catch (e: any) {
-        console.log("e =>", e);
-        return { data: [], errors: e.message };
-    }
-};
+export const getVaterlandOffers = createScraper({
+    providerName: "Vaterland",
+    url: vaterlandUrl,
+    extractOffers: extractVaterlandOffers,
+});

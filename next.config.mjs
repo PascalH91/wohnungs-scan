@@ -1,11 +1,6 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-    chrome: {
-        launchOptions: {
-            args: ["--no-sandbox"],
-        },
-    },
     webpack(config, options) {
         config.module.rules.push({
             test: /\.(ogg|mp3|wav|mpe?g)$/i,
@@ -18,16 +13,31 @@ const nextConfig = {
                 },
             ],
         });
+
+        // Exclude puppeteer packages from client-side bundle
+        if (!options.isServer) {
+            config.resolve.alias = {
+                ...config.resolve.alias,
+                "puppeteer-core": false,
+                puppeteer: false,
+                "@sparticuz/chromium": false,
+                "locate-chrome": false,
+            };
+        }
+
         config.externals.push({
             "utf-8-validate": "commonjs utf-8-validate",
             bufferutil: "commonjs bufferutil",
         });
+
         config.resolve.fallback = {
             // if you miss it, all the other options in fallback, specified
             // by next.js will be dropped.
             ...config.resolve.fallback,
-
-            fs: false, // the solution
+            fs: false,
+            child_process: false,
+            net: false,
+            tls: false,
         };
         return config;
     },
@@ -41,7 +51,12 @@ const nextConfig = {
     distDir: process.env.NODE_ENV === "development" ? ".next/dev" : ".next/build",
 
     experimental: {
-        serverComponentsExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
+        serverComponentsExternalPackages: [
+            "puppeteer-core",
+            "puppeteer",
+            "@sparticuz/chromium",
+            "@sparticuz/chromium-min",
+        ],
         externalDir: true,
     },
     async headers() {

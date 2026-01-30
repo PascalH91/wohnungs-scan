@@ -1,11 +1,10 @@
-//PROD
-export const minRoomSize = 80;
-export const minRoomNumber = 3;
-export const maxColdRent = 1900;
-export const maxWarmRent = 2000;
+/**
+ * @deprecated Use config from '@/config' instead
+ * These exports are kept for backward compatibility during migration
+ */
+import { config } from "@/config";
 
-// TEST
-// export const minRoomSize = 30;
-// export const minRoomNumber = 1;
-// export const maxColdRent = 1900;
-// export const maxWarmRent = 2300;
+export const minRoomSize = config.apartment.minRoomSize;
+export const minRoomNumber = config.apartment.minRoomNumber;
+export const maxColdRent = config.apartment.maxColdRent;
+export const maxWarmRent = config.apartment.maxWarmRent;

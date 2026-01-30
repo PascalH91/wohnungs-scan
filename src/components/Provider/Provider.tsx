@@ -1,10 +1,8 @@
 "use client";
 
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-//@ts-ignore
-import { useSound } from "use-sound";
-//@ts-ignore
+import useSound from "use-sound";
 import ringTone from "../../../public/sounds/ring.mp3";
 import Image from "next/image";
 
@@ -12,23 +10,12 @@ import styles from "./provider.module.scss";
 import { ProviderT } from "./index";
 import { ProviderDetails } from "../Providerlist/index";
 import { transformAddressToGoogleMapsLink } from "@/utils/transformAdressToLink";
-
-export type Offer = {
-    id: string;
-    address: string;
-    title?: string;
-    region?: string;
-    link?: string | null;
-    size?: string;
-    rooms?: number | string;
-    blocked?: boolean;
-    daysUntilAccessible?: number;
-};
+import { Offer } from "@/types";
 
 const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     HOWOGE: "howoge",
     DEUTSCHE_WOHNEN: "deutschewohnen",
-    WBM: "wbm",
+    // WBM: "wbm",
     ADLERGROUP: "adlergroup",
     BERLINOVO: "berlinovo",
     FRIEDRICHSHEIM: "friedrichsheim",
@@ -48,24 +35,39 @@ const fetchUrlByProvider: { [key in ProviderT]?: string } = {
     VINETA_89: "vineta_89",
     VONOVIA: "vonovia",
     EBAY_KLEINANZEIGEN: "ebay_kleinanzeigen",
-
     //TODO: check Stadt und Land
-    //STADTUNDLAND: "stadtundland",
-    // EVM: "evm",
+    STADTUNDLAND: "stadtundland",
+    EVM: "evm",
     //IMMOSCOUT: "immoscout",
 };
 
-const Provider = ({ provider }: { provider: ProviderDetails }) => {
+const Provider = ({
+    provider,
+    isMonitoringActive = false,
+    soundEnabled = false,
+}: {
+    provider: ProviderDetails;
+    isMonitoringActive?: boolean;
+    soundEnabled?: boolean;
+}) => {
     const [play] = useSound(ringTone);
     const [number, setNumber] = useState<number>(0);
     const [isInitialRender, setIsInitialRender] = useState<boolean>(true);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [run, setRun] = useState<boolean>(true);
+    const [run, setRun] = useState<boolean>(false);
     const [visitedIds, setVisitedIds] = useState<string[]>([]);
     const [newOfferIds, setNewOfferIds] = useState<string[]>([]);
     const [offers, setOffers] = useState<Offer[]>([]);
     const [errorToShow, setErrorToShow] = useState<string | undefined>(undefined);
     const [isMultiPages, setIsMultiPages] = useState<boolean>(false);
+    const [hasLoadedInitialOffers, setHasLoadedInitialOffers] = useState<boolean>(false);
+    const [abortController, setAbortController] = useState<AbortController | null>(null);
+    const isMonitoringActiveRef = useRef<boolean>(isMonitoringActive);
+
+    // Keep ref in sync with prop
+    useEffect(() => {
+        isMonitoringActiveRef.current = isMonitoringActive;
+    }, [isMonitoringActive]);
 
     const goToPage = useCallback(
         (id: string, url?: string | null) => {
@@ -82,71 +84,128 @@ const Provider = ({ provider }: { provider: ProviderDetails }) => {
         setIsInitialRender(false);
     }, []);
 
+    // Start monitoring when global monitoring is activated
     useEffect(() => {
-        if (run && fetchUrlByProvider[provider.id] && !isLoading && !isInitialRender) {
-            setIsLoading(true);
-            const getOffers = async () => {
-                const res = await fetch(`/api/cron/${fetchUrlByProvider[provider.id]}`);
+        if (isMonitoringActive && !run && !isLoading) {
+            setRun(true);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isMonitoringActive]);
+
+    // Stop monitoring when global monitoring is deactivated
+    useEffect(() => {
+        if (!isMonitoringActive) {
+            // Abort any in-flight requests
+            if (abortController) {
+                abortController.abort();
+                setAbortController(null);
+            }
+            setRun(false);
+            setIsLoading(false);
+        }
+    }, [isMonitoringActive, abortController]);
+
+    useEffect(() => {
+        if (!run || !fetchUrlByProvider[provider.id] || isLoading || isInitialRender) {
+            return;
+        }
+
+        setIsLoading(true);
+        const controller = new AbortController();
+        setAbortController(controller);
+
+        const getOffers = async () => {
+            try {
+                const res = await fetch(`/api/cron/${fetchUrlByProvider[provider.id]}`, {
+                    signal: controller.signal,
+                });
                 const {
                     data: { offers: offersRes, isMultiPages: isMultiPagesRes },
                     errors,
                 }: { data: { offers: Offer[]; isMultiPages: boolean }; errors: string } = await res.json();
 
-                const newOffers = offersRes?.filter((oRes) => !offers?.map((offer) => offer.id).includes(oRes.id));
+                const existingIds = new Set(offers.map((offer) => offer.id));
+                const newOffers = offersRes?.filter((oRes) => !existingIds.has(oRes.id));
 
-                if ((!!errors && !errorToShow) || (!isMultiPages && isMultiPagesRes)) {
+                // Play sound on errors or multi-page detection (only if sound enabled)
+                if (soundEnabled && ((!!errors && !errorToShow) || (!isMultiPages && isMultiPagesRes))) {
                     play();
                 }
 
                 setIsMultiPages(isMultiPagesRes);
 
-                if (!!newOffers?.length) {
-                    const newOfferIdsThatHaventBeenVisited = newOffers
-                        .map((offer) => offer.id)
-                        .filter((id) => !visitedIds.includes(id));
-
-                    !!newOfferIdsThatHaventBeenVisited.length && play();
-                    setNewOfferIds((ids) => [...ids, ...newOffers.map((offer) => offer.id)]);
+                // Play sound for initial offers load (only if sound enabled)
+                if (soundEnabled && !hasLoadedInitialOffers && offersRes?.length) {
+                    play();
+                    setHasLoadedInitialOffers(true);
                 }
+
+                // Play sound for new unvisited offers (only after initial load and if sound enabled)
+                if (soundEnabled && hasLoadedInitialOffers && newOffers?.length) {
+                    const visitedSet = new Set(visitedIds);
+                    const newUnvisitedOffers = newOffers.filter((offer) => !visitedSet.has(offer.id));
+
+                    if (newUnvisitedOffers.length) {
+                        play();
+                        setNewOfferIds((ids) => [...ids, ...newUnvisitedOffers.map((offer) => offer.id)]);
+                    }
+                }
+
                 setErrorToShow(errors);
-                setOffers(offersRes as Offer[]);
+                setOffers(offersRes || []);
                 setNumber(Math.floor(Math.random() * 10));
+            } catch (error: any) {
+                // Ignore abort errors - these are expected when monitoring is turned off
+                if (error.name === "AbortError") {
+                    console.log(`Fetch aborted for ${provider.name}`);
+                    return;
+                }
+                console.error(`Failed to fetch offers for ${provider.name}:`, error);
+                setErrorToShow(String(error));
+            } finally {
                 setRun(false);
-            };
-            getOffers();
-        }
-    }, [
-        errorToShow,
-        isInitialRender,
-        isLoading,
-        isMultiPages,
-        offers,
-        play,
-        provider.id,
-        provider.url,
-        run,
-        visitedIds,
-    ]);
+                setIsLoading(false);
+                setAbortController(null);
+            }
+        };
+
+        getOffers();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [run, isInitialRender, provider.id]);
 
     useEffect(() => {
-        if (!run) {
-            const getTimoutValue = (min: number = 25, maxBuffer: number = 20) => {
-                const minInMS = min * 1000;
-                const maxBufferInMS = (min + maxBuffer) * 1000;
-                const arbitraryFactorInMS = Math.floor(Math.random() * (maxBufferInMS - minInMS) + minInMS);
-                const timeOutValue = !!min && !!maxBuffer ? arbitraryFactorInMS : minInMS;
-                return timeOutValue;
-            };
-
-            setTimeout(
-                () => {
-                    setRun(true);
-                    setIsLoading(false);
-                },
-                getTimoutValue(provider.refreshRateInSeconds, provider.additionalBufferInSeconds),
-            );
+        // Only schedule next fetch if we're not currently running and monitoring is active
+        if (run || !isMonitoringActive || isInitialRender) {
+            return;
         }
-    }, [run, provider.id, provider.refreshRateInSeconds, provider.additionalBufferInSeconds]);
+
+        const getTimoutValue = (min: number = 25, maxBuffer: number = 20) => {
+            const minInMS = min * 1000;
+            const maxBufferInMS = (min + maxBuffer) * 1000;
+            const arbitraryFactorInMS = Math.floor(Math.random() * (maxBufferInMS - minInMS) + minInMS);
+            const timeOutValue = !!min && !!maxBuffer ? arbitraryFactorInMS : minInMS;
+            return timeOutValue;
+        };
+
+        const timeoutId = setTimeout(
+            () => {
+                // Double-check monitoring is still active when timeout fires
+                if (isMonitoringActiveRef.current && !run) {
+                    setRun(true);
+                }
+            },
+            getTimoutValue(provider.refreshRateInSeconds, provider.additionalBufferInSeconds),
+        );
+
+        return () => clearTimeout(timeoutId);
+    }, [
+        run,
+        isMonitoringActive,
+        isInitialRender,
+        provider.id,
+        provider.refreshRateInSeconds,
+        provider.additionalBufferInSeconds,
+    ]);
 
     return errorToShow ? (
         <div

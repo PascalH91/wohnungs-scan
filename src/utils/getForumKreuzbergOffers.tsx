@@ -1,53 +1,36 @@
-import { Offer } from "@/components/Provider/index";
-import { getBrowser } from "./getBrowser";
-import { generateRandomUA } from "./generateRandomUserAgents";
+import { Offer } from "@/types";
+import { config } from "@/config";
+import { createScraper } from "./baseScraper";
+import { Page } from "puppeteer-core";
+import { forumKreuzbergUrl } from "./providerUrls";
 
-export const forumKreuzbergUrl = "https://forumkreuzberg.de/s/wohnen/wohnungsangebote/";
+const { minRoomSize, minRoomNumber, maxColdRent, maxWarmRent } = config.apartment;
 
-export const getForumKreuzbergOffers = async () => {
-    try {
-        const browser = await getBrowser();
+async function extractForumKreuzbergOffers(page: Page): Promise<{ offers: Offer[]; isMultiPages: boolean }> {
+    return await page.evaluate(async () => {
+        let isMultiPages = false;
+        let results: Offer[] = [];
 
-        const page = await browser.newPage();
+        let item = document.querySelector(".content") as HTMLElement | undefined;
 
-        // Custom user agent from generateRandomUA() function
-        const customUA = generateRandomUA();
+        item &&
+            !item.innerText.includes("Es sind auf absehbare Zeit leider keine Wohnungen verfübar") &&
+            results.push({
+                address: "Neues Angebot",
+                id: "FORUM_KREUZBERG",
+                title: "Neues Angebot",
+                region: "-",
+                link: "https://forumkreuzberg.de/s/wohnen/wohnungsangebote/",
+                size: "0",
+                rooms: 0,
+            });
 
-        // Set custom user agent
-        await page.setUserAgent(customUA);
+        return { offers: results, isMultiPages };
+    });
+}
 
-        page.on("console", (msg) => console.log(msg.text()));
-
-       const response = await page.goto(forumKreuzbergUrl, { waitUntil: "networkidle2" });
-       if (response?.status() !== 200) {
-           throw new Error(`${response?.status()} ${response?.statusText()}`);
-       }
-
-        let data = await page.evaluate(async () => {
-            let isMultiPages = false;
-            let results: Offer[] = [];
-
-            let item = document.querySelector(".content") as HTMLElement | undefined;
-
-            item &&
-                !item.innerText.includes("Es sind auf absehbare Zeit leider keine Wohnungen verfübar") &&
-                results.push({
-                    address: "Neues Angebot",
-                    id: "FORUM_KREUZBERG",
-                    title: "Neues Angebot",
-                    region: "-",
-                    link: "https://forumkreuzberg.de/s/wohnen/wohnungsangebote/",
-                    size: "0",
-                    rooms: 0,
-                });
-
-            return { offers: results, isMultiPages };
-        });
-
-        browser.close();
-        return { data, errors: "" };
-    } catch (e: any) {
-        console.log("e =>", e);
-        return { data: [], errors: e.message };
-    }
-};
+export const getForumKreuzbergOffers = createScraper({
+    providerName: "Forum Kreuzberg",
+    url: forumKreuzbergUrl,
+    extractOffers: extractForumKreuzbergOffers,
+});
