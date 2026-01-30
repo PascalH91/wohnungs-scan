@@ -51,7 +51,8 @@ const nextConfig = {
             fullUrl: true,
         },
     },
-    distDir: process.env.NODE_ENV === "development" ? ".next/dev" : ".next/build",
+    // Use default Next.js dist directory to be compatible with Vercel
+    distDir: ".next",
 
     // Skip static generation for API routes - they should only run at runtime
     skipTrailingSlashRedirect: true,
