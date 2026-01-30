@@ -22,7 +22,7 @@ async function extractEbayKleinanzeigenOffers(page: Page): Promise<{ offers: Off
                 Array.from(items).map(async (item) => {
                     const address = (item.querySelector(".aditem-main--top--left") as HTMLElement)?.innerText;
                     const relevantDistrict = await window.isInRelevantDistrict(address);
-                    const title = item.querySelector("h2")?.innerText;
+                    const title = item.querySelector("h2")?.innerText ?? "";
                     const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
                     const containsDisqualifyingPatternExtended =
                         await window.containsDisqualifyingPatternExtended(title);

@@ -22,7 +22,7 @@ async function extractGESOBAUOffers(page: Page): Promise<{ offers: Offer[]; isMu
 
                     const relevantDistrict = await window.isInRelevantDistrict(address);
 
-                    const title = (item.querySelector(".basicTeaser__title") as HTMLElement | undefined)?.innerText;
+                    const title = (item.querySelector(".basicTeaser__title") as HTMLElement | null)?.innerText ?? "";
                     const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
                     const attributes = item.querySelectorAll(".apartment__info > span");
 

@@ -22,7 +22,7 @@ async function extractVonoviaOffers(page: Page): Promise<{ offers: Offer[]; isMu
                     const address = (item.querySelector(".rte") as HTMLElement | undefined)?.innerText;
                     console.log(address);
                     const relevantDistrict = await window.isInRelevantDistrict(address);
-                    const title = item.querySelector("h2")?.innerText;
+                    const title = item.querySelector("h2")?.innerText ?? "";
                     const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
                     const price = (item.querySelector(".price") as HTMLElement | undefined)?.innerText;
                     const transformedPrice = (await window.transformPriceIntoValidNumber(price)) || 0;

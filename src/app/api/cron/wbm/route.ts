@@ -1,8 +1,8 @@
-import { Offer } from "@/components/Provider";
+import { ScraperResponse } from "@/types";
 import { getWBMOffers } from "@/utils/getWBMOffers";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(): Promise<NextResponse<ScraperResponse>> {
     const data = await getWBMOffers();
-    return NextResponse.json(data) as NextResponse<{ data: Offer[]; errors: string }>;
+    return NextResponse.json(data);
 }

@@ -16,7 +16,7 @@ async function extractHOWOGEOffers(page: Page): Promise<{ offers: Offer[]; isMul
             (await Promise.all(
                 Array.from(items).map(async (item: Element) => {
                     const address = (item.querySelector(".address") as HTMLElement | undefined)?.innerText;
-                    const title = (item.querySelector(".notice") as HTMLElement | undefined)?.innerText;
+                    const title = (item.querySelector(".notice") as HTMLElement | null)?.innerText ?? "";
                     const relevantDistrict = await window.isInRelevantDistrict(address);
                     const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
                     const attributes = item.querySelectorAll(".attributes > div .attributes-content");

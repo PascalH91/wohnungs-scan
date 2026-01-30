@@ -15,7 +15,7 @@ async function extractSTADTUNDLANDOffers(page: Page): Promise<{ offers: Offer[];
         items &&
             (await Promise.all(
                 Array.from(items).map(async (item) => {
-                    const title = item.querySelector("h2")?.innerText;
+                    const title = item.querySelector("h2")?.innerText ?? "";
                     const tableEntries = item.getElementsByTagName("td");
                     const address1 = tableEntries[1].innerText;
                     const address2 = tableEntries[2].innerText;

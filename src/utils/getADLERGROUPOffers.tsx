@@ -19,7 +19,7 @@ async function extractADLERGROUPOffers(page: Page): Promise<{ offers: Offer[]; i
                     const infoMap = Array.from(infos).map((a) => a.innerText);
                     const address = `${infoMap[0]}, ${infoMap[2]}`;
                     const relevantDistrict = await window.isInRelevantDistrict(address);
-                    const title = (item.querySelector(".object-headline") as HTMLElement | undefined)?.innerText;
+                    const title = (item.querySelector(".object-headline") as HTMLElement | null)?.innerText ?? "";
                     const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
 
                     const roomSize = parseFloat(infoMap[1].split(" ")[0]);
@@ -43,7 +43,7 @@ async function extractADLERGROUPOffers(page: Page): Promise<{ offers: Offer[]; i
                                     .querySelector(".object-headline")
                                     ?.getElementsByTagName("a")[0]
                                     .getAttribute("href"),
-                            size: roomSize,
+                            size: String(roomSize),
                             rooms: roomNumber,
                         });
                     }

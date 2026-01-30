@@ -17,7 +17,7 @@ async function extractDAGEWOOffers(page: Page): Promise<{ offers: Offer[]; isMul
                 Array.from(items).map(async (item) => {
                     const address = item.querySelector(".article__meta")?.innerHTML;
 
-                    const title = item.querySelector(".article__title")?.innerHTML;
+                    const title = item.querySelector(".article__title")?.innerHTML ?? "";
                     const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
                     const link = item?.getElementsByTagName("a")?.[0]?.getAttribute("href");
                     const properties = item.querySelectorAll(".article__properties-item > span");

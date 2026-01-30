@@ -17,7 +17,7 @@ async function extractGewobagOffers(page: Page): Promise<{ offers: Offer[]; isMu
                 Array.from(items).map(async (item) => {
                     const address = item.querySelector("address")?.innerText;
                     const relevantDistrict = await window.isInRelevantDistrict(address);
-                    const title = item.querySelector(".angebot-title")?.innerHTML;
+                    const title = item.querySelector(".angebot-title")?.innerHTML ?? "";
                     const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
 
                     if (address && !containsDisqualifyingPattern && relevantDistrict) {

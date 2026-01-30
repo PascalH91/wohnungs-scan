@@ -19,7 +19,7 @@ async function extractBerlinovoOffers(page: Page): Promise<{ offers: Offer[]; is
                         ?.innerText;
 
                     const relevantDistrict = await window.isInRelevantDistrict(address);
-                    const title = (item.querySelector(".field--name-title") as HTMLElement | undefined)?.innerText;
+                    const title = (item.querySelector(".field--name-title") as HTMLElement | null)?.innerText ?? "";
                     const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
 
                     const rooms = (
