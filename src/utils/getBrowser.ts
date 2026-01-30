@@ -10,8 +10,8 @@ const logger = createLogger("browser-pool");
 chromium.setHeadlessMode = true;
 chromium.setGraphicsMode = false;
 
-const CHROMIUM_PATH =
-    "https://vomrghiulbmrfvmhlflk.supabase.co/storage/v1/object/public/chromium-pack/chromium-v123.0.0-pack.tar";
+// Prefer environment-provided chromium pack URL. If not set, let @sparticuz/chromium use its default CDN.
+const CHROMIUM_PATH: string | undefined = process.env.CHROMIUM_PATH;
 
 // Detect if running in Vercel or other serverless environment
 const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
@@ -42,8 +42,23 @@ class BrowserPool {
 
         if (isServerless) {
             // Use @sparticuz/chromium in serverless environments
-            executablePath = await chromium.executablePath(CHROMIUM_PATH);
-            logger.info("Using @sparticuz/chromium for serverless environment");
+            try {
+                if (CHROMIUM_PATH) {
+                    executablePath = await chromium.executablePath(CHROMIUM_PATH);
+                    logger.info("Using @sparticuz/chromium with custom CHROMIUM_PATH", { source: CHROMIUM_PATH });
+                } else {
+                    // No custom URL configured — let the library use its default CDN/mirror
+                    executablePath = await chromium.executablePath();
+                    logger.info("Using @sparticuz/chromium default CDN for binary");
+                }
+            } catch (err: any) {
+                logger.error("Failed to acquire Chromium binary in serverless environment", {
+                    message: err?.message || String(err),
+                    suggestion:
+                        "Set CHROMIUM_PATH env var to an accessible URL for your chromium pack, or ensure @sparticuz/chromium can download from its default CDN from the deployment environment.",
+                });
+                throw err;
+            }
         } else {
             // Use locate-chrome in local development
             executablePath = await new Promise((resolve) => locateChrome((arg: any) => resolve(arg)));
