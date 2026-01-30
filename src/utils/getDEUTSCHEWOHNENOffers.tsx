@@ -1,81 +1,58 @@
-import { Offer } from "@/components/Provider/index";
-import { getBrowser } from "./getBrowser";
-import { generateRandomUA } from "./generateRandomUserAgents";
-import { containsRelevantCityCode } from "./containsRelevantCityCodes";
-import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
-import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
+import { Offer, ScraperResponse } from "@/types";
+import { config } from "@/config";
+import { createScraper } from "./baseScraper";
+import { Page } from "puppeteer-core";
+import { deutscheWohnenUrl } from "./providerUrls";
 
-export const deutscheWohnenUrl = `https://www.deutsche-wohnen.com/mieten/mietangebote?city=Berlin&furnished=0&seniorFriendly=0&subsidizedHousingPermit=egal&immoType=wohnung&priceMax=${maxColdRent}&sizeMin=${minRoomSize}&minRooms=${minRoomNumber}&floor=Beliebig&bathtub=0&bathwindow=0&bathshower=0&kitchenEBK=0&toiletSeparate=0&disabilityAccess=egal&balcony=egal&rentType=miete`;
+const { minRoomSize, minRoomNumber, maxColdRent } = config.apartment;
 
-export const getDEUTSCHEWOHNENOffers = async () => {
-    try {
-        const browser = await getBrowser();
+/**
+ * Extract offers from Deutsche Wohnen page
+ */
+async function extractDeutscheWohnenOffers(page: Page): Promise<{ offers: Offer[]; isMultiPages: boolean }> {
+    return await page.evaluate(async () => {
+        const isMultiPages = Number(document.querySelector(".pagination input")?.getAttribute("max")) > 3;
+        let results: Offer[] = [];
+        let items = document.querySelectorAll(".content-card");
 
-        const page = await browser.newPage();
-        // page.setDefaultNavigationTimeout(10 * 60 * 1000);
+        items &&
+            (await Promise.all(
+                Array.from(items).map(async (item) => {
+                    const title = item.querySelector("h2")?.innerText;
+                    const address = (item.querySelector(".rte") as HTMLElement).innerText;
+                    const relevantDistrict = await window.isInRelevantDistrict(address);
 
-        // Custom user agent from generateRandomUA() function
-        const customUA = generateRandomUA();
+                    const specs = (item.querySelector(".features-wrap .badge") as HTMLElement).innerText?.split(" ");
+                    const size = specs[0];
+                    const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 1000;
+                    const minRoomSize = await window.getMinRoomSize();
 
-        // Set custom user agent
-        await page.setUserAgent(customUA);
+                    const showItem = title && address && relevantDistrict && transformedSize > minRoomSize;
 
-        page.on("console", (msg) => console.log(msg.text()));
-        await page.exposeFunction("isInRelevantDistrict", (cityCode: string) => containsRelevantCityCode(cityCode));
-        await page.exposeFunction("transformSizeIntoValidNumber", (roomSize: string) =>
-            transformSizeIntoValidNumber(roomSize),
-        );
-        await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
-        await page.exposeFunction("getMinRoomSize", () => minRoomSize);
-        await page.exposeFunction("getMaxColdRent", () => maxColdRent);
-        await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
+                    if (showItem) {
+                        results.push({
+                            id: item.getAttribute("id") || address,
+                            address,
+                            title,
+                            region: relevantDistrict?.district,
+                            link: `https://www.deutsche-wohnen.com${item?.getElementsByTagName("a")[0].getAttribute("href")}`,
+                            size: transformedSize + "m²",
+                            rooms: specs[1][1],
+                        });
+                    }
+                }),
+            ));
+        return { offers: results, isMultiPages };
+    });
+}
 
-        const response = await page.goto(deutscheWohnenUrl, { waitUntil: "networkidle2", timeout: 0 });
-        if (response?.status() !== 200) {
-            throw new Error(`${response?.status()} ${response?.statusText()}`);
-        }
-        await page.waitForSelector(".teaser-xl-real-estate", { visible: true, timeout: 2000 });
-
-        let data = await page.evaluate(async () => {
-            const isMultiPages = Number(document.querySelector(".pagination input")?.getAttribute("max")) > 3;
-            let results: Offer[] = [];
-            let items = document.querySelectorAll(".content-card");
-
-            items &&
-                (await Promise.all(
-                    Array.from(items).map(async (item) => {
-                        const title = item.querySelector("h2")?.innerText;
-                        const address = (item.querySelector(".rte") as HTMLElement).innerText;
-                        const relevantDistrict = await window.isInRelevantDistrict(address);
-
-                        const specs = (item.querySelector(".features-wrap .badge") as HTMLElement).innerText?.split(
-                            " ",
-                        );
-                        const size = specs[0];
-                        const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 1000;
-                        const minRoomSize = await window.getMinRoomSize();
-
-                        const showItem = title && address && relevantDistrict && transformedSize > minRoomSize;
-
-                        if (showItem) {
-                            results.push({
-                                id: item.getAttribute("id") || address,
-                                address,
-                                title,
-                                region: relevantDistrict?.district,
-                                link: `https://www.deutsche-wohnen.com${item?.getElementsByTagName("a")[0].getAttribute("href")}`,
-                                size: transformedSize + "m²",
-                                rooms: specs[1][1],
-                            });
-                        }
-                    }),
-                ));
-            return { offers: results, isMultiPages };
-        });
-        browser.close();
-        return { data, errors: "" };
-    } catch (e: any) {
-        console.log("e =>", e.message);
-        return { data: [], errors: e.message };
-    }
-};
+/**
+ * Scrape Deutsche Wohnen for available apartments
+ */
+export const getDEUTSCHEWOHNENOffers = createScraper({
+    providerName: "Deutsche Wohnen",
+    url: deutscheWohnenUrl,
+    waitForSelector: ".teaser-xl-real-estate",
+    selectorTimeout: 2000,
+    extractOffers: extractDeutscheWohnenOffers,
+});

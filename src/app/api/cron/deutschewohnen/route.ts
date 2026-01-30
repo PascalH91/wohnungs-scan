@@ -1,8 +1,8 @@
-import { Offer } from "@/components/Provider";
 import { getDEUTSCHEWOHNENOffers } from "@/utils/getDEUTSCHEWOHNENOffers";
+import { ScraperResponse } from "@/types";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(): Promise<NextResponse<ScraperResponse>> {
     const data = await getDEUTSCHEWOHNENOffers();
-    return NextResponse.json(data) as NextResponse<{ data: Offer[]; errors: string }>;
+    return NextResponse.json(data);
 }

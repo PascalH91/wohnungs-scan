@@ -1,85 +1,61 @@
-import { Offer } from "@/components/Provider/index";
-import { getBrowser } from "./getBrowser";
-import { generateRandomUA } from "./generateRandomUserAgents";
-import { containsRelevantCityCode } from "./containsRelevantCityCodes";
-import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
-import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
-import { maxColdRent, maxWarmRent, minRoomNumber, minRoomSize } from "./const";
+import { Offer } from "@/types";
+import { config } from "@/config";
+import { createScraper } from "./baseScraper";
+import { Page } from "puppeteer-core";
+import { adlergroupUrl } from "./providerUrls";
 
-export const adlergroupUrl = `https://www.adler-group.com/suche/wohnung?tx_adleropenimmo_filterbig%5Bsearch%5D%5BmaxPrice%5D=${maxWarmRent}&tx_adleropenimmo_filterbig%5Bsearch%5D%5Brooms%5D=${minRoomNumber}&tx_adleropenimmo_filterbig%5Bsearch%5D%5Bcity%5D=Berlin&tx_adleropenimmo_filterbig%5Bsearch%5D%5BminSurface%5D=${minRoomSize}`;
+const { minRoomSize, minRoomNumber, maxColdRent, maxWarmRent } = config.apartment;
 
-export const getADLERGROUPOffers = async () => {
-    try {
-        const browser = await getBrowser();
+async function extractADLERGROUPOffers(page: Page): Promise<{ offers: Offer[]; isMultiPages: boolean }> {
+    return await page.evaluate(async () => {
+        let isMultiPages = false;
+        let results: Offer[] = [];
+        let items = document.querySelectorAll(".search-results-inner .row > div");
 
-        const page = await browser.newPage();
+        items &&
+            (await Promise.all(
+                Array.from(items).map(async (item) => {
+                    const infos = item.querySelectorAll("td");
+                    const infoMap = Array.from(infos).map((a) => a.innerText);
+                    const address = `${infoMap[0]}, ${infoMap[2]}`;
+                    const relevantDistrict = await window.isInRelevantDistrict(address);
+                    const title = (item.querySelector(".object-headline") as HTMLElement | undefined)?.innerText;
+                    const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
 
-        // Custom user agent from generateRandomUA() function
-        const customUA = generateRandomUA();
+                    const roomSize = parseFloat(infoMap[1].split(" ")[0]);
+                    const roomNumber = parseFloat(infoMap[3].split(" ")[0]);
 
-        // Set custom user agent
-        await page.setUserAgent(customUA);
+                    if (
+                        address &&
+                        !containsDisqualifyingPattern &&
+                        relevantDistrict &&
+                        roomNumber >= 3 &&
+                        roomSize >= 75
+                    ) {
+                        results.push({
+                            address,
+                            id: item?.getAttribute("data-object-id") || address,
+                            title,
+                            region: relevantDistrict?.district || "",
+                            link:
+                                "https://www.adler-group.com/" +
+                                item
+                                    .querySelector(".object-headline")
+                                    ?.getElementsByTagName("a")[0]
+                                    .getAttribute("href"),
+                            size: roomSize,
+                            rooms: roomNumber,
+                        });
+                    }
+                }),
+            ));
+        return { offers: results, isMultiPages };
+    });
+}
 
-        page.on("console", (msg) => console.log(msg.text()));
-
-        await page.exposeFunction("isInRelevantDistrict", (cityCode: string) => containsRelevantCityCode(cityCode));
-        await page.exposeFunction("containsDisqualifyingPattern", (title: string) =>
-            titleContainsDisqualifyingPattern(title),
-        );
-        await page.exposeFunction("transformSizeIntoValidNumber", (roomSize: string) =>
-            transformSizeIntoValidNumber(roomSize),
-        );
-
-        await page.exposeFunction("getMinRoomNumber", () => minRoomNumber);
-        await page.exposeFunction("getMinRoomSize", () => minRoomSize);
-        await page.exposeFunction("getMaxColdRent", () => maxColdRent);
-        await page.exposeFunction("getMaxWarmRent", () => maxWarmRent);
-
-        const response = await page.goto(adlergroupUrl, { waitUntil: "networkidle2" });
-        if (response?.status() !== 200) {
-            throw new Error(`${response?.status()} ${response?.statusText()}`);
-        }
-        await page.waitForSelector("#search-results", { visible: true });
-
-        let data = await page.evaluate(async () => {
-            let isMultiPages = false;
-            let results: Offer[] = [];
-            let items = document.querySelectorAll("#search-results .row > div");
-
-            items &&
-                (await Promise.all(
-                    Array.from(items).map(async (item) => {
-                        const infos = item.querySelectorAll("td");
-                        const infoMap = Array.from(infos).map((a) => a.innerText);
-                        const address = `${infoMap[0]}, ${infoMap[2]}`;
-                        const relevantDistrict = await window.isInRelevantDistrict(address);
-                        const title = (item.querySelector(".object-headline") as HTMLElement | undefined)?.innerText;
-                        const containsDisqualifyingPattern = await window.containsDisqualifyingPattern(title);
-
-                        if (address && !containsDisqualifyingPattern && relevantDistrict) {
-                            results.push({
-                                address,
-                                id: item?.getAttribute("data-object-id") || address,
-                                title,
-                                region: relevantDistrict?.district || "",
-                                link:
-                                    "https://www.adler-group.com/" +
-                                    item
-                                        .querySelector(".object-headline")
-                                        ?.getElementsByTagName("a")[0]
-                                        .getAttribute("href"),
-                                size: infoMap[1].split(" ")[0],
-                                rooms: infoMap[3].split(" ")[0],
-                            });
-                        }
-                    }),
-                ));
-            return { offers: results, isMultiPages };
-        });
-        browser.close();
-        return { data, errors: "" };
-    } catch (e: any) {
-        console.log("e =>", e);
-        return { data: [], errors: e.message };
-    }
-};
+export const getADLERGROUPOffers = createScraper({
+    providerName: "Adler Group",
+    url: adlergroupUrl,
+    waitForSelector: ".search-results-inner",
+    extractOffers: extractADLERGROUPOffers,
+});

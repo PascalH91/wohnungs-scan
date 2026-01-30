@@ -1,58 +1,40 @@
-import { Offer } from "@/components/Provider/index";
-import { getBrowser } from "./getBrowser";
-import { generateRandomUA } from "./generateRandomUserAgents";
+import { Offer } from "@/types";
+import { config } from "@/config";
+import { createScraper } from "./baseScraper";
+import { Page } from "puppeteer-core";
+import { eg1892Url } from "./providerUrls";
 
-export const eg1892Url = "https://hpm2.immosolve.eu/immosolve_presentation/pub/modern/2145111/HP/immo.jsp";
+const { minRoomSize, minRoomNumber, maxColdRent, maxWarmRent } = config.apartment;
 
-export const get1892Offers = async () => {
-    try {
-        const browser = await getBrowser();
+async function extract1892Offers(page: Page): Promise<{ offers: Offer[]; isMultiPages: boolean }> {
+    await page.waitForNavigation();
 
-        const page = await browser.newPage();
-        page.setDefaultNavigationTimeout(10 * 60 * 1000);
-        // Custom user agent from generateRandomUA() function
-        const customUA = generateRandomUA();
+    return await page.evaluate(async () => {
+        let isMultiPages = false;
+        let results: Offer[] = [];
 
-        // Set custom user agent
-        await page.setUserAgent(customUA);
+        let item = document.querySelector("#ispage") as HTMLElement | undefined;
 
-        page.on("console", (msg) => console.log(msg.text()));
+        item &&
+            !item.innerText.includes("Momentan sind leider keine Objekte in unserem Onlineangebot verfügbar.") &&
+            results.push({
+                address: "Neues Angebot",
+                id: "1892",
+                title: "Neues Angebot",
+                region: "-",
+                link: "https://hpm2.immosolve.eu/immosolve_presentation/pub/modern/2145111/HP/immo.jsp",
+                size: "0",
+                rooms: 0,
+            });
 
-        const response = await page.goto(eg1892Url, { waitUntil: "networkidle2" });
-        if (response?.status() !== 200) {
-            throw new Error(`${response?.status()} ${response?.statusText()}`);
-        }
+        return { offers: results, isMultiPages };
+    });
+}
 
-        await page.waitForNavigation();
-        await page.waitForSelector("#locationChoices", {
-            visible: true,
-        });
-
-        let data = await page.evaluate(async () => {
-            let isMultiPages = false;
-            let results: Offer[] = [];
-
-            let item = document.querySelector("#locationChoices") as HTMLElement | undefined;
-
-            item &&
-                !item.innerText.includes("Momentan sind leider keine Objekte in unserem Onlineangebot verfügbar.") &&
-                results.push({
-                    address: "Neues Angebot",
-                    id: "1892",
-                    title: "Neues Angebot",
-                    region: "-",
-                    link: "https://hpm2.immosolve.eu/immosolve_presentation/pub/modern/2145111/HP/immo.jsp",
-                    size: "0",
-                    rooms: 0,
-                });
-
-            return { offers: results, isMultiPages };
-        });
-
-        browser.close();
-        return { data, errors: "" };
-    } catch (e: any) {
-        console.log("e =>", e);
-        return { data: [], errors: e.message };
-    }
-};
+export const get1892Offers = createScraper({
+    providerName: "1892",
+    url: eg1892Url,
+    waitForSelector: "#ispage",
+    navigationTimeout: 600000,
+    extractOffers: extract1892Offers,
+});

@@ -1,32 +1,36 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 
 import styles from "./providerList.module.scss";
 import { ProviderWrapper, ProviderT } from "../Provider/index";
-import { wbmUrl } from "@/utils/getWBMOffers";
-import { friedrichsheimUrl } from "@/utils/getFRIEDRICHSHEIMOffers";
-import { gewobagUrl } from "@/utils/getGEWOBAGOffers";
-import { deutscheWohnenUrl } from "@/utils/getDEUTSCHEWOHNENOffers";
-import { howogeUrl } from "@/utils/getHOWOGEOffers";
-import { ebayKleinanzeigenUrl } from "@/utils/getEbayKleinanzeigenOffers";
-import { dpfUrl } from "@/utils/getDPFOffers";
-import { stadtUndLandUrl } from "@/utils/getSTADTUNDLANDOffers";
-import { gesobauUrl } from "@/utils/getGESOBAUOffers";
-import { dagewoUrl } from "@/utils/getDAGEWOOffers";
-import { vonoviaUrl } from "@/utils/getVonoviaOffers";
-import { solidariaetUrl } from "@/utils/getSolidaritaetOffers";
-import { neuesBerlinUrl } from "@/utils/getNeuesBerlinOffers";
-import { FriedrichshainEGUrl } from "@/utils/getFriedrichshainEGOffers";
-import { berolinaUrl } from "@/utils/getBerolinaOffers";
-import { vineta89Url } from "@/utils/getVineta89Offers";
-import { forumKreuzbergUrl } from "@/utils/getForumKreuzbergOffers";
-import { berlinovoUrl } from "@/utils/getBerlinovoOffers";
-import { paradiesUrl } from "@/utils/getParadiesOffers";
-import { wgVorwaertsUrl } from "@/utils/getWGVorwaertsOffers";
-import { evmUrl } from "@/utils/getEVMOffers";
-import { vaterlandUrl } from "@/utils/getVaterlandOffers";
-import { adlergroupUrl } from "@/utils/getADLERGROUPOffers";
-import { eg1892Url } from "@/utils/get1892Offers";
-import { immoscoutUrl } from "@/utils/getIMMOSCOUTOffers";
+import {
+    wbmUrl,
+    friedrichsheimUrl,
+    gewobagUrl,
+    deutscheWohnenUrl,
+    howogeUrl,
+    ebayKleinanzeigenUrl,
+    dpfUrl,
+    stadtUndLandUrl,
+    gesobauUrl,
+    dagewoUrl,
+    vonoviaUrl,
+    solidariaetUrl,
+    neuesBerlinUrl,
+    FriedrichshainEGUrl,
+    berolinaUrl,
+    vineta89Url,
+    forumKreuzbergUrl,
+    berlinovoUrl,
+    paradiesUrl,
+    wgVorwaertsUrl,
+    evmUrl,
+    vaterlandUrl,
+    adlergroupUrl,
+    eg1892Url,
+    immoscoutUrl,
+} from "@/utils/providerUrls";
 
 export type ProviderDetails = {
     id: ProviderT;
@@ -245,13 +249,53 @@ const providerDetails: ProviderList = {
 };
 
 export const ProviderList = () => {
+    const [isMonitoringActive, setIsMonitoringActive] = useState<boolean>(false);
+    const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
+
+    const handleToggleMonitoring = () => {
+        if (!isMonitoringActive) {
+            setSoundEnabled(true);
+        }
+        setIsMonitoringActive(!isMonitoringActive);
+    };
+
     return (
         <div className={styles.providerListWrapper}>
+            <div
+                style={{
+                    position: "sticky",
+                    top: "20px",
+                    zIndex: 1000,
+                    display: "flex",
+                    justifyContent: "center",
+                    marginBottom: "20px",
+                }}
+            >
+                <button
+                    onClick={handleToggleMonitoring}
+                    style={{
+                        padding: "15px 30px",
+                        fontSize: "18px",
+                        fontWeight: "bold",
+                        backgroundColor: isMonitoringActive ? "#f44336" : "#4CAF50",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                        transition: "all 0.3s ease",
+                    }}
+                >
+                    {isMonitoringActive ? "⏹️ Stop Monitoring" : "🚀 Start Monitoring"}
+                </button>
+            </div>
             {Object.values(providerDetails).map((provider) => {
                 return (
                     <ProviderWrapper
                         key={provider.id}
                         provider={provider}
+                        isMonitoringActive={isMonitoringActive}
+                        soundEnabled={soundEnabled}
                     />
                 );
             })}
