@@ -41,6 +41,30 @@ class BrowserPool {
         let executablePath: string | undefined;
 
         if (isServerless) {
+            // First, allow connecting to a remote Chrome instance via WebSocket URL if provided
+            const remoteWs = process.env.REMOTE_CHROME_WS_URL;
+            if (remoteWs) {
+                try {
+                    logger.info("Connecting to remote Chrome via WebSocket", { url: remoteWs });
+                    const browser = await puppeteerCore.connect({
+                        browserWSEndpoint: remoteWs,
+                        timeout: config.browserPool.acquireTimeoutMillis,
+                    });
+                    return {
+                        browser,
+                        inUse: false,
+                        createdAt: Date.now(),
+                        lastUsed: Date.now(),
+                    };
+                } catch (err: any) {
+                    logger.error("Failed to connect to remote Chrome WebSocket", {
+                        message: err?.message || String(err),
+                        url: remoteWs,
+                    });
+                    // fall through to try chromium pack
+                }
+            }
+
             // Use @sparticuz/chromium in serverless environments
             try {
                 if (CHROMIUM_PATH) {
@@ -52,11 +76,25 @@ class BrowserPool {
                     logger.info("Using @sparticuz/chromium default CDN for binary");
                 }
             } catch (err: any) {
-                logger.error("Failed to acquire Chromium binary in serverless environment", {
-                    message: err?.message || String(err),
-                    suggestion:
-                        "Set CHROMIUM_PATH env var to an accessible URL for your chromium pack, or ensure @sparticuz/chromium can download from its default CDN from the deployment environment.",
-                });
+                const message = err?.message || String(err);
+                const isMissingBin =
+                    message.includes("input directory") &&
+                    message.includes("/node_modules/@sparticuz/chromium-min/bin");
+
+                if (isMissingBin) {
+                    logger.error("Chromium binary not found in package installation", {
+                        message,
+                        suggestion:
+                            "Either set CHROMIUM_PATH to a publicly accessible chromium pack URL, or set REMOTE_CHROME_WS_URL to connect to an external browser service (e.g., browserless).",
+                    });
+                } else {
+                    logger.error("Failed to acquire Chromium binary in serverless environment", {
+                        message,
+                        suggestion:
+                            "Set CHROMIUM_PATH env var to an accessible URL for your chromium pack, or ensure @sparticuz/chromium can download from its default CDN from the deployment environment.",
+                    });
+                }
+
                 throw err;
             }
         } else {
