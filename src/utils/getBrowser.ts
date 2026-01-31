@@ -48,7 +48,6 @@ class BrowserPool {
                     logger.info("Connecting to remote Chrome via WebSocket", { url: remoteWs });
                     const browser = await puppeteerCore.connect({
                         browserWSEndpoint: remoteWs,
-                        timeout: config.browserPool.acquireTimeoutMillis,
                     });
                     return {
                         browser,
