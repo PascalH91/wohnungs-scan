@@ -10,6 +10,7 @@ import { config } from "@/config";
 import { Offer, ScraperResponse } from "@/types";
 import { createLogger } from "./logger";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
+import { persistOffers } from "./offerStore";
 
 const logger = createLogger("base-scraper");
 
@@ -153,6 +154,13 @@ export async function executeScraper(
             offerCount: data.offers.length,
             isMultiPages: data.isMultiPages,
         });
+
+        // Persist offers to the local store; failures here must not break the scrape response.
+        try {
+            await persistOffers(providerName, data.offers);
+        } catch (error: any) {
+            logger.error(`Failed to persist offers for ${providerName}`, error);
+        }
 
         return { data, errors: "" };
     } catch (error: any) {
