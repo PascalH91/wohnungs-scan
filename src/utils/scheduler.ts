@@ -56,54 +56,97 @@ const SCRAPER_ROUTES: string[] = [
 
 const PORT = process.env.PORT || "8080";
 const BASE_URL = process.env.SCHEDULER_BASE_URL || `http://127.0.0.1:${PORT}`;
-const SCRAPE_INTERVAL_MS = parseInt(process.env.SCRAPE_INTERVAL_MS || `${5 * 60 * 1000}`, 10);
-const SCRAPE_CONCURRENCY = parseInt(process.env.SCRAPE_CONCURRENCY || "3", 10);
+
+// Politeness / anti-block knobs. The goal is to look like an occasional human,
+// not a scraper: a long, jittered wait between full passes, and a randomized
+// gap between individual provider requests so we never fire a burst. Providers
+// are also visited in a shuffled order each pass so the pattern isn't identical.
+const SCRAPE_INTERVAL_MS = parseInt(process.env.SCRAPE_INTERVAL_MS || `${10 * 60 * 1000}`, 10); // 10 min between passes
+const SCRAPE_INTERVAL_JITTER_MS = parseInt(process.env.SCRAPE_INTERVAL_JITTER_MS || `${3 * 60 * 1000}`, 10); // +0..3 min
+const PROVIDER_GAP_MS = parseInt(process.env.PROVIDER_GAP_MS || "5000", 10); // min wait between providers
+const PROVIDER_GAP_JITTER_MS = parseInt(process.env.PROVIDER_GAP_JITTER_MS || "10000", 10); // +0..10s
+// Once a provider blocks/rate-limits us, stop hitting it entirely for this long.
+const BLOCK_COOLDOWN_MS = parseInt(process.env.BLOCK_COOLDOWN_MS || `${60 * 60 * 1000}`, 10); // 1 hour
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const randomGap = () => PROVIDER_GAP_MS + Math.floor(Math.random() * PROVIDER_GAP_JITTER_MS);
+
+/** Fisher–Yates shuffle (returns a new array). */
+function shuffled<T>(arr: T[]): T[] {
+    const out = [...arr];
+    for (let i = out.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+}
 
 let running = false;
-let timer: NodeJS.Timeout | null = null;
+let cycleTimer: NodeJS.Timeout | null = null;
 let started = false;
+// slug -> epoch ms until which we skip the provider after it blocked us.
+const cooldownUntil: Record<string, number> = {};
 
-/** Run an array of tasks with a fixed concurrency limit. */
-async function runWithConcurrency<T>(tasks: (() => Promise<T>)[], limit: number): Promise<void> {
-    let index = 0;
-    const workers = Array.from({ length: Math.max(1, limit) }, async () => {
-        while (index < tasks.length) {
-            const current = index++;
-            try {
-                await tasks[current]();
-            } catch (error) {
-                logger.error("Scraper task threw", error);
-            }
+/** Trigger one provider's scrape. Returns whether the provider blocked us. */
+async function triggerRoute(slug: string): Promise<{ blocked: boolean }> {
+    try {
+        const res = await fetch(`${BASE_URL}/api/cron/${slug}`, { cache: "no-store" });
+        if (!res.ok) {
+            logger.warn(`Scraper route returned non-OK status: ${slug}`, { status: res.status });
+            return { blocked: res.status === 403 || res.status === 429 };
         }
-    });
-    await Promise.all(workers);
-}
-
-async function triggerRoute(slug: string): Promise<void> {
-    const res = await fetch(`${BASE_URL}/api/cron/${slug}`, { cache: "no-store" });
-    if (!res.ok) {
-        logger.warn(`Scraper route returned non-OK status: ${slug}`, { status: res.status });
-        return;
+        const body = (await res.json()) as { errors?: string };
+        if (body?.errors) {
+            logger.warn(`Scraper reported error: ${slug}`, { error: body.errors });
+            // Heuristic: treat rate-limit / forbidden / explicit "blocked" as a block.
+            const blocked = /\b(403|429)\b|blocked|rate.?limit|too many requests/i.test(body.errors);
+            return { blocked };
+        }
+        return { blocked: false };
+    } catch (error) {
+        logger.error(`Failed to trigger scraper: ${slug}`, error);
+        return { blocked: false };
     }
-    const body = (await res.json()) as { errors?: string };
-    if (body?.errors) logger.warn(`Scraper reported error: ${slug}`, { error: body.errors });
 }
 
-/** Trigger every scraper once, then email a digest of any new offers. */
+/**
+ * One full pass: visit every provider once, sequentially, in shuffled order,
+ * with a randomized gap between each (no bursts), skipping any provider that is
+ * in a block cooldown. Then email a digest of new offers.
+ */
 async function runCycle(): Promise<void> {
     if (running) {
-        logger.warn("Previous scrape cycle still running — skipping this tick");
+        logger.warn("Previous scrape cycle still running — skipping");
         return;
     }
     running = true;
     const startedAt = Date.now();
-    logger.info("Starting scrape cycle", { scrapers: SCRAPER_ROUTES.length, concurrency: SCRAPE_CONCURRENCY });
+    const order = shuffled(SCRAPER_ROUTES);
+    logger.info("Starting scrape cycle", { scrapers: order.length });
 
     try {
-        await runWithConcurrency(
-            SCRAPER_ROUTES.map((slug) => () => triggerRoute(slug)),
-            SCRAPE_CONCURRENCY,
-        );
+        for (let i = 0; i < order.length; i++) {
+            const slug = order[i];
+
+            const cooldown = cooldownUntil[slug];
+            if (cooldown && Date.now() < cooldown) {
+                logger.info(`Skipping ${slug} — in block cooldown`, {
+                    until: new Date(cooldown).toISOString(),
+                });
+                continue;
+            }
+
+            const { blocked } = await triggerRoute(slug);
+            if (blocked) {
+                cooldownUntil[slug] = Date.now() + BLOCK_COOLDOWN_MS;
+                logger.warn(`${slug} appears to be blocking us — backing off`, {
+                    cooldownUntil: new Date(cooldownUntil[slug]).toISOString(),
+                });
+            }
+
+            // Polite randomized gap before the next provider (not after the last).
+            if (i < order.length - 1) await sleep(randomGap());
+        }
 
         // The notify route atomically claims unnotified offers and emails one
         // digest. Each new offer is emailed exactly once, even across restarts.
@@ -130,7 +173,8 @@ export async function startScheduler(): Promise<void> {
     logger.info("Initializing scheduler", {
         baseUrl: BASE_URL,
         intervalMs: SCRAPE_INTERVAL_MS,
-        concurrency: SCRAPE_CONCURRENCY,
+        intervalJitterMs: SCRAPE_INTERVAL_JITTER_MS,
+        providerGapMs: PROVIDER_GAP_MS,
     });
 
     // Backfill so the first cycle does not email the entire existing backlog.
@@ -143,17 +187,26 @@ export async function startScheduler(): Promise<void> {
         } catch (error) {
             logger.error("Failed to backfill on startup", error);
         }
-        void runCycle();
+        await runCycle();
+        scheduleNextCycle();
     }, 10000);
+}
 
-    // Then on a fixed interval.
-    timer = setInterval(() => {
-        void runCycle();
-    }, SCRAPE_INTERVAL_MS);
+/**
+ * Schedule the next pass with a randomized delay AFTER the previous one
+ * finishes — so passes never overlap and the cadence isn't perfectly regular.
+ */
+function scheduleNextCycle(): void {
+    const delay = SCRAPE_INTERVAL_MS + Math.floor(Math.random() * SCRAPE_INTERVAL_JITTER_MS);
+    logger.info("Next scrape cycle scheduled", { inMinutes: Math.round(delay / 60000) });
+    cycleTimer = setTimeout(async () => {
+        await runCycle();
+        scheduleNextCycle();
+    }, delay);
 }
 
 export function stopScheduler(): void {
-    if (timer) clearInterval(timer);
-    timer = null;
+    if (cycleTimer) clearTimeout(cycleTimer);
+    cycleTimer = null;
     started = false;
 }

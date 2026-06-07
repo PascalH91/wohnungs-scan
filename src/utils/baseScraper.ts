@@ -14,6 +14,10 @@ import { persistOffers, persistSnapshot } from "./offerStore";
 
 const logger = createLogger("base-scraper");
 
+// Pick one realistic user agent per process. A real browser keeps a stable UA;
+// rotating it on every request from a single IP is itself a bot signal.
+const SESSION_USER_AGENT = generateRandomUA();
+
 export interface ScraperConfig {
     providerName: string;
     url: string;
@@ -32,7 +36,7 @@ export interface ScraperOptions {
 /**
  * Setup page context with common functions exposed to page.evaluate()
  */
-async function setupPageContext(page: Page): Promise<void> {
+async function setupPageContext(page: Page, providerName: string): Promise<void> {
     // Expose common functions to page context
     await page.exposeFunction("isInRelevantDistrict", (cityCode: string) => containsRelevantCityCode(cityCode));
     await page.exposeFunction("transformSizeIntoValidNumber", (roomSize: string) =>
@@ -46,16 +50,21 @@ async function setupPageContext(page: Page): Promise<void> {
         titleContainsDisqualifyingPattern(title),
     );
 
-    // Log console messages from page context
+    // Mirror the target page's own console output. These are messages from the
+    // SCRAPED WEBSITE (e.g. a broken WordPress plugin), not from our scraper, so
+    // they are logged at debug level only — surfacing them as errors made
+    // third-party site bugs look like our failures. Set LOG_LEVEL=DEBUG to see
+    // them when diagnosing a specific scraper.
     page.on("console", (msg) => {
-        const text = msg.text();
-        if (text.includes("ERROR") || text.includes("Error")) {
-            logger.error("Browser console error", undefined, { message: text });
-        } else {
-            logger.debug("Browser console", { message: text });
-        }
+        logger.debug(`[${providerName}] remote page console`, { type: msg.type(), message: msg.text() });
     });
 }
+
+/**
+ * Error that must NOT be retried. Used for block/rate-limit responses, where
+ * retrying immediately would only deepen the block and look more bot-like.
+ */
+class NonRetryableError extends Error {}
 
 /**
  * Retry wrapper for async operations
@@ -71,6 +80,13 @@ async function withRetry<T>(
             return await operation();
         } catch (error: any) {
             lastError = error;
+
+            // A block/rate-limit must fail fast — never retry into it.
+            if (error instanceof NonRetryableError) {
+                logger.warn(`${options.operationName} hit a non-retryable block`, { error: error.message });
+                throw error;
+            }
+
             logger.warn(`${options.operationName} failed, attempt ${attempt}/${options.maxRetries}`, {
                 error: error.message,
             });
@@ -133,12 +149,12 @@ export async function executeScraper(
             });
         }
 
-        // Set custom user agent
-        const userAgent = customUserAgent || generateRandomUA();
+        // Set user agent (stable per process unless a scraper overrides it).
+        const userAgent = customUserAgent || SESSION_USER_AGENT;
         await page.setUserAgent(userAgent);
 
         // Setup page context with exposed functions
-        await setupPageContext(page);
+        await setupPageContext(page, providerName);
 
         // Navigate to URL with retry logic
         const response = await withRetry(
@@ -147,8 +163,13 @@ export async function executeScraper(
                     waitUntil: "networkidle2",
                     timeout: navigationTimeout || config.scraping.navigationTimeout,
                 });
-                if (!resp || resp.status() !== 200) {
-                    throw new Error(`HTTP ${resp?.status()} ${resp?.statusText()}`);
+                const status = resp?.status();
+                // Rate-limited / forbidden: do NOT retry — that only deepens the block.
+                if (status === 403 || status === 429 || status === 503) {
+                    throw new NonRetryableError(`Blocked by ${providerName}: HTTP ${status} ${resp?.statusText()}`);
+                }
+                if (!resp || status !== 200) {
+                    throw new Error(`HTTP ${status} ${resp?.statusText()}`);
                 }
                 return resp;
             },

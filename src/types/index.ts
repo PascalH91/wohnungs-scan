@@ -67,8 +67,6 @@ export interface ProviderDetails {
     id: ProviderType;
     name: string;
     logo?: string;
-    refreshRateInSeconds?: number;
-    additionalBufferInSeconds?: number;
     url?: string;
 }
 

@@ -36,8 +36,6 @@ export type ProviderDetails = {
     id: ProviderT;
     name: string;
     logo?: string;
-    refreshRateInSeconds?: number;
-    additionalBufferInSeconds?: number;
     url?: string;
 };
 type ProviderList = {
@@ -49,8 +47,6 @@ const providerDetails: ProviderList = {
         id: "WBM",
         name: "WBM",
         logo: "/images/wbm.jpg",
-        refreshRateInSeconds: 300,
-        additionalBufferInSeconds: 60,
         url: wbmUrl,
     },
 
@@ -121,8 +117,6 @@ const providerDetails: ProviderList = {
         id: "SOLIDARITAET",
         name: "Solidarität eG",
         logo: "/images/friedrichsheim.jpg",
-        refreshRateInSeconds: 900,
-        additionalBufferInSeconds: 30,
         url: solidariaetUrl,
     },
 
@@ -130,8 +124,6 @@ const providerDetails: ProviderList = {
         id: "NEUES_BERLIN",
         name: "Neues Berlin",
         logo: "/images/friedrichsheim.jpg",
-        refreshRateInSeconds: 900,
-        additionalBufferInSeconds: 30,
         url: neuesBerlinUrl,
     },
 
@@ -139,8 +131,6 @@ const providerDetails: ProviderList = {
         id: "WBG_FRIEDRICHSHAIN_EG",
         name: "WBG Friedrichshain eG",
         logo: "/images/friedrichsheim.jpg",
-        refreshRateInSeconds: 300,
-        additionalBufferInSeconds: 60,
         url: FriedrichshainEGUrl,
     },
 
@@ -148,8 +138,6 @@ const providerDetails: ProviderList = {
         id: "BEROLINA",
         name: "BEROLINA",
         logo: "/images/friedrichsheim.jpg",
-        refreshRateInSeconds: 300,
-        additionalBufferInSeconds: 60,
         url: berolinaUrl,
     },
 
@@ -157,8 +145,6 @@ const providerDetails: ProviderList = {
         id: "VINETA_89",
         name: "VINETA 89",
         logo: "/images/friedrichsheim.jpg",
-        refreshRateInSeconds: 400,
-        additionalBufferInSeconds: 30,
         url: vineta89Url,
     },
 
@@ -166,24 +152,18 @@ const providerDetails: ProviderList = {
         id: "FORUM_KREUZBERG",
         name: "Forum Kreuzberg",
         logo: "/images/friedrichsheim.jpg",
-        refreshRateInSeconds: 900,
-        additionalBufferInSeconds: 30,
         url: forumKreuzbergUrl,
     },
     BERLINOVO: {
         id: "BERLINOVO",
         name: "Berlinovo",
         logo: "/images/berlinovo.svg",
-        refreshRateInSeconds: 300,
-        additionalBufferInSeconds: 30,
         url: berlinovoUrl,
     },
     PARADIES: {
         id: "PARADIES",
         name: "Paradies",
         logo: "/images/friedrichsheim.jpg",
-        refreshRateInSeconds: 900,
-        additionalBufferInSeconds: 30,
         url: paradiesUrl,
     },
 
@@ -191,8 +171,6 @@ const providerDetails: ProviderList = {
         id: "WG_VORWAERTS",
         name: "WG Vorwärts",
         logo: "/images/friedrichsheim.jpg",
-        refreshRateInSeconds: 900,
-        additionalBufferInSeconds: 30,
         url: wgVorwaertsUrl,
     },
 
@@ -200,8 +178,6 @@ const providerDetails: ProviderList = {
         id: "EVM",
         name: "EVM",
         logo: "/images/friedrichsheim.jpg",
-        refreshRateInSeconds: 900,
-        additionalBufferInSeconds: 30,
         url: evmUrl,
     },
 
@@ -209,8 +185,6 @@ const providerDetails: ProviderList = {
         id: "VATERLAND",
         name: "Vaterland eG",
         logo: "/images/friedrichsheim.jpg",
-        refreshRateInSeconds: 900,
-        additionalBufferInSeconds: 30,
         url: vaterlandUrl,
     },
 
@@ -218,32 +192,24 @@ const providerDetails: ProviderList = {
         id: "ADLERGROUP",
         name: "Adler Gruppe",
         logo: "/images/adlergroup.png",
-        refreshRateInSeconds: 60,
-        additionalBufferInSeconds: 30,
         url: adlergroupUrl,
     },
     EBAY_KLEINANZEIGEN: {
         id: "EBAY_KLEINANZEIGEN",
         name: "Ebay Kleinanzeigen",
         logo: "/images/ebay_kleinanzeigen.jpg",
-        refreshRateInSeconds: 500,
-        additionalBufferInSeconds: 30,
         url: ebayKleinanzeigenUrl,
     },
     EG_1892: {
         id: "EG_1892",
         name: "1892",
         logo: "/images/friedrichsheim.jpg",
-        refreshRateInSeconds: 900,
-        additionalBufferInSeconds: 30,
         url: eg1892Url,
     },
     IMMOSCOUT: {
         id: "IMMOSCOUT",
         name: "ImmoScout 24",
         logo: "/images/immoscout.png",
-        refreshRateInSeconds: 300,
-        additionalBufferInSeconds: 30,
         url: immoscoutUrl,
     },
 };

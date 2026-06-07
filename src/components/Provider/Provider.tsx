@@ -19,7 +19,7 @@ import { Offer } from "@/types";
 const providerNameById: { [key in ProviderT]?: string } = {
     HOWOGE: "HOWOGE",
     DEUTSCHE_WOHNEN: "Deutsche Wohnen",
-    // WBM: "WBM",
+    WBM: "WBM",
     ADLERGROUP: "Adler Group",
     BERLINOVO: "Berlinovo",
     FRIEDRICHSHEIM: "Friedrichsheim",
@@ -43,6 +43,13 @@ const providerNameById: { [key in ProviderT]?: string } = {
     EVM: "EVM",
     //IMMOSCOUT: "ImmobilienScout24",
 };
+
+// How often each tile re-reads the store (a cheap /api/offers call — no
+// scraping). One uniform rate for every provider; the backend scheduler is what
+// actually controls scrape frequency. A little jitter spreads the 24 tiles'
+// reads out instead of firing them all at the same instant.
+const VIEW_REFRESH_BASE_MS = 25_000;
+const VIEW_REFRESH_JITTER_MS = 10_000;
 
 const Provider = ({
     provider,
@@ -182,33 +189,17 @@ const Provider = ({
             return;
         }
 
-        const getTimoutValue = (min: number = 25, maxBuffer: number = 20) => {
-            const minInMS = min * 1000;
-            const maxBufferInMS = (min + maxBuffer) * 1000;
-            const arbitraryFactorInMS = Math.floor(Math.random() * (maxBufferInMS - minInMS) + minInMS);
-            const timeOutValue = !!min && !!maxBuffer ? arbitraryFactorInMS : minInMS;
-            return timeOutValue;
-        };
+        const nextRefreshMs = VIEW_REFRESH_BASE_MS + Math.floor(Math.random() * VIEW_REFRESH_JITTER_MS);
 
-        const timeoutId = setTimeout(
-            () => {
-                // Double-check monitoring is still active when timeout fires
-                if (isMonitoringActiveRef.current && !run) {
-                    setRun(true);
-                }
-            },
-            getTimoutValue(provider.refreshRateInSeconds, provider.additionalBufferInSeconds),
-        );
+        const timeoutId = setTimeout(() => {
+            // Double-check monitoring is still active when timeout fires
+            if (isMonitoringActiveRef.current && !run) {
+                setRun(true);
+            }
+        }, nextRefreshMs);
 
         return () => clearTimeout(timeoutId);
-    }, [
-        run,
-        isMonitoringActive,
-        isInitialRender,
-        provider.id,
-        provider.refreshRateInSeconds,
-        provider.additionalBufferInSeconds,
-    ]);
+    }, [run, isMonitoringActive, isInitialRender, provider.id]);
 
     return errorToShow ? (
         <div

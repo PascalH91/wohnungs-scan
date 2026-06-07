@@ -17,6 +17,10 @@ const CHROMIUM_PATH: string | undefined = process.env.CHROMIUM_PATH;
 // Detect if running in Vercel or other serverless environment
 const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
 
+// Warn at most once per process about a misconfigured PUPPETEER_EXECUTABLE_PATH,
+// so a stale shell env var doesn't spam a line on every browser creation.
+let warnedBadPuppeteerPath = false;
+
 interface BrowserInstance {
     browser: Browser;
     inUse: boolean;
@@ -105,7 +109,8 @@ class BrowserPool {
             executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
             logger.info("Using PUPPETEER_EXECUTABLE_PATH for browser binary", { path: executablePath });
         } else {
-            if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            if (process.env.PUPPETEER_EXECUTABLE_PATH && !warnedBadPuppeteerPath) {
+                warnedBadPuppeteerPath = true;
                 logger.warn("PUPPETEER_EXECUTABLE_PATH is set but no file exists there — falling back to locate-chrome", {
                     path: process.env.PUPPETEER_EXECUTABLE_PATH,
                 });
