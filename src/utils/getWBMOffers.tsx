@@ -58,6 +58,7 @@ async function extractWBMOffers(page: Page): Promise<{ offers: Offer[]; isMultiP
 
 export const getWBMOffers = createScraper({
     providerName: "WBM",
+    stableId: true, // data-id + data-uid
     url: wbmUrl,
     extractOffers: extractWBMOffers,
 });

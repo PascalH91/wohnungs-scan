@@ -126,8 +126,12 @@ async function triggerRoute(slug: string): Promise<{ blocked: boolean; detail: s
  * One full pass: visit every provider once, sequentially, in shuffled order,
  * with a randomized gap between each (no bursts), skipping any provider that is
  * in a block cooldown. Then email a digest of new offers.
+ *
+ * When `emailOffers` is false (the startup "prime" pass), offers are still
+ * scraped and stored but NOT emailed — used to capture current state before we
+ * suppress it, so deploys/fingerprint changes don't blast the whole backlog.
  */
-async function runCycle(): Promise<void> {
+async function runCycle(emailOffers = true): Promise<void> {
     if (running) {
         logger.warn("Previous scrape cycle still running — skipping");
         return;
@@ -196,16 +200,19 @@ async function runCycle(): Promise<void> {
 
         // The notify route atomically claims unnotified offers and emails one
         // digest. Each new offer is emailed exactly once, even across restarts.
+        // Skipped on the prime pass (emailOffers=false).
         let newOffers = 0;
-        try {
-            const res = await fetch(`${BASE_URL}/api/notify`, { cache: "no-store" });
-            const body = (await res.json()) as { newOffers?: number };
-            newOffers = body?.newOffers ?? 0;
-        } catch (error) {
-            logger.error("Notify step failed", error);
+        if (emailOffers) {
+            try {
+                const res = await fetch(`${BASE_URL}/api/notify`, { cache: "no-store" });
+                const body = (await res.json()) as { newOffers?: number };
+                newOffers = body?.newOffers ?? 0;
+            } catch (error) {
+                logger.error("Notify step failed", error);
+            }
         }
 
-        logger.info("Scrape cycle complete", { durationMs: Date.now() - startedAt, newOffers });
+        logger.info("Scrape cycle complete", { durationMs: Date.now() - startedAt, newOffers, emailOffers });
     } finally {
         running = false;
     }
@@ -223,17 +230,20 @@ export async function startScheduler(): Promise<void> {
         providerGapMs: PROVIDER_GAP_MS,
     });
 
-    // Backfill so the first cycle does not email the entire existing backlog.
-    // Runs after the HTTP server is up; the first scrape cycle follows it.
+    // Prime then suppress: once the HTTP server is up, run one scrape pass
+    // WITHOUT emailing to capture the current state, then mark everything seen.
+    // This means you're only alerted about offers that appear AFTER startup —
+    // so a deploy, a fresh store, or a fingerprint change never blasts the whole
+    // existing backlog at you. Regular (emailing) passes follow on the interval.
     setTimeout(async () => {
         try {
+            await runCycle(false); // prime: scrape + store, no offer emails
             const res = await fetch(`${BASE_URL}/api/notify?backfill=1`, { cache: "no-store" });
             const body = (await res.json()) as { backfilled?: number };
-            logger.info("Startup backfill complete", { marked: body?.backfilled ?? 0 });
+            logger.info("Startup prime complete — suppressed current backlog", { marked: body?.backfilled ?? 0 });
         } catch (error) {
-            logger.error("Failed to backfill on startup", error);
+            logger.error("Startup prime/backfill failed", error);
         }
-        await runCycle();
         scheduleNextCycle();
     }, 10000);
 }

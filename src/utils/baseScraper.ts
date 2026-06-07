@@ -24,6 +24,13 @@ export interface ScraperConfig {
     waitForSelector?: string;
     selectorTimeout?: number;
     navigationTimeout?: number;
+    /**
+     * Set when this provider's extractOffers emits a genuine stable per-listing
+     * id in Offer.id (e.g. a data-* attribute or listing URL). The offer store
+     * then keys identity on that id instead of a content fingerprint. Leave
+     * unset/false for providers that use a constant or content-derived id.
+     */
+    stableId?: boolean;
     extractOffers: (page: Page) => Promise<{ offers: Offer[]; isMultiPages?: boolean }>;
 }
 
@@ -113,7 +120,8 @@ export async function executeScraper(
         customUserAgent,
     } = options;
 
-    const { providerName, url, waitForSelector, selectorTimeout, navigationTimeout, extractOffers } = scraperConfig;
+    const { providerName, url, waitForSelector, selectorTimeout, navigationTimeout, stableId, extractOffers } =
+        scraperConfig;
 
     logger.info(`Starting scraper for ${providerName}`, { url });
 
@@ -198,7 +206,7 @@ export async function executeScraper(
         // Persist offers to the local store and attach isNew flags from firstSeenAt.
         // Persistence failures must not break the scrape response.
         try {
-            data.offers = await persistOffers(providerName, data.offers);
+            data.offers = await persistOffers(providerName, data.offers, { useProviderId: stableId });
         } catch (error: any) {
             logger.error(`Failed to persist offers for ${providerName}`, error);
         }

@@ -57,7 +57,26 @@ function normalize(value: unknown): string {
     return String(value).trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-export function computeOfferId(company: string, offer: Offer): string {
+/**
+ * Stable identity for an offer.
+ *
+ * When `useProviderId` is set (providers whose scraper supplies a genuine
+ * stable per-listing id — see ScraperConfig.stableId), we key on company + that
+ * id. This survives cosmetic changes (price/size/title reformatting) and avoids
+ * collisions between distinct listings that share title/address/size.
+ *
+ * Otherwise we fall back to a content fingerprint of company + the visible
+ * fields, which is the best available identity when no provider id exists.
+ */
+export function computeOfferId(company: string, offer: Offer, useProviderId = false): string {
+    const providerId = normalize(offer.id);
+    if (useProviderId && providerId) {
+        return createHash("sha256")
+            .update(`${normalize(company)}|providerId|${providerId}`)
+            .digest("hex")
+            .slice(0, 32);
+    }
+
     const parts = [
         normalize(company),
         normalize(offer.title),
@@ -107,7 +126,11 @@ function withLock<T>(fn: () => Promise<T>): Promise<T> {
  * NEW_OFFER_WINDOW_MS window. firstSeenAt is permanent, so this signal survives
  * page reloads and short-lived disappearances of an offer between scrape cycles.
  */
-export async function persistOffers(company: string, offers: Offer[]): Promise<Offer[]> {
+export async function persistOffers(
+    company: string,
+    offers: Offer[],
+    options: { useProviderId?: boolean } = {},
+): Promise<Offer[]> {
     if (!offers.length) return offers;
 
     return withLock(async () => {
@@ -118,7 +141,7 @@ export async function persistOffers(company: string, offers: Offer[]): Promise<O
         let newlyStoredCount = 0;
 
         const decorated: Offer[] = offers.map((offer) => {
-            const id = computeOfferId(company, offer);
+            const id = computeOfferId(company, offer, options.useProviderId);
             const existing = store.offers[id];
 
             if (existing) {
