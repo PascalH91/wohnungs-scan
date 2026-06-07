@@ -44,3 +44,6 @@ next-env.d.ts
 
 # runtime scrape snapshots (frontend read model)
 data/snapshots.json
+
+# Playwright MCP debug snapshots (browser inspection artifacts)
+.playwright-mcp/
