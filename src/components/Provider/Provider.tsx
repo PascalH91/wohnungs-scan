@@ -124,9 +124,6 @@ const Provider = ({
                     errors,
                 }: { data: { offers: Offer[]; isMultiPages: boolean }; errors: string } = await res.json();
 
-                const existingIds = new Set(offers.map((offer) => offer.id));
-                const newOffers = offersRes?.filter((oRes) => !existingIds.has(oRes.id));
-
                 // Play sound on errors or multi-page detection (only if sound enabled)
                 if (soundEnabled && ((!!errors && !errorToShow) || (!isMultiPages && isMultiPagesRes))) {
                     play();
@@ -134,20 +131,23 @@ const Provider = ({
 
                 setIsMultiPages(isMultiPagesRes);
 
-                // Play sound for initial offers load (only if sound enabled)
+                // Play sound for initial offers load (only if sound enabled).
+                // This also suppresses the bell on the very first scrape against an
+                // empty store, where every offer would otherwise be flagged isNew.
                 if (soundEnabled && !hasLoadedInitialOffers && offersRes?.length) {
                     play();
                     setHasLoadedInitialOffers(true);
                 }
 
-                // Play sound for new unvisited offers (only after initial load and if sound enabled)
-                if (soundEnabled && hasLoadedInitialOffers && newOffers?.length) {
+                // Server-truth "new" signal: backed by firstSeenAt in the offer store,
+                // so it survives reloads and short-lived disappearances of an offer.
+                if (soundEnabled && hasLoadedInitialOffers) {
                     const visitedSet = new Set(visitedIds);
-                    const newUnvisitedOffers = newOffers.filter((offer) => !visitedSet.has(offer.id));
+                    const serverNewUnvisited = offersRes?.filter((o) => o.isNew && !visitedSet.has(o.id)) ?? [];
 
-                    if (newUnvisitedOffers.length) {
+                    if (serverNewUnvisited.length) {
                         play();
-                        setNewOfferIds((ids) => [...ids, ...newUnvisitedOffers.map((offer) => offer.id)]);
+                        setNewOfferIds((ids) => [...ids, ...serverNewUnvisited.map((offer) => offer.id)]);
                     }
                 }
 

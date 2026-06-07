@@ -20,6 +20,11 @@ const STORE_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(STORE_DIR, "offers.json");
 const STORE_VERSION = 1;
 
+// Offers whose firstSeenAt falls within this window are marked isNew=true in the
+// response. Must be longer than the longest scraper poll interval so a tick can
+// always observe the freshness flag at least once.
+const NEW_OFFER_WINDOW_MS = 15 * 60 * 1000;
+
 export interface StoredOffer {
     id: string;
     company: string;
@@ -87,24 +92,29 @@ function withLock<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 /**
- * Upsert a batch of offers for a provider. Returns the offers that were
- * first-seen in this call (i.e. not present in the store before).
+ * Upsert a batch of offers for a provider and return the same offers decorated
+ * with `isNew`, which is true when the offer's firstSeenAt falls inside the
+ * NEW_OFFER_WINDOW_MS window. firstSeenAt is permanent, so this signal survives
+ * page reloads and short-lived disappearances of an offer between scrape cycles.
  */
-export async function persistOffers(company: string, offers: Offer[]): Promise<StoredOffer[]> {
-    if (!offers.length) return [];
+export async function persistOffers(company: string, offers: Offer[]): Promise<Offer[]> {
+    if (!offers.length) return offers;
 
     return withLock(async () => {
         const store = await readStore();
-        const now = new Date().toISOString();
-        const newlyStored: StoredOffer[] = [];
+        const now = new Date();
+        const nowIso = now.toISOString();
+        const windowStart = now.getTime() - NEW_OFFER_WINDOW_MS;
+        let newlyStoredCount = 0;
 
-        for (const offer of offers) {
+        const decorated: Offer[] = offers.map((offer) => {
             const id = computeOfferId(company, offer);
             const existing = store.offers[id];
 
             if (existing) {
-                existing.lastSeenAt = now;
-                continue;
+                existing.lastSeenAt = nowIso;
+                const isNew = Date.parse(existing.firstSeenAt) >= windowStart;
+                return { ...offer, isNew };
             }
 
             const record: StoredOffer = {
@@ -115,21 +125,19 @@ export async function persistOffers(company: string, offers: Offer[]): Promise<S
                 rooms: offer.rooms !== undefined ? String(offer.rooms) : "",
                 size: offer.size ?? "",
                 link: offer.link ?? "",
-                firstSeenAt: now,
-                lastSeenAt: now,
+                firstSeenAt: nowIso,
+                lastSeenAt: nowIso,
             };
             store.offers[id] = record;
-            newlyStored.push(record);
+            newlyStoredCount += 1;
+            return { ...offer, isNew: true };
+        });
+
+        await writeStore(store);
+        if (newlyStoredCount) {
+            logger.info("Stored new offers", { company, count: newlyStoredCount });
         }
 
-        if (newlyStored.length) {
-            await writeStore(store);
-            logger.info("Stored new offers", { company, count: newlyStored.length });
-        } else {
-            // Touch lastSeenAt updates so they're not lost across restarts.
-            await writeStore(store);
-        }
-
-        return newlyStored;
+        return decorated;
     });
 }

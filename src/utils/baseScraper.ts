@@ -155,9 +155,10 @@ export async function executeScraper(
             isMultiPages: data.isMultiPages,
         });
 
-        // Persist offers to the local store; failures here must not break the scrape response.
+        // Persist offers to the local store and attach isNew flags from firstSeenAt.
+        // Persistence failures must not break the scrape response.
         try {
-            await persistOffers(providerName, data.offers);
+            data.offers = await persistOffers(providerName, data.offers);
         } catch (error: any) {
             logger.error(`Failed to persist offers for ${providerName}`, error);
         }

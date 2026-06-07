@@ -15,6 +15,8 @@ export interface Offer {
     rooms?: number | string;
     blocked?: boolean;
     daysUntilAccessible?: number;
+    /** Server-side signal: this offer was first seen recently enough to warrant alerting. */
+    isNew?: boolean;
 }
 
 /**
