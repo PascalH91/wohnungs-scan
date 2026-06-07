@@ -96,6 +96,11 @@ class BrowserPool {
 
                 throw err;
             }
+        } else if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            // Explicit Chromium path — set this in Docker/VPS deployments where
+            // the system chromium lives at a known location.
+            executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+            logger.info("Using PUPPETEER_EXECUTABLE_PATH for browser binary", { path: executablePath });
         } else {
             // Use locate-chrome in local development
             executablePath = await new Promise((resolve) => locateChrome((arg: any) => resolve(arg)));

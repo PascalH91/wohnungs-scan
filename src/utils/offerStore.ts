@@ -35,6 +35,12 @@ export interface StoredOffer {
     link: string;
     firstSeenAt: string;
     lastSeenAt: string;
+    /**
+     * Set once an email notification for this offer has been sent. Undefined
+     * means the offer is still pending notification. This is the single source
+     * of truth for email dedup and survives process restarts.
+     */
+    notifiedAt?: string;
 }
 
 interface StoreFile {
@@ -139,5 +145,57 @@ export async function persistOffers(company: string, offers: Offer[]): Promise<O
         }
 
         return decorated;
+    });
+}
+
+/**
+ * Atomically return all stored offers that have not yet been notified and mark
+ * them as notified in the same write. Because the claim and the mark happen
+ * under the same lock, an offer is handed out exactly once even if scrape
+ * cycles overlap — this is what guarantees you never get two emails for the
+ * same listing.
+ */
+export async function claimUnnotifiedOffers(): Promise<StoredOffer[]> {
+    return withLock(async () => {
+        const store = await readStore();
+        const nowIso = new Date().toISOString();
+
+        const pending = Object.values(store.offers).filter((offer) => !offer.notifiedAt);
+        if (!pending.length) return [];
+
+        for (const offer of pending) {
+            store.offers[offer.id].notifiedAt = nowIso;
+        }
+
+        await writeStore(store);
+        logger.info("Claimed unnotified offers", { count: pending.length });
+        return pending;
+    });
+}
+
+/**
+ * Mark every currently-stored offer as notified without sending anything.
+ * Used as a one-time backfill when the scheduler first boots so the very first
+ * run does not email the entire pre-existing backlog — only listings that
+ * appear after the scheduler starts will trigger alerts.
+ */
+export async function markAllNotified(): Promise<number> {
+    return withLock(async () => {
+        const store = await readStore();
+        const nowIso = new Date().toISOString();
+        let marked = 0;
+
+        for (const offer of Object.values(store.offers)) {
+            if (!offer.notifiedAt) {
+                offer.notifiedAt = nowIso;
+                marked += 1;
+            }
+        }
+
+        if (marked) {
+            await writeStore(store);
+            logger.info("Backfilled notifiedAt for existing offers", { count: marked });
+        }
+        return marked;
     });
 }

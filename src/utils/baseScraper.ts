@@ -114,6 +114,25 @@ export async function executeScraper(
 
         page = await browser.newPage();
 
+        // Block heavy, non-essential resources (images, media, fonts) to cut
+        // bandwidth dramatically — these dominate page weight and are never read
+        // when extracting text data. Stylesheets and scripts are kept so that
+        // visibility-based `waitForSelector` checks and JS-rendered listings
+        // still work. Disable with SCRAPER_BLOCK_RESOURCES=false if a provider
+        // needs the full page. Enabled by default.
+        if (process.env.SCRAPER_BLOCK_RESOURCES !== "false") {
+            const BLOCKED = new Set(["image", "media", "font"]);
+            await page.setRequestInterception(true);
+            page.on("request", (request) => {
+                if (request.isInterceptResolutionHandled()) return;
+                if (BLOCKED.has(request.resourceType())) {
+                    void request.abort();
+                } else {
+                    void request.continue();
+                }
+            });
+        }
+
         // Set custom user agent
         const userAgent = customUserAgent || generateRandomUA();
         await page.setUserAgent(userAgent);
