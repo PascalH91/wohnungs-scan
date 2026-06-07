@@ -10,7 +10,7 @@ import { config } from "@/config";
 import { Offer, ScraperResponse } from "@/types";
 import { createLogger } from "./logger";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
-import { persistOffers } from "./offerStore";
+import { persistOffers, persistSnapshot } from "./offerStore";
 
 const logger = createLogger("base-scraper");
 
@@ -182,10 +182,24 @@ export async function executeScraper(
             logger.error(`Failed to persist offers for ${providerName}`, error);
         }
 
+        // Save the current listing as this provider's snapshot for the frontend.
+        try {
+            await persistSnapshot(providerName, data.offers, data.isMultiPages ?? false, "");
+        } catch (error: any) {
+            logger.error(`Failed to persist snapshot for ${providerName}`, error);
+        }
+
         return { data, errors: "" };
     } catch (error: any) {
         const errorMessage = error?.message || String(error);
         logger.error(`Scraper failed for ${providerName}`, error, { url });
+
+        // Record the error in the snapshot so the frontend can surface it.
+        try {
+            await persistSnapshot(providerName, [], false, errorMessage);
+        } catch (snapshotError: any) {
+            logger.error(`Failed to persist error snapshot for ${providerName}`, snapshotError);
+        }
 
         return {
             data: { offers: [], isMultiPages: false },

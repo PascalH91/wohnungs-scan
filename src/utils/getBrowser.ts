@@ -1,6 +1,7 @@
 import chromium from "@sparticuz/chromium-min";
 import puppeteerCore, { Browser } from "puppeteer-core";
 import locateChrome from "locate-chrome";
+import { existsSync } from "fs";
 import _ from "lodash";
 import { config } from "@/config";
 import { createLogger } from "./logger";
@@ -96,13 +97,20 @@ class BrowserPool {
 
                 throw err;
             }
-        } else if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+        } else if (process.env.PUPPETEER_EXECUTABLE_PATH && existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
             // Explicit Chromium path — set this in Docker/VPS deployments where
-            // the system chromium lives at a known location.
+            // the system chromium lives at a known location. Only honored when a
+            // file actually exists there, so a stale/bogus shell env var (e.g.
+            // PUPPETEER_EXECUTABLE_PATH="chromium not found") can't break local dev.
             executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
             logger.info("Using PUPPETEER_EXECUTABLE_PATH for browser binary", { path: executablePath });
         } else {
-            // Use locate-chrome in local development
+            if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+                logger.warn("PUPPETEER_EXECUTABLE_PATH is set but no file exists there — falling back to locate-chrome", {
+                    path: process.env.PUPPETEER_EXECUTABLE_PATH,
+                });
+            }
+            // Use locate-chrome in local development (finds installed Chrome/Chromium).
             executablePath = await new Promise((resolve) => locateChrome((arg: any) => resolve(arg)));
         }
 

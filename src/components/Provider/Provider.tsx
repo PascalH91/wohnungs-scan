@@ -12,33 +12,36 @@ import { ProviderDetails } from "../Providerlist/index";
 import { transformAddressToGoogleMapsLink } from "@/utils/transformAdressToLink";
 import { Offer } from "@/types";
 
-const fetchUrlByProvider: { [key in ProviderT]?: string } = {
-    HOWOGE: "howoge",
-    DEUTSCHE_WOHNEN: "deutschewohnen",
-    // WBM: "wbm",
-    ADLERGROUP: "adlergroup",
-    BERLINOVO: "berlinovo",
-    FRIEDRICHSHEIM: "friedrichsheim",
-    GEWOBAG: "gewobag",
-    DPF: "dpf",
-    DAGEWO: "dagewo",
-    GESOBAU: "gesobau",
-    SOLIDARITAET: "solidaritaet",
-    WBG_FRIEDRICHSHAIN_EG: "friedrichshain_eg",
-    BEROLINA: "berolina",
-    NEUES_BERLIN: "neues_berlin",
-    PARADIES: "paradies",
-    WG_VORWAERTS: "wg_vorwaerts",
-    FORUM_KREUZBERG: "forum_kreuzberg",
+// Maps a UI provider id to the scraper's providerName, which is the key the
+// backend stores snapshots under. The frontend reads /api/offers?provider=<name>
+// (a cheap read of the latest backend scrape) instead of triggering a scrape.
+// WBM and IMMOSCOUT are intentionally omitted (disabled in the UI).
+const providerNameById: { [key in ProviderT]?: string } = {
+    HOWOGE: "HOWOGE",
+    DEUTSCHE_WOHNEN: "Deutsche Wohnen",
+    // WBM: "WBM",
+    ADLERGROUP: "Adler Group",
+    BERLINOVO: "Berlinovo",
+    FRIEDRICHSHEIM: "Friedrichsheim",
+    GEWOBAG: "GEWOBAG",
+    DPF: "DPF",
+    DAGEWO: "DAGEWO",
+    GESOBAU: "GESOBAU",
+    SOLIDARITAET: "Solidarität",
+    WBG_FRIEDRICHSHAIN_EG: "Friedrichshain EG",
+    BEROLINA: "Berolina",
+    NEUES_BERLIN: "Neues Berlin",
+    PARADIES: "Paradies",
+    WG_VORWAERTS: "WG Vorwärts",
+    FORUM_KREUZBERG: "Forum Kreuzberg",
     EG_1892: "1892",
-    VATERLAND: "vaterland",
-    VINETA_89: "vineta_89",
-    VONOVIA: "vonovia",
-    EBAY_KLEINANZEIGEN: "ebay_kleinanzeigen",
-    //TODO: check Stadt und Land
-    STADTUNDLAND: "stadtundland",
-    EVM: "evm",
-    //IMMOSCOUT: "immoscout",
+    VATERLAND: "Vaterland",
+    VINETA_89: "Vineta 89",
+    VONOVIA: "Vonovia",
+    EBAY_KLEINANZEIGEN: "Ebay Kleinanzeigen",
+    STADTUNDLAND: "Stadt und Land",
+    EVM: "EVM",
+    //IMMOSCOUT: "ImmobilienScout24",
 };
 
 const Provider = ({
@@ -106,7 +109,7 @@ const Provider = ({
     }, [isMonitoringActive, abortController]);
 
     useEffect(() => {
-        if (!run || !fetchUrlByProvider[provider.id] || isLoading || isInitialRender) {
+        if (!run || !providerNameById[provider.id] || isLoading || isInitialRender) {
             return;
         }
 
@@ -116,7 +119,7 @@ const Provider = ({
 
         const getOffers = async () => {
             try {
-                const res = await fetch(`/api/cron/${fetchUrlByProvider[provider.id]}`, {
+                const res = await fetch(`/api/offers?provider=${encodeURIComponent(providerNameById[provider.id]!)}`, {
                     signal: controller.signal,
                 });
                 const {

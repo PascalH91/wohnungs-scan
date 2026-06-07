@@ -18,6 +18,10 @@ const logger = createLogger("offer-store");
 
 const STORE_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(STORE_DIR, "offers.json");
+// Latest scrape result per provider, for the frontend to read (no re-scraping).
+// Kept separate from the dedup store above, which accumulates every offer ever
+// seen for email purposes; this file only holds each provider's CURRENT listing.
+const SNAPSHOT_PATH = path.join(STORE_DIR, "snapshots.json");
 const STORE_VERSION = 1;
 
 // Offers whose firstSeenAt falls within this window are marked isNew=true in the
@@ -198,4 +202,73 @@ export async function markAllNotified(): Promise<number> {
         }
         return marked;
     });
+}
+
+// ============================================================================
+// Per-provider snapshots — the frontend's read model.
+//
+// On each scrape the base scraper overwrites the provider's snapshot with the
+// current listing (plus isMultiPages and any error). The frontend reads these
+// instead of triggering a scrape, so opening the page launches zero browsers.
+// ============================================================================
+
+export interface ProviderSnapshot {
+    offers: Offer[];
+    isMultiPages: boolean;
+    error: string;
+    scrapedAt: string;
+}
+
+interface SnapshotFile {
+    version: number;
+    providers: Record<string, ProviderSnapshot>;
+}
+
+async function readSnapshotFile(): Promise<SnapshotFile> {
+    try {
+        const raw = await fs.readFile(SNAPSHOT_PATH, "utf8");
+        const parsed = JSON.parse(raw) as SnapshotFile;
+        if (!parsed.providers || typeof parsed.providers !== "object") {
+            return { version: STORE_VERSION, providers: {} };
+        }
+        return { version: parsed.version ?? STORE_VERSION, providers: parsed.providers };
+    } catch (error: any) {
+        if (error.code === "ENOENT") {
+            return { version: STORE_VERSION, providers: {} };
+        }
+        logger.warn("Failed to read snapshot file, treating as empty", { error: error.message });
+        return { version: STORE_VERSION, providers: {} };
+    }
+}
+
+async function writeSnapshotFile(file: SnapshotFile): Promise<void> {
+    await fs.mkdir(STORE_DIR, { recursive: true });
+    const tmpPath = `${SNAPSHOT_PATH}.${process.pid}.tmp`;
+    await fs.writeFile(tmpPath, JSON.stringify(file, null, 2), "utf8");
+    await fs.rename(tmpPath, SNAPSHOT_PATH);
+}
+
+/** Overwrite the current snapshot for a provider. Shares the write lock with the dedup store. */
+export async function persistSnapshot(
+    company: string,
+    offers: Offer[],
+    isMultiPages: boolean,
+    error: string,
+): Promise<void> {
+    return withLock(async () => {
+        const file = await readSnapshotFile();
+        file.providers[company] = {
+            offers,
+            isMultiPages: Boolean(isMultiPages),
+            error: error || "",
+            scrapedAt: new Date().toISOString(),
+        };
+        await writeSnapshotFile(file);
+    });
+}
+
+/** Read one provider's current snapshot, or null if it has never been scraped. */
+export async function getProviderSnapshot(company: string): Promise<ProviderSnapshot | null> {
+    const file = await readSnapshotFile();
+    return file.providers[company] ?? null;
 }
