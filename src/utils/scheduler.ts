@@ -87,25 +87,26 @@ let started = false;
 // slug -> epoch ms until which we skip the provider after it blocked us.
 const cooldownUntil: Record<string, number> = {};
 
-/** Trigger one provider's scrape. Returns whether the provider blocked us. */
-async function triggerRoute(slug: string): Promise<{ blocked: boolean }> {
+/** Trigger one provider's scrape. Returns whether it blocked us and the detail. */
+async function triggerRoute(slug: string): Promise<{ blocked: boolean; detail: string }> {
     try {
         const res = await fetch(`${BASE_URL}/api/cron/${slug}`, { cache: "no-store" });
         if (!res.ok) {
             logger.warn(`Scraper route returned non-OK status: ${slug}`, { status: res.status });
-            return { blocked: res.status === 403 || res.status === 429 };
+            const blocked = res.status === 403 || res.status === 429;
+            return { blocked, detail: blocked ? `HTTP ${res.status}` : "" };
         }
         const body = (await res.json()) as { errors?: string };
         if (body?.errors) {
             logger.warn(`Scraper reported error: ${slug}`, { error: body.errors });
             // Heuristic: treat rate-limit / forbidden / explicit "blocked" as a block.
             const blocked = /\b(403|429)\b|blocked|rate.?limit|too many requests/i.test(body.errors);
-            return { blocked };
+            return { blocked, detail: blocked ? body.errors : "" };
         }
-        return { blocked: false };
+        return { blocked: false, detail: "" };
     } catch (error) {
         logger.error(`Failed to trigger scraper: ${slug}`, error);
-        return { blocked: false };
+        return { blocked: false, detail: "" };
     }
 }
 
@@ -124,6 +125,8 @@ async function runCycle(): Promise<void> {
     const order = shuffled(SCRAPER_ROUTES);
     logger.info("Starting scrape cycle", { scrapers: order.length });
 
+    const blockedThisCycle: { provider: string; detail: string }[] = [];
+
     try {
         for (let i = 0; i < order.length; i++) {
             const slug = order[i];
@@ -136,9 +139,10 @@ async function runCycle(): Promise<void> {
                 continue;
             }
 
-            const { blocked } = await triggerRoute(slug);
+            const { blocked, detail } = await triggerRoute(slug);
             if (blocked) {
                 cooldownUntil[slug] = Date.now() + BLOCK_COOLDOWN_MS;
+                blockedThisCycle.push({ provider: slug, detail });
                 logger.warn(`${slug} appears to be blocking us — backing off`, {
                     cooldownUntil: new Date(cooldownUntil[slug]).toISOString(),
                 });
@@ -146,6 +150,20 @@ async function runCycle(): Promise<void> {
 
             // Polite randomized gap before the next provider (not after the last).
             if (i < order.length - 1) await sleep(randomGap());
+        }
+
+        // Alert by email if any provider blocked us this pass (one digest).
+        if (blockedThisCycle.length) {
+            try {
+                await fetch(`${BASE_URL}/api/notify-block`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    cache: "no-store",
+                    body: JSON.stringify({ blocked: blockedThisCycle }),
+                });
+            } catch (error) {
+                logger.error("Block-alert step failed", error);
+            }
         }
 
         // The notify route atomically claims unnotified offers and emails one
