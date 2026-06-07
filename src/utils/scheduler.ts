@@ -68,6 +68,16 @@ const PROVIDER_GAP_JITTER_MS = parseInt(process.env.PROVIDER_GAP_JITTER_MS || "1
 // Once a provider blocks/rate-limits us, stop hitting it entirely for this long.
 const BLOCK_COOLDOWN_MS = parseInt(process.env.BLOCK_COOLDOWN_MS || `${60 * 60 * 1000}`, 10); // 1 hour
 
+// Hardcoded per-provider minimum gap between scrapes, enforced REGARDLESS of
+// SCRAPE_INTERVAL_MS. Protects sensitive providers (WBM has blocked us for
+// hitting it too often) even when the global interval is set short for testing.
+// A provider is skipped in a pass if it was scraped more recently than this.
+const MIN_PROVIDER_INTERVAL_MS: Record<string, number> = {
+    wbm: 3 * 60 * 1000, // WBM: at most once every 3 minutes
+};
+// Added on top of the minimum so the gap isn't exactly on the dot.
+const MIN_INTERVAL_JITTER_MS = 30_000; // +0..30s
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const randomGap = () => PROVIDER_GAP_MS + Math.floor(Math.random() * PROVIDER_GAP_JITTER_MS);
 
@@ -86,6 +96,8 @@ let cycleTimer: NodeJS.Timeout | null = null;
 let started = false;
 // slug -> epoch ms until which we skip the provider after it blocked us.
 const cooldownUntil: Record<string, number> = {};
+// slug -> epoch ms of last actual scrape, for enforcing MIN_PROVIDER_INTERVAL_MS.
+const lastScrapedAt: Record<string, number> = {};
 
 /** Trigger one provider's scrape. Returns whether it blocked us and the detail. */
 async function triggerRoute(slug: string): Promise<{ blocked: boolean; detail: string }> {
@@ -139,7 +151,23 @@ async function runCycle(): Promise<void> {
                 continue;
             }
 
+            // Enforce the hardcoded per-provider minimum gap (e.g. WBM ≥ 3 min),
+            // regardless of the global interval.
+            const minGap = MIN_PROVIDER_INTERVAL_MS[slug];
+            if (minGap) {
+                const last = lastScrapedAt[slug];
+                const effectiveGap = minGap + Math.floor(Math.random() * MIN_INTERVAL_JITTER_MS);
+                if (last && Date.now() - last < effectiveGap) {
+                    logger.info(`Skipping ${slug} — minimum interval not elapsed`, {
+                        minIntervalMs: minGap,
+                        sinceLastMs: Date.now() - last,
+                    });
+                    continue;
+                }
+            }
+
             const { blocked, detail } = await triggerRoute(slug);
+            lastScrapedAt[slug] = Date.now();
             if (blocked) {
                 cooldownUntil[slug] = Date.now() + BLOCK_COOLDOWN_MS;
                 blockedThisCycle.push({ provider: slug, detail });
