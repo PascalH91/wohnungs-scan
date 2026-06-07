@@ -17,9 +17,18 @@ const CHROMIUM_PATH: string | undefined = process.env.CHROMIUM_PATH;
 // Detect if running in Vercel or other serverless environment
 const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
 
-// Warn at most once per process about a misconfigured PUPPETEER_EXECUTABLE_PATH,
-// so a stale shell env var doesn't spam a line on every browser creation.
-let warnedBadPuppeteerPath = false;
+// If PUPPETEER_EXECUTABLE_PATH points to a file that doesn't exist (e.g. a
+// stale shell export like `export PUPPETEER_EXECUTABLE_PATH=$(which chromium)`
+// that captured the literal "chromium not found"), drop it now so we cleanly
+// fall back to locate-chrome. Deleting it from the shared process.env means the
+// warning fires at most once per process — even though Next dev re-evaluates
+// this module per route. A valid path (e.g. Docker's /usr/bin/chromium) is kept.
+if (process.env.PUPPETEER_EXECUTABLE_PATH && !existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
+    logger.warn("Ignoring invalid PUPPETEER_EXECUTABLE_PATH (no file there) — using locate-chrome", {
+        path: process.env.PUPPETEER_EXECUTABLE_PATH,
+    });
+    delete process.env.PUPPETEER_EXECUTABLE_PATH;
+}
 
 interface BrowserInstance {
     browser: Browser;
@@ -101,20 +110,12 @@ class BrowserPool {
 
                 throw err;
             }
-        } else if (process.env.PUPPETEER_EXECUTABLE_PATH && existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
-            // Explicit Chromium path — set this in Docker/VPS deployments where
-            // the system chromium lives at a known location. Only honored when a
-            // file actually exists there, so a stale/bogus shell env var (e.g.
-            // PUPPETEER_EXECUTABLE_PATH="chromium not found") can't break local dev.
+        } else if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            // Explicit Chromium path for Docker/VPS deployments. Any invalid value
+            // was already stripped at module load, so reaching here means it exists.
             executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
             logger.info("Using PUPPETEER_EXECUTABLE_PATH for browser binary", { path: executablePath });
         } else {
-            if (process.env.PUPPETEER_EXECUTABLE_PATH && !warnedBadPuppeteerPath) {
-                warnedBadPuppeteerPath = true;
-                logger.warn("PUPPETEER_EXECUTABLE_PATH is set but no file exists there — falling back to locate-chrome", {
-                    path: process.env.PUPPETEER_EXECUTABLE_PATH,
-                });
-            }
             // Use locate-chrome in local development (finds installed Chrome/Chromium).
             executablePath = await new Promise((resolve) => locateChrome((arg: any) => resolve(arg)));
         }
