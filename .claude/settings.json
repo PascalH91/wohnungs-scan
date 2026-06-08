@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prettier *)",
+      "Bash(node -e ' *)",
+      "Bash(node -e 'const href=\"/s-anzeige/wg-room-available-in-friedrichshain-berlin/3424773438-203-3354\"; console.log\\(\"adId =\", href.split\\(\"/\"\\).pop\\(\\)?.split\\(\"-\"\\)[0]\\);')"
+    ]
+  }
+}

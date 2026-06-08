@@ -16,6 +16,8 @@ async function extractDPFOffers(page: Page): Promise<{ offers: Offer[]; isMultiP
 
         let items = document.querySelectorAll(".immo-a-info");
 
+        console.log(JSON.stringify(items));
+
         items &&
             (await Promise.all(
                 Array.from(items).map(async (item) => {

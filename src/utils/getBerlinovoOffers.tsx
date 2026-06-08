@@ -29,6 +29,7 @@ async function extractBerlinovoOffers(page: Page): Promise<{ offers: Offer[]; is
                     const transformedRooms = (await window.transformSizeIntoValidNumber(rooms)) || 100;
 
                     const minRoomNumber = await window.getMinRoomNumber();
+                    const minRoomSize = await window.getMinRoomSize();
 
                     if (
                         address &&
@@ -44,7 +45,7 @@ async function extractBerlinovoOffers(page: Page): Promise<{ offers: Offer[]; is
                             link:
                                 "https://www.berlinovo.de/" +
                                 item.querySelector(".title .field")?.getElementsByTagName("a")[0].getAttribute("href"),
-                            size: "> 67m²",
+                            size: `> ${minRoomSize}m²`,
                             rooms: transformedRooms,
                         });
                     }

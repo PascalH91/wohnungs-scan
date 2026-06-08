@@ -37,6 +37,7 @@
         "puppeteer-core": "^22.6.2",
         "react": "^18",
         "react-dom": "^18",
+        "resend": "^6.12.4",
         "types": "^0.1.1",
         "url-loader": "^4.1.1",
         "use-sound": "^4.0.1"

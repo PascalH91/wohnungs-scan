@@ -58,6 +58,7 @@ async function extractHOWOGEOffers(page: Page): Promise<{ offers: Offer[]; isMul
 
 export const getHOWOGEOffers = createScraper({
     providerName: "HOWOGE",
+    stableId: true, // data-uid
     url: howogeUrl,
     waitForSelector: ".flat-search",
     selectorTimeout: 0,

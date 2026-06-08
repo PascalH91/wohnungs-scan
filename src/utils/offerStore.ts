@@ -18,6 +18,10 @@ const logger = createLogger("offer-store");
 
 const STORE_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(STORE_DIR, "offers.json");
+// Latest scrape result per provider, for the frontend to read (no re-scraping).
+// Kept separate from the dedup store above, which accumulates every offer ever
+// seen for email purposes; this file only holds each provider's CURRENT listing.
+const SNAPSHOT_PATH = path.join(STORE_DIR, "snapshots.json");
 const STORE_VERSION = 1;
 
 // Offers whose firstSeenAt falls within this window are marked isNew=true in the
@@ -35,6 +39,12 @@ export interface StoredOffer {
     link: string;
     firstSeenAt: string;
     lastSeenAt: string;
+    /**
+     * Set once an email notification for this offer has been sent. Undefined
+     * means the offer is still pending notification. This is the single source
+     * of truth for email dedup and survives process restarts.
+     */
+    notifiedAt?: string;
 }
 
 interface StoreFile {
@@ -47,7 +57,26 @@ function normalize(value: unknown): string {
     return String(value).trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-export function computeOfferId(company: string, offer: Offer): string {
+/**
+ * Stable identity for an offer.
+ *
+ * When `useProviderId` is set (providers whose scraper supplies a genuine
+ * stable per-listing id — see ScraperConfig.stableId), we key on company + that
+ * id. This survives cosmetic changes (price/size/title reformatting) and avoids
+ * collisions between distinct listings that share title/address/size.
+ *
+ * Otherwise we fall back to a content fingerprint of company + the visible
+ * fields, which is the best available identity when no provider id exists.
+ */
+export function computeOfferId(company: string, offer: Offer, useProviderId = false): string {
+    const providerId = normalize(offer.id);
+    if (useProviderId && providerId) {
+        return createHash("sha256")
+            .update(`${normalize(company)}|providerId|${providerId}`)
+            .digest("hex")
+            .slice(0, 32);
+    }
+
     const parts = [
         normalize(company),
         normalize(offer.title),
@@ -97,7 +126,11 @@ function withLock<T>(fn: () => Promise<T>): Promise<T> {
  * NEW_OFFER_WINDOW_MS window. firstSeenAt is permanent, so this signal survives
  * page reloads and short-lived disappearances of an offer between scrape cycles.
  */
-export async function persistOffers(company: string, offers: Offer[]): Promise<Offer[]> {
+export async function persistOffers(
+    company: string,
+    offers: Offer[],
+    options: { useProviderId?: boolean } = {},
+): Promise<Offer[]> {
     if (!offers.length) return offers;
 
     return withLock(async () => {
@@ -108,7 +141,7 @@ export async function persistOffers(company: string, offers: Offer[]): Promise<O
         let newlyStoredCount = 0;
 
         const decorated: Offer[] = offers.map((offer) => {
-            const id = computeOfferId(company, offer);
+            const id = computeOfferId(company, offer, options.useProviderId);
             const existing = store.offers[id];
 
             if (existing) {
@@ -140,4 +173,125 @@ export async function persistOffers(company: string, offers: Offer[]): Promise<O
 
         return decorated;
     });
+}
+
+/**
+ * Atomically return all stored offers that have not yet been notified and mark
+ * them as notified in the same write. Because the claim and the mark happen
+ * under the same lock, an offer is handed out exactly once even if scrape
+ * cycles overlap — this is what guarantees you never get two emails for the
+ * same listing.
+ */
+export async function claimUnnotifiedOffers(): Promise<StoredOffer[]> {
+    return withLock(async () => {
+        const store = await readStore();
+        const nowIso = new Date().toISOString();
+
+        const pending = Object.values(store.offers).filter((offer) => !offer.notifiedAt);
+        if (!pending.length) return [];
+
+        for (const offer of pending) {
+            store.offers[offer.id].notifiedAt = nowIso;
+        }
+
+        await writeStore(store);
+        logger.info("Claimed unnotified offers", { count: pending.length });
+        return pending;
+    });
+}
+
+/**
+ * Mark every currently-stored offer as notified without sending anything.
+ * Used as a one-time backfill when the scheduler first boots so the very first
+ * run does not email the entire pre-existing backlog — only listings that
+ * appear after the scheduler starts will trigger alerts.
+ */
+export async function markAllNotified(): Promise<number> {
+    return withLock(async () => {
+        const store = await readStore();
+        const nowIso = new Date().toISOString();
+        let marked = 0;
+
+        for (const offer of Object.values(store.offers)) {
+            if (!offer.notifiedAt) {
+                offer.notifiedAt = nowIso;
+                marked += 1;
+            }
+        }
+
+        if (marked) {
+            await writeStore(store);
+            logger.info("Backfilled notifiedAt for existing offers", { count: marked });
+        }
+        return marked;
+    });
+}
+
+// ============================================================================
+// Per-provider snapshots — the frontend's read model.
+//
+// On each scrape the base scraper overwrites the provider's snapshot with the
+// current listing (plus isMultiPages and any error). The frontend reads these
+// instead of triggering a scrape, so opening the page launches zero browsers.
+// ============================================================================
+
+export interface ProviderSnapshot {
+    offers: Offer[];
+    isMultiPages: boolean;
+    error: string;
+    scrapedAt: string;
+}
+
+interface SnapshotFile {
+    version: number;
+    providers: Record<string, ProviderSnapshot>;
+}
+
+async function readSnapshotFile(): Promise<SnapshotFile> {
+    try {
+        const raw = await fs.readFile(SNAPSHOT_PATH, "utf8");
+        const parsed = JSON.parse(raw) as SnapshotFile;
+        if (!parsed.providers || typeof parsed.providers !== "object") {
+            return { version: STORE_VERSION, providers: {} };
+        }
+        return { version: parsed.version ?? STORE_VERSION, providers: parsed.providers };
+    } catch (error: any) {
+        if (error.code === "ENOENT") {
+            return { version: STORE_VERSION, providers: {} };
+        }
+        logger.warn("Failed to read snapshot file, treating as empty", { error: error.message });
+        return { version: STORE_VERSION, providers: {} };
+    }
+}
+
+async function writeSnapshotFile(file: SnapshotFile): Promise<void> {
+    await fs.mkdir(STORE_DIR, { recursive: true });
+    const tmpPath = `${SNAPSHOT_PATH}.${process.pid}.tmp`;
+    await fs.writeFile(tmpPath, JSON.stringify(file, null, 2), "utf8");
+    await fs.rename(tmpPath, SNAPSHOT_PATH);
+}
+
+/** Overwrite the current snapshot for a provider. Shares the write lock with the dedup store. */
+export async function persistSnapshot(
+    company: string,
+    offers: Offer[],
+    isMultiPages: boolean,
+    error: string,
+): Promise<void> {
+    return withLock(async () => {
+        const file = await readSnapshotFile();
+        file.providers[company] = {
+            offers,
+            isMultiPages: Boolean(isMultiPages),
+            error: error || "",
+            scrapedAt: new Date().toISOString(),
+        };
+        await writeSnapshotFile(file);
+    });
+}
+
+/** Read one provider's current snapshot, or null if it has never been scraped. */
+export async function getProviderSnapshot(company: string): Promise<ProviderSnapshot | null> {
+    const file = await readSnapshotFile();
+    return file.providers[company] ?? null;
 }

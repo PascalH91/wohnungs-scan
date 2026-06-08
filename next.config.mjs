@@ -59,6 +59,8 @@ const nextConfig = {
     skipMiddlewareUrlNormalize: true,
 
     experimental: {
+        // Boot the background scrape scheduler from src/instrumentation.ts.
+        instrumentationHook: true,
         serverComponentsExternalPackages: [
             "puppeteer-core",
             "puppeteer",

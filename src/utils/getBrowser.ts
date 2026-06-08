@@ -1,6 +1,7 @@
 import chromium from "@sparticuz/chromium-min";
 import puppeteerCore, { Browser } from "puppeteer-core";
 import locateChrome from "locate-chrome";
+import { existsSync } from "fs";
 import _ from "lodash";
 import { config } from "@/config";
 import { createLogger } from "./logger";
@@ -15,6 +16,19 @@ const CHROMIUM_PATH: string | undefined = process.env.CHROMIUM_PATH;
 
 // Detect if running in Vercel or other serverless environment
 const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+
+// If PUPPETEER_EXECUTABLE_PATH points to a file that doesn't exist (e.g. a
+// stale shell export like `export PUPPETEER_EXECUTABLE_PATH=$(which chromium)`
+// that captured the literal "chromium not found"), drop it now so we cleanly
+// fall back to locate-chrome. Deleting it from the shared process.env means the
+// warning fires at most once per process — even though Next dev re-evaluates
+// this module per route. A valid path (e.g. Docker's /usr/bin/chromium) is kept.
+if (process.env.PUPPETEER_EXECUTABLE_PATH && !existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
+    logger.warn("Ignoring invalid PUPPETEER_EXECUTABLE_PATH (no file there) — using locate-chrome", {
+        path: process.env.PUPPETEER_EXECUTABLE_PATH,
+    });
+    delete process.env.PUPPETEER_EXECUTABLE_PATH;
+}
 
 interface BrowserInstance {
     browser: Browser;
@@ -96,8 +110,13 @@ class BrowserPool {
 
                 throw err;
             }
+        } else if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            // Explicit Chromium path for Docker/VPS deployments. Any invalid value
+            // was already stripped at module load, so reaching here means it exists.
+            executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+            logger.info("Using PUPPETEER_EXECUTABLE_PATH for browser binary", { path: executablePath });
         } else {
-            // Use locate-chrome in local development
+            // Use locate-chrome in local development (finds installed Chrome/Chromium).
             executablePath = await new Promise((resolve) => locateChrome((arg: any) => resolve(arg)));
         }
 

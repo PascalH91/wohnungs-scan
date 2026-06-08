@@ -10,9 +10,13 @@ import { config } from "@/config";
 import { Offer, ScraperResponse } from "@/types";
 import { createLogger } from "./logger";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
-import { persistOffers } from "./offerStore";
+import { persistOffers, persistSnapshot } from "./offerStore";
 
 const logger = createLogger("base-scraper");
+
+// Pick one realistic user agent per process. A real browser keeps a stable UA;
+// rotating it on every request from a single IP is itself a bot signal.
+const SESSION_USER_AGENT = generateRandomUA();
 
 export interface ScraperConfig {
     providerName: string;
@@ -20,6 +24,13 @@ export interface ScraperConfig {
     waitForSelector?: string;
     selectorTimeout?: number;
     navigationTimeout?: number;
+    /**
+     * Set when this provider's extractOffers emits a genuine stable per-listing
+     * id in Offer.id (e.g. a data-* attribute or listing URL). The offer store
+     * then keys identity on that id instead of a content fingerprint. Leave
+     * unset/false for providers that use a constant or content-derived id.
+     */
+    stableId?: boolean;
     extractOffers: (page: Page) => Promise<{ offers: Offer[]; isMultiPages?: boolean }>;
 }
 
@@ -32,7 +43,7 @@ export interface ScraperOptions {
 /**
  * Setup page context with common functions exposed to page.evaluate()
  */
-async function setupPageContext(page: Page): Promise<void> {
+async function setupPageContext(page: Page, providerName: string): Promise<void> {
     // Expose common functions to page context
     await page.exposeFunction("isInRelevantDistrict", (cityCode: string) => containsRelevantCityCode(cityCode));
     await page.exposeFunction("transformSizeIntoValidNumber", (roomSize: string) =>
@@ -46,16 +57,21 @@ async function setupPageContext(page: Page): Promise<void> {
         titleContainsDisqualifyingPattern(title),
     );
 
-    // Log console messages from page context
+    // Mirror the target page's own console output. These are messages from the
+    // SCRAPED WEBSITE (e.g. a broken WordPress plugin), not from our scraper, so
+    // they are logged at debug level only — surfacing them as errors made
+    // third-party site bugs look like our failures. Set LOG_LEVEL=DEBUG to see
+    // them when diagnosing a specific scraper.
     page.on("console", (msg) => {
-        const text = msg.text();
-        if (text.includes("ERROR") || text.includes("Error")) {
-            logger.error("Browser console error", undefined, { message: text });
-        } else {
-            logger.debug("Browser console", { message: text });
-        }
+        logger.debug(`[${providerName}] remote page console`, { type: msg.type(), message: msg.text() });
     });
 }
+
+/**
+ * Error that must NOT be retried. Used for block/rate-limit responses, where
+ * retrying immediately would only deepen the block and look more bot-like.
+ */
+class NonRetryableError extends Error {}
 
 /**
  * Retry wrapper for async operations
@@ -71,6 +87,13 @@ async function withRetry<T>(
             return await operation();
         } catch (error: any) {
             lastError = error;
+
+            // A block/rate-limit must fail fast — never retry into it.
+            if (error instanceof NonRetryableError) {
+                logger.warn(`${options.operationName} hit a non-retryable block`, { error: error.message });
+                throw error;
+            }
+
             logger.warn(`${options.operationName} failed, attempt ${attempt}/${options.maxRetries}`, {
                 error: error.message,
             });
@@ -97,7 +120,8 @@ export async function executeScraper(
         customUserAgent,
     } = options;
 
-    const { providerName, url, waitForSelector, selectorTimeout, navigationTimeout, extractOffers } = scraperConfig;
+    const { providerName, url, waitForSelector, selectorTimeout, navigationTimeout, stableId, extractOffers } =
+        scraperConfig;
 
     logger.info(`Starting scraper for ${providerName}`, { url });
 
@@ -114,12 +138,31 @@ export async function executeScraper(
 
         page = await browser.newPage();
 
-        // Set custom user agent
-        const userAgent = customUserAgent || generateRandomUA();
+        // Block heavy, non-essential resources (images, media, fonts) to cut
+        // bandwidth dramatically — these dominate page weight and are never read
+        // when extracting text data. Stylesheets and scripts are kept so that
+        // visibility-based `waitForSelector` checks and JS-rendered listings
+        // still work. Disable with SCRAPER_BLOCK_RESOURCES=false if a provider
+        // needs the full page. Enabled by default.
+        if (process.env.SCRAPER_BLOCK_RESOURCES !== "false") {
+            const BLOCKED = new Set(["image", "media", "font"]);
+            await page.setRequestInterception(true);
+            page.on("request", (request) => {
+                if (request.isInterceptResolutionHandled()) return;
+                if (BLOCKED.has(request.resourceType())) {
+                    void request.abort();
+                } else {
+                    void request.continue();
+                }
+            });
+        }
+
+        // Set user agent (stable per process unless a scraper overrides it).
+        const userAgent = customUserAgent || SESSION_USER_AGENT;
         await page.setUserAgent(userAgent);
 
         // Setup page context with exposed functions
-        await setupPageContext(page);
+        await setupPageContext(page, providerName);
 
         // Navigate to URL with retry logic
         const response = await withRetry(
@@ -128,8 +171,13 @@ export async function executeScraper(
                     waitUntil: "networkidle2",
                     timeout: navigationTimeout || config.scraping.navigationTimeout,
                 });
-                if (!resp || resp.status() !== 200) {
-                    throw new Error(`HTTP ${resp?.status()} ${resp?.statusText()}`);
+                const status = resp?.status();
+                // Rate-limited / forbidden: do NOT retry — that only deepens the block.
+                if (status === 403 || status === 429 || status === 503) {
+                    throw new NonRetryableError(`Blocked by ${providerName}: HTTP ${status} ${resp?.statusText()}`);
+                }
+                if (!resp || status !== 200) {
+                    throw new Error(`HTTP ${status} ${resp?.statusText()}`);
                 }
                 return resp;
             },
@@ -158,15 +206,29 @@ export async function executeScraper(
         // Persist offers to the local store and attach isNew flags from firstSeenAt.
         // Persistence failures must not break the scrape response.
         try {
-            data.offers = await persistOffers(providerName, data.offers);
+            data.offers = await persistOffers(providerName, data.offers, { useProviderId: stableId });
         } catch (error: any) {
             logger.error(`Failed to persist offers for ${providerName}`, error);
+        }
+
+        // Save the current listing as this provider's snapshot for the frontend.
+        try {
+            await persistSnapshot(providerName, data.offers, data.isMultiPages ?? false, "");
+        } catch (error: any) {
+            logger.error(`Failed to persist snapshot for ${providerName}`, error);
         }
 
         return { data, errors: "" };
     } catch (error: any) {
         const errorMessage = error?.message || String(error);
         logger.error(`Scraper failed for ${providerName}`, error, { url });
+
+        // Record the error in the snapshot so the frontend can surface it.
+        try {
+            await persistSnapshot(providerName, [], false, errorMessage);
+        } catch (snapshotError: any) {
+            logger.error(`Failed to persist error snapshot for ${providerName}`, snapshotError);
+        }
 
         return {
             data: { offers: [], isMultiPages: false },
