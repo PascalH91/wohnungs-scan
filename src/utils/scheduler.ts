@@ -78,6 +78,46 @@ const MIN_PROVIDER_INTERVAL_MS: Record<string, number> = {
 // Added on top of the minimum so the gap isn't exactly on the dot.
 const MIN_INTERVAL_JITTER_MS = 30_000; // +0..30s
 
+// Quiet hours: don't scrape overnight (providers don't post new flats then, so
+// it's wasted bandwidth + needless block exposure). Evaluated in QUIET_TZ, not
+// the server's clock — the container usually runs on UTC. Set START === END to
+// disable. Default: pause from 23:00 to 08:00 Berlin time.
+const QUIET_HOURS_START = parseInt(process.env.QUIET_HOURS_START || "23", 10);
+const QUIET_HOURS_END = parseInt(process.env.QUIET_HOURS_END || "8", 10);
+const QUIET_TZ = process.env.QUIET_HOURS_TZ || "Europe/Berlin";
+
+/** Current wall-clock time in QUIET_TZ (handles UTC server + DST correctly). */
+function localTimeInQuietTz(): { hour: number; minute: number; second: number } {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: QUIET_TZ,
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    }).formatToParts(new Date());
+    const get = (type: string) => parseInt(parts.find((p) => p.type === type)?.value || "0", 10);
+    // "24" can appear at exactly midnight in some environments → normalise to 0.
+    return { hour: get("hour") % 24, minute: get("minute"), second: get("second") };
+}
+
+/** True if we're currently inside the quiet window (handles wrap past midnight). */
+function isQuietNow(): boolean {
+    if (QUIET_HOURS_START === QUIET_HOURS_END) return false; // disabled
+    const { hour } = localTimeInQuietTz();
+    return QUIET_HOURS_START < QUIET_HOURS_END
+        ? hour >= QUIET_HOURS_START && hour < QUIET_HOURS_END // same-day window
+        : hour >= QUIET_HOURS_START || hour < QUIET_HOURS_END; // window wraps midnight (e.g. 23→8)
+}
+
+/** Milliseconds from now until the quiet window ends (next QUIET_HOURS_END o'clock). */
+function msUntilQuietEnds(): number {
+    const { hour, minute, second } = localTimeInQuietTz();
+    const hoursUntil = (QUIET_HOURS_END - hour + 24) % 24;
+    let ms = ((hoursUntil * 60 - minute) * 60 - second) * 1000;
+    if (ms <= 0) ms += 24 * 60 * 60 * 1000;
+    return ms;
+}
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const randomGap = () => PROVIDER_GAP_MS + Math.floor(Math.random() * PROVIDER_GAP_JITTER_MS);
 
@@ -128,6 +168,10 @@ async function triggerRoute(slug: string): Promise<{ blocked: boolean; detail: s
  * in a block cooldown. Then email a digest of new offers.
  */
 async function runCycle(): Promise<void> {
+    if (isQuietNow()) {
+        logger.info("Skipping scrape cycle — quiet hours", { tz: QUIET_TZ });
+        return;
+    }
     if (running) {
         logger.warn("Previous scrape cycle still running — skipping");
         return;
@@ -237,10 +281,22 @@ export async function startScheduler(): Promise<void> {
 /**
  * Schedule the next pass with a randomized delay AFTER the previous one
  * finishes — so passes never overlap and the cadence isn't perfectly regular.
+ * During quiet hours it sleeps in one go until the window ends, instead of
+ * waking every interval to do nothing.
  */
 function scheduleNextCycle(): void {
-    const delay = SCRAPE_INTERVAL_MS + Math.floor(Math.random() * SCRAPE_INTERVAL_JITTER_MS);
-    logger.info("Next scrape cycle scheduled", { inMinutes: Math.round(delay / 60000) });
+    let delay: number;
+    if (isQuietNow()) {
+        // Sleep until the quiet window ends (+ a little jitter), then resume.
+        delay = msUntilQuietEnds() + Math.floor(Math.random() * SCRAPE_INTERVAL_JITTER_MS);
+        logger.info("Quiet hours — pausing until window ends", {
+            tz: QUIET_TZ,
+            resumeInMinutes: Math.round(delay / 60000),
+        });
+    } else {
+        delay = SCRAPE_INTERVAL_MS + Math.floor(Math.random() * SCRAPE_INTERVAL_JITTER_MS);
+        logger.info("Next scrape cycle scheduled", { inMinutes: Math.round(delay / 60000) });
+    }
     cycleTimer = setTimeout(async () => {
         await runCycle();
         scheduleNextCycle();
