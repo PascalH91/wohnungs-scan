@@ -3,10 +3,9 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "npm run open-browser && cross-env NODE_OPTIONS='--inspect' next dev -p 8080",
-        "open-browser": "open-cli http://localhost:8080/",
-        "build": "next build",
-        "start": "npm run open-browser && cross-env NODE_OPTIONS='--inspect' next start -p 8080",
+        "dev": "cross-env NODE_OPTIONS='--inspect' next dev --webpack -p 8080",
+        "build": "next build --webpack",
+        "start": "cross-env NODE_OPTIONS='--inspect' next start -p 8080",
         "lint": "next lint"
     },
     "browser": {
@@ -26,7 +25,7 @@
         "date-fns": "^3.6.0",
         "fs": "^0.0.1-security",
         "locate-chrome": "^0.1.1",
-        "next": "14.2.35",
+        "next": "16.2.7",
         "node-schedule": "^2.1.1",
         "prettier": "^3.2.5",
         "puppeteer": "^25.1.0",
@@ -44,9 +43,8 @@
         "@types/react-dom": "^18",
         "cross-env": "7.0.3",
         "encoding": "^0.1.13",
-        "eslint": "^8",
-        "eslint-config-next": "14.2.35",
-        "open-cli": "7.2.0",
+        "eslint": "^9",
+        "eslint-config-next": "16.2.7",
         "sass": "^1.100.0",
         "typescript": "^5",
         "webpack-node-externals": "^3.0.0"

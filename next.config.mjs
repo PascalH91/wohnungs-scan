@@ -1,6 +1,14 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
+    // Pin the file-tracing root to this project (silences the "inferred workspace
+    // root" warning when other lockfiles exist in parent directories).
+    outputFileTracingRoot: projectRoot,
     webpack(config, options) {
         config.module.rules.push({
             test: /\.(ogg|mp3|wav|mpe?g)$/i,
@@ -43,7 +51,6 @@ const nextConfig = {
         return config;
     },
     reactStrictMode: true,
-    swcMinify: true,
     logging: {
         fetches: {
             fullUrl: true,
@@ -54,12 +61,13 @@ const nextConfig = {
 
     // Skip static generation for API routes - they should only run at runtime
     skipTrailingSlashRedirect: true,
-    skipMiddlewareUrlNormalize: true,
+    skipProxyUrlNormalize: true,
+
+    // Keep puppeteer out of the bundle; it's required at runtime on the server.
+    // (Renamed from experimental.serverComponentsExternalPackages in Next 15.)
+    serverExternalPackages: ["puppeteer-core", "puppeteer"],
 
     experimental: {
-        // Boot the background scrape scheduler from src/instrumentation.ts.
-        instrumentationHook: true,
-        serverComponentsExternalPackages: ["puppeteer-core", "puppeteer"],
         externalDir: true,
     },
     async headers() {
