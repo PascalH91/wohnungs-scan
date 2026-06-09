@@ -10,6 +10,15 @@ const nextConfig = {
     // root" warning when other lockfiles exist in parent directories).
     outputFileTracingRoot: projectRoot,
     webpack(config, options) {
+        // Resolve the "@/..." path alias explicitly. tsconfig has `paths` but no
+        // `baseUrl` (deprecated in TS 7), and Next 16's webpack resolver on Linux
+        // doesn't pick the alias up from `paths` alone — so set it here. Applies
+        // to server bundles too (instrumentation.ts, API routes import "@/...").
+        config.resolve.alias = {
+            ...config.resolve.alias,
+            "@": path.resolve(projectRoot, "src"),
+        };
+
         config.module.rules.push({
             test: /\.(ogg|mp3|wav|mpe?g)$/i,
             use: [
