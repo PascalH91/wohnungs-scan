@@ -1,21 +1,10 @@
-import chromium from "@sparticuz/chromium-min";
 import puppeteerCore, { Browser } from "puppeteer-core";
 import locateChrome from "locate-chrome";
 import { existsSync } from "fs";
-import _ from "lodash";
 import { config } from "@/config";
 import { createLogger } from "./logger";
 
 const logger = createLogger("browser-pool");
-
-chromium.setHeadlessMode = true;
-chromium.setGraphicsMode = false;
-
-// Prefer environment-provided chromium pack URL. If not set, let @sparticuz/chromium use its default CDN.
-const CHROMIUM_PATH: string | undefined = process.env.CHROMIUM_PATH;
-
-// Detect if running in Vercel or other serverless environment
-const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
 
 // If PUPPETEER_EXECUTABLE_PATH points to a file that doesn't exist (e.g. a
 // stale shell export like `export PUPPETEER_EXECUTABLE_PATH=$(which chromium)`
@@ -54,69 +43,13 @@ class BrowserPool {
     private async createBrowserInstance(): Promise<BrowserInstance> {
         let executablePath: string | undefined;
 
-        if (isServerless) {
-            // First, allow connecting to a remote Chrome instance via WebSocket URL if provided
-            const remoteWs = process.env.REMOTE_CHROME_WS_URL;
-            if (remoteWs) {
-                try {
-                    logger.info("Connecting to remote Chrome via WebSocket", { url: remoteWs });
-                    const browser = await puppeteerCore.connect({
-                        browserWSEndpoint: remoteWs,
-                    });
-                    return {
-                        browser,
-                        inUse: false,
-                        createdAt: Date.now(),
-                        lastUsed: Date.now(),
-                    };
-                } catch (err: any) {
-                    logger.error("Failed to connect to remote Chrome WebSocket", {
-                        message: err?.message || String(err),
-                        url: remoteWs,
-                    });
-                    // fall through to try chromium pack
-                }
-            }
-
-            // Use @sparticuz/chromium in serverless environments
-            try {
-                if (CHROMIUM_PATH) {
-                    executablePath = await chromium.executablePath(CHROMIUM_PATH);
-                    logger.info("Using @sparticuz/chromium with custom CHROMIUM_PATH", { source: CHROMIUM_PATH });
-                } else {
-                    // No custom URL configured — let the library use its default CDN/mirror
-                    executablePath = await chromium.executablePath();
-                    logger.info("Using @sparticuz/chromium default CDN for binary");
-                }
-            } catch (err: any) {
-                const message = err?.message || String(err);
-                const isMissingBin =
-                    message.includes("input directory") &&
-                    message.includes("/node_modules/@sparticuz/chromium-min/bin");
-
-                if (isMissingBin) {
-                    logger.error("Chromium binary not found in package installation", {
-                        message,
-                        suggestion:
-                            "Either set CHROMIUM_PATH to a publicly accessible chromium pack URL, or set REMOTE_CHROME_WS_URL to connect to an external browser service (e.g., browserless).",
-                    });
-                } else {
-                    logger.error("Failed to acquire Chromium binary in serverless environment", {
-                        message,
-                        suggestion:
-                            "Set CHROMIUM_PATH env var to an accessible URL for your chromium pack, or ensure @sparticuz/chromium can download from its default CDN from the deployment environment.",
-                    });
-                }
-
-                throw err;
-            }
-        } else if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-            // Explicit Chromium path for Docker/VPS deployments. Any invalid value
-            // was already stripped at module load, so reaching here means it exists.
+        if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            // Explicit Chromium path for Docker/VPS (e.g. /usr/bin/chromium). Any
+            // invalid value was already stripped at module load, so it exists here.
             executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
             logger.info("Using PUPPETEER_EXECUTABLE_PATH for browser binary", { path: executablePath });
         } else {
-            // Use locate-chrome in local development (finds installed Chrome/Chromium).
+            // Local dev: locate the installed Chrome/Chromium.
             executablePath = await new Promise((resolve) => locateChrome((arg: any) => resolve(arg)));
         }
 
@@ -124,9 +57,7 @@ class BrowserPool {
 
         const browser = await puppeteerCore.launch({
             executablePath,
-            args: isServerless
-                ? chromium.args
-                : ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
+            args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
             headless: true,
             timeout: config.browserPool.acquireTimeoutMillis,
         });

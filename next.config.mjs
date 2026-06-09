@@ -20,8 +20,6 @@ const nextConfig = {
                 ...config.resolve.alias,
                 "puppeteer-core": false,
                 puppeteer: false,
-                "@sparticuz/chromium": false,
-                "@sparticuz/chromium-min": false,
                 "locate-chrome": false,
                 "@vertx/core": false,
             };
@@ -61,12 +59,7 @@ const nextConfig = {
     experimental: {
         // Boot the background scrape scheduler from src/instrumentation.ts.
         instrumentationHook: true,
-        serverComponentsExternalPackages: [
-            "puppeteer-core",
-            "puppeteer",
-            "@sparticuz/chromium",
-            "@sparticuz/chromium-min",
-        ],
+        serverComponentsExternalPackages: ["puppeteer-core", "puppeteer"],
         externalDir: true,
     },
     async headers() {

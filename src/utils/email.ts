@@ -31,11 +31,7 @@ export function isEmailConfigured(): boolean {
 }
 
 function escapeHtml(value: string): string {
-    return value
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 function renderOffer(offer: StoredOffer): string {
@@ -64,19 +60,28 @@ function renderOffer(offer: StoredOffer): string {
 
 function renderEmail(offers: StoredOffer[]): { subject: string; html: string; text: string } {
     const count = offers.length;
-    const subject = count === 1 ? "🏠 1 neue Wohnung gefunden" : `🏠 ${count} neue Wohnungen gefunden`;
+    // Highlight when any offer is in Alt-Stralau (PLZ 10245).
+    const hasAltStralau = offers.some((o) => (o.address || "").includes("10245"));
+    const flag = hasAltStralau ? "🏠 + 🏝️ (ALT-STRALAU): " : "🏠: ";
+    const subject = `${flag}${count === 1 ? "1 neue Wohnung gefunden" : `${count} neue Wohnungen gefunden`}`;
 
     const rows = offers.map(renderOffer).join("");
     const html = `
         <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;">
-            <h2 style="color:#111;">${count} neue${count === 1 ? "s" : ""} Angebot${count === 1 ? "" : "e"}</h2>
+            <h2 style="color:#111;">${flag}${count} neue${count === 1 ? "s" : ""} Angebot${count === 1 ? "" : "e"}</h2>
             <table style="width:100%;border-collapse:collapse;">${rows}</table>
             <p style="font-size:12px;color:#aaa;margin-top:24px;">Automatisch vom Wohnungs-Scan gesendet.</p>
         </div>`;
 
     const text = offers
         .map((o) =>
-            [o.company, o.title, [o.rooms && `${o.rooms} Zi.`, o.size && `${o.size} m²`].filter(Boolean).join(" "), o.address, o.link]
+            [
+                o.company,
+                o.title,
+                [o.rooms && `${o.rooms} Zi.`, o.size && `${o.size} m²`].filter(Boolean).join(" "),
+                o.address,
+                o.link,
+            ]
                 .filter(Boolean)
                 .join(" | "),
         )
