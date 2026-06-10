@@ -1,67 +1,76 @@
 import { Offer } from "@/types";
 import { config } from "@/config";
-import { createScraper } from "./baseScraper";
-import { Page } from "puppeteer-core";
-import { howogeUrl } from "./providerUrls";
+import { containsRelevantCityCode } from "./containsRelevantCityCodes";
+import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
+import { createApiScraper, fetchJson } from "./apiScraper";
+import { howogeApiUrl } from "./providerUrls";
 
-const { minRoomSize, minRoomNumber, maxColdRent, maxWarmRent } = config.apartment;
+const { minRoomSize, minRoomNumber } = config.apartment;
 
-async function extractHOWOGEOffers(page: Page): Promise<{ offers: Offer[]; isMultiPages: boolean }> {
-    return await page.evaluate(async () => {
-        let isMultiPages = false;
-        let results: Offer[] = [];
-        let items = document.querySelectorAll(".flat-single-grid-item");
-
-        items &&
-            (await Promise.all(
-                Array.from(items).map(async (item: Element) => {
-                    const address = (item.querySelector(".address") as HTMLElement | undefined)?.innerText;
-                    const title = (item.querySelector(".notice") as HTMLElement | null)?.innerText ?? "";
-                    const relevantDistrict = await window.isInRelevantDistrict(address);
-                    const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
-                    const attributes = item.querySelectorAll(".attributes > div .attributes-content");
-                    const isNewBuildingProject = attributes.length === 2;
-
-                    const rooms = isNewBuildingProject
-                        ? 0
-                        : Number((attributes[2] as HTMLElement | undefined)?.innerText || 0);
-                    const size = isNewBuildingProject ? "" : (attributes[1] as HTMLElement | undefined)?.innerText;
-                    const transformedSize = (await window.transformSizeIntoValidNumber(size)) || 1000;
-
-                    const minRoomNumber = await window.getMinRoomNumber();
-                    const minRoomSize = await window.getMinRoomSize();
-
-                    const showItem =
-                        address &&
-                        !containsDisqualifyingPattern &&
-                        relevantDistrict &&
-                        !isNewBuildingProject &&
-                        rooms >= minRoomNumber &&
-                        transformedSize >= minRoomSize;
-
-                    if (showItem) {
-                        results.push({
-                            address,
-                            id: item.getAttribute("data-uid") || address,
-                            title,
-                            region: relevantDistrict?.district || address.split(", ")[address.split(", ").length - 1],
-                            link: `https://www.howoge.de${item?.getElementsByTagName("a")[0].getAttribute("href")}`,
-                            size,
-                            rooms,
-                        });
-                    }
-                }),
-            ));
-        return { offers: results, isMultiPages };
-    });
+/** Single flat as returned by HOWOGE's immoList endpoint (only the fields we use). */
+interface HowogeObject {
+    uid: number;
+    /** Street address incl. postal code, e.g. "Streitstraße 5, 13587 Berlin". */
+    title: string;
+    district: string;
+    rent: number;
+    area: number;
+    rooms: number;
+    /** "ja" => WBS (subsidized-housing certificate) required. */
+    wbs: string;
+    /** Marketing headline, e.g. "3-Zimmer-Wohnung ohne WBS". */
+    notice: string;
+    /** Relative detail-page path. */
+    link: string;
 }
 
-export const getHOWOGEOffers = createScraper({
+interface HowogeResponse {
+    immocount?: number;
+    teasercount?: number;
+    // `projectteaser` holds new-building projects (room ranges, future move-in
+    // dates) — intentionally ignored, matching the previous scraper.
+    immoobjects?: HowogeObject[];
+}
+
+async function toOffer(obj: HowogeObject): Promise<Offer | null> {
+    // Skip listings that require a WBS certificate.
+    if (obj.wbs === "ja") return null;
+
+    const notice = obj.notice?.trim() ?? "";
+    if (titleContainsDisqualifyingPattern(notice)) return null;
+
+    if (typeof obj.rooms === "number" && obj.rooms < minRoomNumber) return null;
+    if (typeof obj.area === "number" && obj.area < minRoomSize) return null;
+
+    const address = obj.title?.trim() ?? "";
+
+    // District relevance is keyed on the postal code inside the address.
+    const relevantDistrict = await containsRelevantCityCode(address);
+    if (!relevantDistrict) return null;
+
+    return {
+        id: String(obj.uid),
+        address,
+        title: notice,
+        region: relevantDistrict.district || obj.district,
+        link: `https://www.howoge.de${obj.link}`,
+        size: `${Math.round(obj.area)}m²`,
+        rooms: obj.rooms,
+    };
+}
+
+/**
+ * Scrape HOWOGE for available apartments via its JSON list endpoint instead of
+ * the rendered page. uid is a stable per-listing id, so the offer store dedups
+ * on it directly.
+ */
+export const getHOWOGEOffers = createApiScraper({
     providerName: "HOWOGE",
-    stableId: true, // data-uid
-    url: howogeUrl,
-    waitForSelector: ".flat-search",
-    selectorTimeout: 0,
-    navigationTimeout: 0,
-    extractOffers: extractHOWOGEOffers,
+    useProviderId: true,
+    fetchOffers: async ({ userAgent }) => {
+        const json = await fetchJson<HowogeResponse>(howogeApiUrl, userAgent);
+        const objects = json.immoobjects ?? [];
+        const mapped = await Promise.all(objects.map(toOffer));
+        return mapped.filter((offer): offer is Offer => offer !== null);
+    },
 });

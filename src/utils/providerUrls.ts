@@ -19,6 +19,13 @@ export const deutscheWohnenApiUrl = `https://www.deutsche-wohnen.com/api/deuwo-r
 
 export const howogeUrl = `https://www.howoge.de/immobiliensuche/wohnungssuche.html?tx_howsite_json_list%5Bpage%5D=1&tx_howsite_json_list%5Blimit%5D=12&tx_howsite_json_list%5Blang%5D=&tx_howsite_json_list%5Bkiez%5D%5B%5D=Friedrichshain-Kreuzberg&tx_howsite_json_list%5Bkiez%5D%5B%5D=Mitte&tx_howsite_json_list%5Bkiez%5D%5B%5D=Lichtenberg&tx_howsite_json_list%5Bkiez%5D%5B%5D=Treptow-K%C3%B6penick&tx_howsite_json_list%5Bkiez%5D%5B%5D=Charlottenburg-Wilmersdorf&tx_howsite_json_list%5Bkiez%5D%5B%5D=Neuk%C3%B6lln&tx_howsite_json_list%5Bkiez%5D%5B%5D=Pankow&tx_howsite_json_list%5Bkiez%5D%5B%5D=Tempelhof-Sch%C3%B6neberg&tx_howsite_json_list%5Brooms%5D=${minRoomSize}`;
 
+// HOWOGE's JSON list endpoint. Returns the individually-available rental flats
+// in `immoobjects` (new-building projects come back separately in
+// `projectteaser`, which we intentionally skip — same as the old scraper). The
+// endpoint carries no usable filter/pagination params, so filtering is done
+// client-side in the scraper.
+export const howogeApiUrl = "https://www.howoge.de/?type=999&tx_howrealestate_json_list%5Baction%5D=immoList";
+
 export const ebayKleinanzeigenUrl = `https://www.kleinanzeigen.de/s-wohnung-mieten/friedrichshain-kreuzberg/anzeige:angebote/preis:700:${maxColdRent}/c203l26918r5+wohnung_mieten.qm_d:${minRoomSize}%2C+wohnung_mieten.swap_s:nein+wohnung_mieten.zimmer_d:${minRoomNumber}%2C`;
 
 export const dpfUrl = "https://www.dpfonline.de/interessenten/angebote/";

@@ -5,21 +5,17 @@
  * same `/api/.../real-estate/list` endpoint with an identical response shape
  * (the "deuwo" data model, served from cdn.expose.vonovia.de). Hitting these
  * directly is faster and far less brittle than scraping the rendered page, so
- * every brand in the family shares this one fetch/paginate/map/persist path.
+ * every brand in the family shares this one fetch/paginate/map path.
  *
  * Per-brand differences (endpoint, price filter, detail-page base) are baked
  * into each brand's API URL and DeuwoApiScraperConfig; the logic here is brand
- * agnostic.
+ * agnostic. Persistence/error handling lives in the generic createApiScraper.
  */
 import { Offer, ScraperResponse } from "@/types";
 import { config } from "@/config";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
-import { persistOffers, persistSnapshot } from "./offerStore";
-import { createLogger } from "./logger";
-import { generateRandomUA } from "./generateRandomUserAgents";
-
-const logger = createLogger("deuwo-api");
+import { createApiScraper, fetchJson } from "./apiScraper";
 
 const { minRoomSize } = config.apartment;
 
@@ -53,24 +49,6 @@ export interface DeuwoApiScraperConfig {
     apiUrl: string;
     /** Detail-page base; the listing slug is appended (e.g. ".../immobilien" -> ".../immobilien/{slug}"). */
     detailBaseUrl: string;
-}
-
-async function fetchPage(apiUrl: string, offset: number, userAgent: string): Promise<DeuwoResponse> {
-    const url = `${apiUrl}&limit=${PAGE_LIMIT}&offset=${offset}`;
-    const resp = await fetch(url, {
-        headers: { "User-Agent": userAgent, Accept: "application/json" },
-        // Always hit the live endpoint; Next.js otherwise caches fetch responses.
-        cache: "no-store",
-    });
-
-    if (resp.status === 403 || resp.status === 429 || resp.status === 503) {
-        throw new Error(`Blocked: HTTP ${resp.status} ${resp.statusText}`);
-    }
-    if (!resp.ok) {
-        throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
-    }
-
-    return (await resp.json()) as DeuwoResponse;
 }
 
 /**
@@ -107,25 +85,22 @@ async function toOffer(result: DeuwoResult, detailBaseUrl: string): Promise<Offe
 
 /**
  * Build a scraper for a Vonovia-family brand that fetches its JSON list
- * endpoint, paginates, filters, and persists — mirroring the base (Puppeteer)
- * scraper's persistence and error handling so the rest of the pipeline is
- * unaffected. wrk_id is a stable per-listing id, so dedup keys on it directly.
+ * endpoint, paginates, filters and maps. wrk_id is a stable per-listing id, so
+ * the offer store dedups on it directly.
  */
 export function createDeuwoApiScraper(cfg: DeuwoApiScraperConfig): () => Promise<ScraperResponse> {
     const { providerName, apiUrl, detailBaseUrl } = cfg;
 
-    return async (): Promise<ScraperResponse> => {
-        logger.info(`Starting scraper for ${providerName}`, { url: apiUrl });
-
-        const userAgent = generateRandomUA();
-
-        try {
+    return createApiScraper({
+        providerName,
+        useProviderId: true,
+        fetchOffers: async ({ userAgent }) => {
             const raw: DeuwoResult[] = [];
             let offset = 0;
             let total = Infinity;
 
             for (let page = 0; page < MAX_PAGES && offset < total; page++) {
-                const json = await fetchPage(apiUrl, offset, userAgent);
+                const json = await fetchJson<DeuwoResponse>(`${apiUrl}&limit=${PAGE_LIMIT}&offset=${offset}`, userAgent);
                 const results = json.results ?? [];
                 total = json.paging?.info?.count ?? results.length;
 
@@ -136,35 +111,7 @@ export function createDeuwoApiScraper(cfg: DeuwoApiScraperConfig): () => Promise
             }
 
             const mapped = await Promise.all(raw.map((r) => toOffer(r, detailBaseUrl)));
-            const offers = mapped.filter((offer): offer is Offer => offer !== null);
-
-            logger.info(`Successfully scraped ${providerName}`, { fetched: raw.length, matched: offers.length });
-
-            let decorated = offers;
-            try {
-                decorated = await persistOffers(providerName, offers, { useProviderId: true });
-            } catch (error: any) {
-                logger.error(`Failed to persist offers for ${providerName}`, error);
-            }
-
-            try {
-                await persistSnapshot(providerName, decorated, false, "");
-            } catch (error: any) {
-                logger.error(`Failed to persist snapshot for ${providerName}`, error);
-            }
-
-            return { data: { offers: decorated, isMultiPages: false }, errors: "" };
-        } catch (error: any) {
-            const errorMessage = error?.message || String(error);
-            logger.error(`Scraper failed for ${providerName}`, error, { url: apiUrl });
-
-            try {
-                await persistSnapshot(providerName, [], false, errorMessage);
-            } catch (snapshotError: any) {
-                logger.error(`Failed to persist error snapshot for ${providerName}`, snapshotError);
-            }
-
-            return { data: { offers: [], isMultiPages: false }, errors: errorMessage };
-        }
-    };
+            return mapped.filter((offer): offer is Offer => offer !== null);
+        },
+    });
 }
