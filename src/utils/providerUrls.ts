@@ -11,6 +11,12 @@ export const gewobagUrl = `https://www.gewobag.de/fuer-mietinteressentinnen/miet
 
 export const deutscheWohnenUrl = `https://www.deutsche-wohnen.com/mieten/mietangebote?city=Berlin&furnished=0&seniorFriendly=0&subsidizedHousingPermit=egal&immoType=wohnung&priceMax=${maxColdRent}&sizeMin=${minRoomSize}&minRooms=${minRoomNumber}&floor=Beliebig&bathtub=0&bathwindow=0&bathshower=0&kitchenEBK=0&toiletSeparate=0&disabilityAccess=egal&balcony=egal&rentType=miete`;
 
+// Deutsche Wohnen exposes the same listings as a clean JSON endpoint (the
+// "deuwo" data set), so we hit this directly instead of scraping the rendered
+// page. Mirrors the filters of `deutscheWohnenUrl` above; `limit`/`offset` are
+// appended per request by the scraper for pagination.
+export const deutscheWohnenApiUrl = `https://www.deutsche-wohnen.com/api/deuwo-real-estate/list?rentType=miete&city=Berlin&immoType=wohnung&priceMax=${maxColdRent}&sizeMin=${minRoomSize}&minRooms=${minRoomNumber}&floor=Beliebig&subsidizedHousingPermit=egal&disabilityAccess=egal&balcony=egal&furnished=0&seniorFriendly=0&dataSet=deuwo`;
+
 export const howogeUrl = `https://www.howoge.de/immobiliensuche/wohnungssuche.html?tx_howsite_json_list%5Bpage%5D=1&tx_howsite_json_list%5Blimit%5D=12&tx_howsite_json_list%5Blang%5D=&tx_howsite_json_list%5Bkiez%5D%5B%5D=Friedrichshain-Kreuzberg&tx_howsite_json_list%5Bkiez%5D%5B%5D=Mitte&tx_howsite_json_list%5Bkiez%5D%5B%5D=Lichtenberg&tx_howsite_json_list%5Bkiez%5D%5B%5D=Treptow-K%C3%B6penick&tx_howsite_json_list%5Bkiez%5D%5B%5D=Charlottenburg-Wilmersdorf&tx_howsite_json_list%5Bkiez%5D%5B%5D=Neuk%C3%B6lln&tx_howsite_json_list%5Bkiez%5D%5B%5D=Pankow&tx_howsite_json_list%5Bkiez%5D%5B%5D=Tempelhof-Sch%C3%B6neberg&tx_howsite_json_list%5Brooms%5D=${minRoomSize}`;
 
 export const ebayKleinanzeigenUrl = `https://www.kleinanzeigen.de/s-wohnung-mieten/friedrichshain-kreuzberg/anzeige:angebote/preis:700:${maxColdRent}/c203l26918r5+wohnung_mieten.qm_d:${minRoomSize}%2C+wohnung_mieten.swap_s:nein+wohnung_mieten.zimmer_d:${minRoomNumber}%2C`;
