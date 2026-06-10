@@ -31,6 +31,11 @@ export const dagewoUrl = "https://www.degewo.de/immosuche#openimmo-search-result
 
 export const vonoviaUrl = `https://www.vonovia.de/zuhause-finden/immobilien?rentType=miete&city=Berlin&lift=0&parking=0&cellar=0&immoType=wohnung&priceMax=${maxWarmRent}&sizeMin=${minRoomSize}&minRooms=${minRoomNumber}&floor=Beliebig&bathtub=0&bathwindow=0&bathshower=0&furnished=0&kitchenEBK=0&toiletSeparate=0&disabilityAccess=egal&seniorFriendly=0&balcony=egal&garden=0&subsidizedHousingPermit=egal&scroll=true`;
 
+// Vonovia's JSON list endpoint — same data model as deutscheWohnenApiUrl, served
+// from the same Vonovia-group backend. Mirrors the filters of `vonoviaUrl` above
+// (priceMax keyed on warm rent); `limit`/`offset` are appended by the scraper.
+export const vonoviaApiUrl = `https://www.vonovia.de/api/real-estate/list?rentType=miete&city=Berlin&locationDisplay=Berlin&lift=0&parking=0&cellar=0&immoType=wohnung&priceMax=${maxWarmRent}&sizeMin=${minRoomSize}&minRooms=${minRoomNumber}&floor=Beliebig&furnished=0&seniorFriendly=0&disabilityAccess=egal&balcony=egal&garden=0&subsidizedHousingPermit=egal`;
+
 export const solidariaetUrl = "https://wg-solidaritaet.de/wohnen/mietangebote/";
 
 export const neuesBerlinUrl = "https://www.neues-berlin.de/wohnen/wohnungsangebote";
