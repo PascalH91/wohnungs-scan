@@ -42,6 +42,26 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
                 const link = titleEl?.getAttribute("href") ?? null;
                 const address = item.querySelector(".c-copy > p")?.textContent?.trim();
 
+                // degewo's card address is "Street | Neighbourhood" with no postal
+                // code, so the PLZ-based isInRelevantDistrict() can't be used here.
+                // Filter on the neighbourhood name instead. Compared case- and
+                // hyphen-insensitively, so "Prenzlauer-Berg" and "Prenzlauer Berg"
+                // both match.
+                const NEIGHBOURHOOD_ALLOWLIST = [
+                    "mitte",
+                    "friedrichshain",
+                    "pankow",
+                    "lichtenberg",
+                    "prenzlauer berg",
+                    "gesundbrunnen",
+                    "treptow",
+                ];
+                const neighbourhood = (address ?? "").split("|").pop()?.trim() ?? "";
+                const normalizedNeighbourhood = neighbourhood.toLowerCase().replace(/-/g, " ");
+                const isRelevantNeighbourhood = NEIGHBOURHOOD_ALLOWLIST.some((name) =>
+                    normalizedNeighbourhood.includes(name),
+                );
+
                 // Definition list holds the key facts as term/definition pairs,
                 // e.g. { "946,35 €": "Warmmiete", "1": "Zimmer", "45,52": "m²" }.
                 const facts: Record<string, string> = {};
@@ -66,6 +86,7 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
                     title &&
                     !containsDisqualifyingPattern &&
                     !isWBS &&
+                    isRelevantNeighbourhood &&
                     rooms >= minRoomNumber &&
                     size >= minRoomSize;
 
@@ -74,7 +95,7 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
                         address,
                         id: link || address,
                         title,
-                        region: "-",
+                        region: neighbourhood || "-",
                         link: link ? `https://www.degewo.de${link}` : null,
                         size: size + " m²",
                         rooms,

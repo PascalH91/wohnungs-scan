@@ -34,6 +34,11 @@ export const config = {
         staleEmptyHours: parseInt(process.env.HEALTH_STALE_EMPTY_HOURS || "72", 10),
         // Don't re-email about the same unhealthy provider more often than this.
         alertThrottleHours: parseInt(process.env.HEALTH_ALERT_THROTTLE_HOURS || "12", 10),
+        // Ignore snapshots not refreshed within this window when deciding alerts.
+        // Active providers are scraped every cycle (~10 min), so a snapshot this
+        // old means the provider was disabled/removed — don't keep alerting on its
+        // frozen state.
+        staleSnapshotHours: parseInt(process.env.HEALTH_STALE_SNAPSHOT_HOURS || "6", 10),
         // Fraction of returned offers with mangled fields (HTML in size, NaN rooms)
         // above which the scrape is judged SUSPECT.
         malformedFieldThreshold: parseFloat(process.env.HEALTH_MALFORMED_FIELD_THRESHOLD || "0.5"),

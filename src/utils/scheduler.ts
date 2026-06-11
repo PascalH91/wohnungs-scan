@@ -26,7 +26,8 @@ import { createLogger } from "./logger";
 const logger = createLogger("scheduler");
 
 // Route slugs under /api/cron. Mirrors the providers wired up in the UI;
-// disabled providers (WBM/IMMOSCOUT) are omitted — add their slug to re-enable.
+// disabled providers (IMMOSCOUT, EVM) are omitted — add their slug to re-enable.
+// EVM was removed once it became a waiting-list-only site (no published flats).
 const SCRAPER_ROUTES: string[] = [
     "wbm",
     "friedrichsheim",
@@ -51,7 +52,6 @@ const SCRAPER_ROUTES: string[] = [
     "ebay_kleinanzeigen",
     "berlinovo",
     "adlergroup",
-    "evm",
 ];
 
 const PORT = process.env.PORT || "8080";

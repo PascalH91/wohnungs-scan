@@ -22,10 +22,16 @@ export async function GET(): Promise<NextResponse> {
         const now = Date.now();
         const staleMs = config.health.staleEmptyHours * 60 * 60 * 1000;
         const throttleMs = config.health.alertThrottleHours * 60 * 60 * 1000;
+        const staleSnapshotMs = config.health.staleSnapshotHours * 60 * 60 * 1000;
 
         const issues: HealthIssue[] = [];
 
         for (const [provider, snap] of Object.entries(snapshots)) {
+            // Skip providers whose snapshot is no longer being refreshed (e.g. a
+            // disabled/removed provider): don't keep alerting on a frozen verdict.
+            const scrapedAt = snap.scrapedAt ? Date.parse(snap.scrapedAt) : 0;
+            if (!scrapedAt || now - scrapedAt > staleSnapshotMs) continue;
+
             // Respect the per-provider alert throttle.
             const alertedAt = snap.healthAlertedAt ? Date.parse(snap.healthAlertedAt) : 0;
             const throttled = alertedAt && now - alertedAt < throttleMs;

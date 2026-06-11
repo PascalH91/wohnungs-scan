@@ -49,7 +49,11 @@ export const neuesBerlinUrl = "https://www.neues-berlin.de/wohnen/wohnungsangebo
 
 export const FriedrichshainEGUrl = "https://wgf.berlin/services/wohnung-finden/#wohnung";
 
-export const berolinaUrl = "https://berolina.info/allgemein/wohnungssuche/";
+// Berolina moved its listings out of the WordPress page and into an embedded
+// immosolve result-list app (same platform as eg1892Url). The old
+// /allgemein/wohnungssuche/ page no longer carries the offers, so we hit the
+// iframe's app URL directly.
+export const berolinaUrl = "https://2106276.hpm.immosolve.eu/#!/result-list-2";
 
 export const vineta89Url = "https://vineta98.de/wohnungen/";
 

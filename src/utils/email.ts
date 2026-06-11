@@ -34,15 +34,40 @@ function escapeHtml(value: string): string {
     return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+// Synthetic placeholders pushed by presence-only scrapers (Berolina, EVM, …) —
+// not real addresses, so they get no map link.
+const NON_ADDRESSES = new Set(["", "-", "neues angebot"]);
+
+/**
+ * Build a Google Maps search link for an offer address, or null when the address
+ * is a synthetic placeholder. degewo uses "Street | Neighbourhood" (commas
+ * geocode better than pipes), and a trailing ", Berlin" is added when missing so
+ * street-only addresses still resolve.
+ */
+function googleMapsLink(address: string | undefined): string | null {
+    const raw = (address || "").trim();
+    if (NON_ADDRESSES.has(raw.toLowerCase())) return null;
+
+    let query = raw.replace(/\s*\|\s*/g, ", ").replace(/\s+/g, " ").trim();
+    if (!/berlin/i.test(query)) query += ", Berlin";
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
 function renderOffer(offer: StoredOffer): string {
     const title = escapeHtml(offer.title || "Wohnungsangebot");
     const meta = [offer.rooms && `${escapeHtml(offer.rooms)} Zi.`, offer.size && `${escapeHtml(offer.size)} m²`]
         .filter(Boolean)
         .join(" · ");
     const address = offer.address ? escapeHtml(offer.address) : "";
-    const link = offer.link
-        ? `<a href="${escapeHtml(offer.link)}" style="color:#1a73e8;text-decoration:none;">Zum Angebot →</a>`
-        : "";
+    const mapsUrl = googleMapsLink(offer.address);
+    const links = [
+        offer.link
+            ? `<a href="${escapeHtml(offer.link)}" style="color:#1a73e8;text-decoration:none;">Zum Angebot →</a>`
+            : "",
+        mapsUrl
+            ? `<a href="${escapeHtml(mapsUrl)}" style="color:#1a73e8;text-decoration:none;">📍 Auf Google Maps</a>`
+            : "",
+    ].filter(Boolean);
 
     return `
         <tr>
@@ -53,7 +78,7 @@ function renderOffer(offer: StoredOffer): string {
                 <div style="font-size:16px;font-weight:600;color:#111;margin:2px 0;">${title}</div>
                 ${meta ? `<div style="font-size:14px;color:#444;">${meta}</div>` : ""}
                 ${address ? `<div style="font-size:14px;color:#666;">${address}</div>` : ""}
-                ${link ? `<div style="margin-top:6px;">${link}</div>` : ""}
+                ${links.length ? `<div style="margin-top:6px;">${links.join(' &nbsp;·&nbsp; ')}</div>` : ""}
             </td>
         </tr>`;
 }
