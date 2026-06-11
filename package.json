@@ -28,7 +28,6 @@
         "next": "16.2.7",
         "node-schedule": "^2.1.1",
         "prettier": "^3.2.5",
-        "puppeteer": "^25.1.0",
         "puppeteer-core": "^25.1.0",
         "react": "^18",
         "react-dom": "^18",

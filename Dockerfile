@@ -1,7 +1,10 @@
 # Wohnungs-Scan — Next.js UI + background scrape/email scheduler.
 # Uses the system-installed Chromium (no bundled download) to keep the image
 # small and stable on a small VPS.
-FROM node:20-slim
+#
+# node 22: puppeteer-core@25 declares engines.node ">=22.12.0", so node 20 is
+# unsupported (and risks runtime breakage in the scrapers).
+FROM node:22-slim
 
 # Chromium + the fonts/libs headless Chrome needs to render real pages.
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -19,9 +22,12 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true \
 
 WORKDIR /app
 
-# Install deps first for better layer caching.
+# Install deps first for better layer caching. --include=dev is required even
+# though NODE_ENV=production: `next build` needs TypeScript and @types/* (which
+# live in devDependencies) to type-check. Without them, Next tries to auto-install
+# them at build time via yarn, which then fails on puppeteer's node-engine check.
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --include=dev
 
 # Build the Next.js app.
 COPY . .
