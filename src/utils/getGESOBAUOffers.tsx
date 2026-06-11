@@ -66,4 +66,9 @@ export const getGESOBAUOffers = createScraper({
     url: gesobauUrl,
     waitForSelector: ".documentContent__content",
     extractOffers: extractGESOBAUOffers,
+    health: {
+        baselineEmpty: true,
+        listingSelector: ".basicTeaser__content",
+        anchorSelector: ".documentContent__content",
+    },
 });

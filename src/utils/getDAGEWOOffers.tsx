@@ -125,4 +125,16 @@ export const getDAGEWOOffers = createScraper({
     url: dagewoUrl,
     stableId: true,
     extractOffers: extractDAGEWOOffers,
+    health: {
+        baselineEmpty: true,
+        listingSelector: "#immo-teaser-list .c-teaser",
+        anchorSelector: "#immo-teaser-list",
+        // degewo renders "66 Ergebnisse" in .results-count on every page.
+        resultCount: (page) =>
+            page.evaluate(() => {
+                const text = document.querySelector(".results-count")?.textContent ?? "";
+                const match = text.match(/(\d+)\s*Ergebnis/i);
+                return match ? parseInt(match[1], 10) : null;
+            }),
+    },
 });

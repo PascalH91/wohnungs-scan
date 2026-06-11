@@ -33,4 +33,8 @@ export const getWGVorwaertsOffers = createScraper({
     providerName: "WG Vorwärts",
     url: wgVorwaertsUrl,
     extractOffers: extractWGVorwaertsOffers,
+    health: {
+        presenceOnly: true,
+        anchorSelector: ".entry-content",
+    },
 });

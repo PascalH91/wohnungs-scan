@@ -32,4 +32,10 @@ export const getSolidaritaetOffers = createScraper({
     providerName: "Solidarität",
     url: solidariaetUrl,
     extractOffers: extractSolidaritaetOffers,
+    // Presence-only without an anchor: the scraper keys on a Formidable-Forms
+    // ".frm_no_entries" marker (the empty state itself), which has no stable
+    // "must always exist" counterpart to probe.
+    health: {
+        presenceOnly: true,
+    },
 });

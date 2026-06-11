@@ -23,6 +23,22 @@ export const config = {
         retryDelay: parseInt(process.env.SCRAPER_RETRY_DELAY || "2000", 10), // 2 seconds
     },
 
+    // Scrape-health alerting. Distinguishes "genuinely no flats" from a silently
+    // broken scraper (changed DOM / moved URL / mangled fields) and alerts on the
+    // latter. See utils/baseScraper assessHealth() and api/notify-health.
+    health: {
+        // A provider that USED to return listings but has been empty/unknown for
+        // longer than this is flagged — catches identifier changes that silently
+        // zero out a previously-working scraper. Providers with no history are not
+        // baselined (no false alarms for ones that are simply usually empty).
+        staleEmptyHours: parseInt(process.env.HEALTH_STALE_EMPTY_HOURS || "72", 10),
+        // Don't re-email about the same unhealthy provider more often than this.
+        alertThrottleHours: parseInt(process.env.HEALTH_ALERT_THROTTLE_HOURS || "12", 10),
+        // Fraction of returned offers with mangled fields (HTML in size, NaN rooms)
+        // above which the scrape is judged SUSPECT.
+        malformedFieldThreshold: parseFloat(process.env.HEALTH_MALFORMED_FIELD_THRESHOLD || "0.5"),
+    },
+
     // Browser pool configuration
     browserPool: {
         min: parseInt(process.env.BROWSER_POOL_MIN || "1", 10),

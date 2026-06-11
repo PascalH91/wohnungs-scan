@@ -89,4 +89,9 @@ export const getGEWOBAGOffers = createScraper({
     providerName: "GEWOBAG",
     url: gewobagUrl,
     extractOffers: extractGewobagOffers,
+    health: {
+        baselineEmpty: true,
+        listingSelector: "article.gw-offer",
+        anchorSelector: ".filtered-mietangebote",
+    },
 });

@@ -11,7 +11,7 @@
 import { createHash } from "crypto";
 import { promises as fs } from "fs";
 import path from "path";
-import { Offer } from "@/types";
+import { Offer, ProviderHealth } from "@/types";
 import { createLogger } from "./logger";
 
 const logger = createLogger("offer-store");
@@ -240,6 +240,13 @@ export interface ProviderSnapshot {
     isMultiPages: boolean;
     error: string;
     scrapedAt: string;
+    /** Scrape-health verdict for this run (see assessHealth in baseScraper). */
+    health?: ProviderHealth;
+    /** Last time this provider actually produced listings — the baseline used to
+     * detect a previously-working scraper that has silently gone empty. */
+    lastNonEmptyAt?: string;
+    /** Last time a health alert was emailed for this provider (throttle). */
+    healthAlertedAt?: string;
 }
 
 interface SnapshotFile {
@@ -277,14 +284,26 @@ export async function persistSnapshot(
     offers: Offer[],
     isMultiPages: boolean,
     error: string,
+    health?: ProviderHealth,
 ): Promise<void> {
     return withLock(async () => {
         const file = await readSnapshotFile();
+        const previous = file.providers[company];
+        const nowIso = new Date().toISOString();
+
+        // Baseline: carry the previous lastNonEmptyAt forward, bumping it only when
+        // this scrape actually saw listings (raw cards, or any returned offer).
+        const hadListings = (health?.rawCount ?? 0) > 0 || offers.length > 0;
+
         file.providers[company] = {
             offers,
             isMultiPages: Boolean(isMultiPages),
             error: error || "",
-            scrapedAt: new Date().toISOString(),
+            scrapedAt: nowIso,
+            health,
+            lastNonEmptyAt: hadListings ? nowIso : previous?.lastNonEmptyAt,
+            // Reset the alert throttle once a provider recovers to healthy.
+            healthAlertedAt: health?.status === "HEALTHY" ? undefined : previous?.healthAlertedAt,
         };
         await writeSnapshotFile(file);
     });
@@ -294,4 +313,23 @@ export async function persistSnapshot(
 export async function getProviderSnapshot(company: string): Promise<ProviderSnapshot | null> {
     const file = await readSnapshotFile();
     return file.providers[company] ?? null;
+}
+
+/** Read every provider's current snapshot, keyed by company. */
+export async function getAllSnapshots(): Promise<Record<string, ProviderSnapshot>> {
+    const file = await readSnapshotFile();
+    return file.providers;
+}
+
+/** Stamp healthAlertedAt=now for the given providers, so the digest doesn't re-alert them every cycle. */
+export async function markHealthAlerted(companies: string[]): Promise<void> {
+    if (!companies.length) return;
+    return withLock(async () => {
+        const file = await readSnapshotFile();
+        const nowIso = new Date().toISOString();
+        for (const company of companies) {
+            if (file.providers[company]) file.providers[company].healthAlertedAt = nowIso;
+        }
+        await writeSnapshotFile(file);
+    });
 }

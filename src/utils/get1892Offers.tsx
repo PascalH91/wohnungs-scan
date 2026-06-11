@@ -109,4 +109,8 @@ export const get1892Offers = createScraper({
     waitForSelector: "#ispage",
     navigationTimeout: 60000,
     extractOffers: extract1892Offers,
+    health: {
+        listingSelector: ".isobject",
+        anchorSelector: "#ispage",
+    },
 });

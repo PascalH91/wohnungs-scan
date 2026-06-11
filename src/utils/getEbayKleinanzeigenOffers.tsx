@@ -69,4 +69,7 @@ export const getEbayKleinanzeigenOffers = createScraper({
     stableId: true, // ad id parsed from listing URL
     url: ebayKleinanzeigenUrl,
     extractOffers: extractEbayKleinanzeigenOffers,
+    health: {
+        listingSelector: ".fully-clickable-card",
+    },
 });

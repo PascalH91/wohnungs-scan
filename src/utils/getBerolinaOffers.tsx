@@ -33,4 +33,8 @@ export const getBerolinaOffers = createScraper({
     providerName: "Berolina",
     url: berolinaUrl,
     extractOffers: extractBerolinaOffers,
+    health: {
+        presenceOnly: true,
+        anchorSelector: ".entrytext",
+    },
 });

@@ -165,3 +165,59 @@ export async function sendBlockAlertEmail(blocked: BlockedProvider[]): Promise<b
     logger.info("Sent block alert email", { blockedCount: count, id: data?.id });
     return true;
 }
+
+export interface HealthIssue {
+    provider: string;
+    /** SUSPECT (looks broken now) or STALE (was working, has gone silently empty). */
+    kind: "SUSPECT" | "STALE";
+    reasons: string[];
+}
+
+/**
+ * Alert that one or more providers look broken rather than genuinely empty — a
+ * changed DOM, a moved URL, mangled fields, or a previously-working scraper that
+ * has returned nothing for too long. One digest per scrape pass.
+ */
+export async function sendHealthAlertEmail(issues: HealthIssue[]): Promise<boolean> {
+    if (!issues.length) return false;
+
+    const resend = getClient();
+    if (!resend || !TO) {
+        logger.warn("Email not configured — skipping health alert", { issueCount: issues.length });
+        return false;
+    }
+
+    const count = issues.length;
+    const subject = `🛠️ Wohnungs-Scan: ${count} Scraper prüfen${count === 1 ? "" : " (mehrere)"}`;
+    const rows = issues
+        .map((issue) => {
+            const label = issue.kind === "STALE" ? "Seit Längerem leer" : "Sieht kaputt aus";
+            const reasonList = issue.reasons
+                .map((r) => `<li style="color:#666;font-size:13px;margin:2px 0;">${escapeHtml(r)}</li>`)
+                .join("");
+            return `<li style="margin:10px 0;"><b>${escapeHtml(issue.provider)}</b>
+                <span style="font-size:12px;color:#b00;">— ${label}</span>
+                <ul style="padding-left:18px;margin:4px 0;">${reasonList}</ul></li>`;
+        })
+        .join("");
+    const html = `
+        <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;">
+            <h2 style="color:#b00;">${count} Scraper brauchen einen Blick</h2>
+            <p style="color:#444;">Diese Anbieter lieferten 0 Ergebnisse aus einem verdächtigen Grund (geändertes
+            DOM, umgezogene URL, kaputte Felder) oder sind seit Längerem leer, obwohl sie früher Treffer hatten.
+            Bitte Selektoren/URL prüfen.</p>
+            <ul style="padding-left:18px;">${rows}</ul>
+        </div>`;
+    const text = issues
+        .map((i) => `${i.provider} [${i.kind}]: ${i.reasons.join("; ")}`)
+        .join("\n");
+
+    const { data, error } = await resend.emails.send({ from: FROM, to: TO, subject, html, text });
+    if (error) {
+        logger.error("Failed to send health alert email", error, { issueCount: count });
+        throw new Error(error.message || "Resend send failed");
+    }
+
+    logger.info("Sent health alert email", { issueCount: count, id: data?.id });
+    return true;
+}

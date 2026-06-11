@@ -34,4 +34,8 @@ export const getEVMOffers = createScraper({
     providerName: "EVM",
     url: evmUrl,
     extractOffers: extractEVMOffers,
+    health: {
+        presenceOnly: true,
+        anchorSelector: ".note-attention",
+    },
 });

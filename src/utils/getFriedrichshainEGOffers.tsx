@@ -61,4 +61,7 @@ export const getFriedrichshainEGOffers = createScraper({
     providerName: "Friedrichshain EG",
     url: FriedrichshainEGUrl,
     extractOffers: extractFriedrichshainEGOffers,
+    health: {
+        listingSelector: ".wohnungsangebot-card",
+    },
 });

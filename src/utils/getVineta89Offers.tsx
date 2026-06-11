@@ -33,4 +33,8 @@ export const getVineta89Offers = createScraper({
     providerName: "Vineta 89",
     url: vineta89Url,
     extractOffers: extractVineta89Offers,
+    health: {
+        presenceOnly: true,
+        anchorSelector: "#content",
+    },
 });

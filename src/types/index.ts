@@ -20,6 +20,33 @@ export interface Offer {
 }
 
 /**
+ * Health of a single scrape, used to tell a genuinely-empty result apart from a
+ * silently-broken scraper (changed DOM, moved URL, mangled fields).
+ *
+ * - HEALTHY:  listings were found (and their fields look sane).
+ * - EMPTY_OK: confirmed genuinely empty — the page rendered fine (anchor present
+ *             or the site advertised 0 results), there just are no flats.
+ * - SUSPECT:  something looks broken — see `reasons`. This is what gets alerted.
+ * - UNKNOWN:  0 results with no corroborating signal; can't tell empty from
+ *             broken on this run alone (the time-based baseline check decides).
+ */
+export type HealthStatus = "HEALTHY" | "EMPTY_OK" | "SUSPECT" | "UNKNOWN";
+
+export interface ProviderHealth {
+    status: HealthStatus;
+    /** Human-readable explanations for a SUSPECT/UNKNOWN verdict. */
+    reasons: string[];
+    /** Listing elements matched by the provider's card selector, pre-filter. -1 if not probed. */
+    rawCount: number;
+    /** Result count the site itself advertises ("66 Ergebnisse"), or null if not probed. */
+    advertisedCount: number | null;
+    /** Whether this provider opted into the time-based stale-empty baseline. Only
+     * meaningful for high-volume providers that reliably always have listings;
+     * the strict size/room filter makes "empty" normal for everyone else. */
+    baselineEligible: boolean;
+}
+
+/**
  * Response structure from scraper functions
  */
 export interface ScraperResponse {

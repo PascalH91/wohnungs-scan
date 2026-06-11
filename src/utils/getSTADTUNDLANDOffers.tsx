@@ -107,4 +107,14 @@ export const getSTADTUNDLANDOffers = createScraper({
     url: stadtUndLandUrl,
     stableId: true,
     extractOffers: extractSTADTUNDLANDOffers,
+    health: {
+        baselineEmpty: true,
+        listingSelector: ARTICLE_SELECTOR,
+        // The page renders "19 Suchergebnisse" in its results header.
+        resultCount: (page) =>
+            page.evaluate(() => {
+                const match = document.body.innerText.match(/(\d+)\s*Suchergebnis/i);
+                return match ? parseInt(match[1], 10) : null;
+            }),
+    },
 });

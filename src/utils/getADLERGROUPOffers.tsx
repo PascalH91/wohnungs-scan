@@ -64,4 +64,8 @@ export const getADLERGROUPOffers = createScraper({
     url: adlergroupUrl,
     waitForSelector: ".search-results-inner",
     extractOffers: extractADLERGROUPOffers,
+    health: {
+        listingSelector: ".search-results-inner .row > div",
+        anchorSelector: ".search-results-inner",
+    },
 });

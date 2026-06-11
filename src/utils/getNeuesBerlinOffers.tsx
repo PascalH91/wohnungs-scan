@@ -64,4 +64,7 @@ export const getNeuesBerlinOffers = createScraper({
     providerName: "Neues Berlin",
     url: neuesBerlinUrl,
     extractOffers: extractNeuesBerlinOffers,
+    health: {
+        listingSelector: ".frame-type-list",
+    },
 });

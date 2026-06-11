@@ -33,4 +33,8 @@ export const getForumKreuzbergOffers = createScraper({
     providerName: "Forum Kreuzberg",
     url: forumKreuzbergUrl,
     extractOffers: extractForumKreuzbergOffers,
+    health: {
+        presenceOnly: true,
+        anchorSelector: ".content",
+    },
 });

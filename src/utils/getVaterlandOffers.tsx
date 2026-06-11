@@ -32,4 +32,8 @@ export const getVaterlandOffers = createScraper({
     providerName: "Vaterland",
     url: vaterlandUrl,
     extractOffers: extractVaterlandOffers,
+    health: {
+        presenceOnly: true,
+        anchorSelector: "#content",
+    },
 });

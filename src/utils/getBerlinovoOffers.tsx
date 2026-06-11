@@ -59,4 +59,7 @@ export const getBerlinovoOffers = createScraper({
     providerName: "Berlinovo",
     url: berlinovoUrl,
     extractOffers: extractBerlinovoOffers,
+    health: {
+        listingSelector: ".view-content article",
+    },
 });

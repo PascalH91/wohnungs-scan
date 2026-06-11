@@ -58,4 +58,7 @@ export const getFRIEDRICHSHEIMOffers = createScraper({
     providerName: "Friedrichsheim",
     url: friedrichsheimUrl,
     extractOffers: extractFRIEDRICHSHEIMOffers,
+    health: {
+        listingSelector: "article",
+    },
 });

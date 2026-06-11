@@ -250,6 +250,18 @@ async function runCycle(): Promise<void> {
             logger.error("Notify step failed", error);
         }
 
+        // Health digest: alert on providers that look broken rather than empty
+        // (changed DOM / moved URL / mangled fields, or stale-empty baselines).
+        try {
+            const res = await fetch(`${BASE_URL}/api/notify-health`, { cache: "no-store" });
+            const body = (await res.json()) as { issues?: number; providers?: string[] };
+            if (body?.issues) {
+                logger.warn("Scrape-health issues detected", { count: body.issues, providers: body.providers });
+            }
+        } catch (error) {
+            logger.error("Health-check step failed", error);
+        }
+
         logger.info("Scrape cycle complete", { durationMs: Date.now() - startedAt, newOffers });
     } finally {
         running = false;

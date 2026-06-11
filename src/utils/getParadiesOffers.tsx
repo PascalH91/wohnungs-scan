@@ -33,4 +33,9 @@ export const getParadiesOffers = createScraper({
     providerName: "Paradies",
     url: paradiesUrl,
     extractOffers: extractParadiesOffers,
+    // Presence-only and intentionally without an anchor: this scraper keys on a
+    // bare <p> + German text match, with no stable structural element to probe.
+    health: {
+        presenceOnly: true,
+    },
 });

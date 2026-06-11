@@ -68,4 +68,7 @@ export const getDPFOffers = createScraper({
     providerName: "DPF",
     url: dpfUrl,
     extractOffers: extractDPFOffers,
+    health: {
+        listingSelector: ".immo-a-info",
+    },
 });

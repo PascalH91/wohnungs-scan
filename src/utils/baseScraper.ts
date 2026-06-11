@@ -7,7 +7,7 @@ import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 import { config } from "@/config";
-import { Offer, ScraperResponse } from "@/types";
+import { Offer, ProviderHealth, ScraperResponse } from "@/types";
 import { createLogger } from "./logger";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
 import { persistOffers, persistSnapshot } from "./offerStore";
@@ -32,6 +32,37 @@ export interface ScraperConfig {
      */
     stableId?: boolean;
     extractOffers: (page: Page) => Promise<{ offers: Offer[]; isMultiPages?: boolean }>;
+    /**
+     * Optional probes that let assessHealth() tell a genuinely-empty result apart
+     * from a silently-broken scraper. All fields are optional — supply whatever
+     * the provider's page makes available; the more you give, the more confidently
+     * a break can be distinguished from a real "no flats right now".
+     */
+    health?: {
+        /** Selector for an individual listing card. Counted pre-filter, so it's not
+         * skewed by our district/title filters — the key signal for "site has
+         * results but our selector matched nothing". */
+        listingSelector?: string;
+        /** Selector for a structural element that exists regardless of whether there
+         * are any listings (results container, filter form, "X Treffer" box). Its
+         * absence means the page was redesigned or we landed somewhere unexpected. */
+        anchorSelector?: string;
+        /** Reads the result count the site itself advertises ("66 Ergebnisse"),
+         * or null if it can't be found. The strongest signal: advertised > 0 while
+         * we parsed 0 is an unambiguous break. */
+        resultCount?: (page: Page) => Promise<number | null>;
+        /** For "sentinel" providers that don't enumerate listings but show a fixed
+         * "no apartments" page (and the scraper pushes a single synthetic offer
+         * otherwise). For these, empty is normal — the only failure mode is the
+         * anchorSelector disappearing. Set this so they are judged on the anchor
+         * alone and never flagged as stale-empty. */
+        presenceOnly?: boolean;
+        /** Opt into the time-based stale-empty baseline: alert if this provider
+         * shows zero listing CARDS (pre-filter) for staleEmptyHours. Only enable
+         * for high-volume providers that reliably always have stock — otherwise a
+         * genuinely empty page trips it. Requires listingSelector. */
+        baselineEmpty?: boolean;
+    };
 }
 
 export interface ScraperOptions {
@@ -105,6 +136,124 @@ async function withRetry<T>(
     }
 
     throw lastError || new Error(`${options.operationName} failed after ${options.maxRetries} attempts`);
+}
+
+/**
+ * Detect mangled fields among the offers we DID return — the case where the card
+ * selector still matches but a sub-selector changed underneath it (e.g. GESOBAU
+ * started wrapping each datum in an SVG, so `size` came back full of HTML and
+ * `rooms` as NaN). Returns a reason string when too many offers look broken, else
+ * null. Only flags clear garbage, never merely-absent fields (a scraper that
+ * legitimately doesn't populate rooms/size must not trip this).
+ */
+function assessFieldHealth(offers: Offer[]): string | null {
+    if (offers.length === 0) return null;
+
+    let malformed = 0;
+    for (const offer of offers) {
+        const sizeStr = offer.size != null ? String(offer.size) : "";
+        const roomsStr = offer.rooms != null ? String(offer.rooms) : "";
+        // size present but containing HTML, or no digit at all → garbage.
+        const sizeBad = sizeStr.length > 0 && (sizeStr.includes("<") || !/\d/.test(sizeStr));
+        // rooms parsed to a non-number.
+        const roomsBad = roomsStr === "NaN";
+        if (sizeBad || roomsBad) malformed += 1;
+    }
+
+    const fraction = malformed / offers.length;
+    if (fraction >= config.health.malformedFieldThreshold) {
+        return `${malformed}/${offers.length} returned offers have malformed fields (HTML in size or non-numeric rooms) — a card sub-selector likely changed`;
+    }
+    return null;
+}
+
+/**
+ * Classify the health of a completed scrape so a silent break can be alerted on.
+ * Combines several independent signals (advertised count, structural anchor,
+ * field sanity, raw card count) precisely because no single one resolves the
+ * "empty vs broken" ambiguity on its own.
+ */
+async function assessHealth(
+    page: Page,
+    scraperConfig: ScraperConfig,
+    offers: Offer[],
+): Promise<ProviderHealth> {
+    const hc = scraperConfig.health;
+    let rawCount = -1;
+    let anchorPresent: boolean | null = null;
+    let advertisedCount: number | null = null;
+
+    if (hc?.listingSelector) {
+        rawCount = await page.evaluate((sel) => document.querySelectorAll(sel).length, hc.listingSelector);
+    }
+    if (hc?.anchorSelector) {
+        anchorPresent = await page.evaluate((sel) => !!document.querySelector(sel), hc.anchorSelector);
+    }
+    if (hc?.resultCount) {
+        try {
+            advertisedCount = await hc.resultCount(page);
+        } catch (error: any) {
+            logger.debug(`resultCount probe failed for ${scraperConfig.providerName}`, { error: error?.message });
+        }
+    }
+
+    const baselineEligible = Boolean(hc?.baselineEmpty);
+
+    // Sentinel providers (fixed "no apartments" page; a single synthetic offer
+    // otherwise) don't enumerate listings, so empty is normal. Their only failure
+    // mode is the anchor element vanishing — judge them on that alone.
+    if (hc?.presenceOnly) {
+        if (anchorPresent === false) {
+            return {
+                status: "SUSPECT",
+                reasons: [`anchor "${hc.anchorSelector}" not found — page may have been redesigned (presence check can no longer run)`],
+                rawCount,
+                advertisedCount,
+                baselineEligible: false,
+            };
+        }
+        return { status: "HEALTHY", reasons: [], rawCount, advertisedCount, baselineEligible: false };
+    }
+
+    const reasons: string[] = [];
+
+    // Structural anchor gone → page redesigned or we were redirected somewhere else.
+    if (anchorPresent === false) {
+        reasons.push(`structural anchor "${hc!.anchorSelector}" not found — page may have been redesigned or moved`);
+    }
+
+    // Site advertises results but our card selector matched none → selector broken.
+    if (advertisedCount !== null && advertisedCount > 0 && rawCount === 0) {
+        reasons.push(
+            `site advertises ${advertisedCount} result(s) but the listing selector matched 0 — card markup likely changed`,
+        );
+    }
+
+    // Cards matched but their fields are garbage → sub-selector broken.
+    const fieldIssue = assessFieldHealth(offers);
+    if (fieldIssue) reasons.push(fieldIssue);
+
+    if (reasons.length) {
+        return { status: "SUSPECT", reasons, rawCount, advertisedCount, baselineEligible };
+    }
+
+    // No problems found — now decide between "has results", "confirmed empty", and
+    // "empty but can't confirm".
+    if (rawCount > 0 || offers.length > 0) {
+        return { status: "HEALTHY", reasons: [], rawCount, advertisedCount, baselineEligible };
+    }
+    if (advertisedCount === 0 || anchorPresent === true) {
+        // The page rendered fine (count says 0, or the results scaffold is present)
+        // — genuinely no flats right now.
+        return { status: "EMPTY_OK", reasons: [], rawCount, advertisedCount, baselineEligible };
+    }
+    return {
+        status: "UNKNOWN",
+        reasons: ["0 listings and no corroborating signal — can't tell an empty page from a broken scraper on this run alone"],
+        rawCount,
+        advertisedCount,
+        baselineEligible,
+    };
 }
 
 /**
@@ -198,9 +347,20 @@ export async function executeScraper(
         // Extract offers using provider-specific logic
         const data = await extractOffers(page);
 
+        // Assess scrape health (empty vs silently broken) before we tear the page
+        // down — the probes read the live DOM. Never let this break the scrape.
+        let health: ProviderHealth | undefined;
+        try {
+            health = await assessHealth(page, scraperConfig, data.offers);
+        } catch (error: any) {
+            logger.debug(`Health assessment failed for ${providerName}`, { error: error?.message });
+        }
+
         logger.info(`Successfully scraped ${providerName}`, {
             offerCount: data.offers.length,
             isMultiPages: data.isMultiPages,
+            health: health?.status,
+            ...(health && health.status !== "HEALTHY" ? { healthReasons: health.reasons } : {}),
         });
 
         // Persist offers to the local store and attach isNew flags from firstSeenAt.
@@ -213,7 +373,7 @@ export async function executeScraper(
 
         // Save the current listing as this provider's snapshot for the frontend.
         try {
-            await persistSnapshot(providerName, data.offers, data.isMultiPages ?? false, "");
+            await persistSnapshot(providerName, data.offers, data.isMultiPages ?? false, "", health);
         } catch (error: any) {
             logger.error(`Failed to persist snapshot for ${providerName}`, error);
         }

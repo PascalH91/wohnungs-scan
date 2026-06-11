@@ -61,4 +61,8 @@ export const getWBMOffers = createScraper({
     stableId: true, // data-id + data-uid
     url: wbmUrl,
     extractOffers: extractWBMOffers,
+    health: {
+        baselineEmpty: true,
+        listingSelector: ".openimmo-search-list-item",
+    },
 });
