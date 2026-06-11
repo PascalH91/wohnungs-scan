@@ -12,8 +12,6 @@ async function extractGESOBAUOffers(page: Page): Promise<{ offers: Offer[]; isMu
         let results: Offer[] = [];
         let items = document.querySelectorAll(".basicTeaser__content");
 
-        console.log("LENGTH", items.length);
-
         items &&
             (await Promise.all(
                 Array.from(items).map(async (item) => {
@@ -24,7 +22,15 @@ async function extractGESOBAUOffers(page: Page): Promise<{ offers: Offer[]; isMu
 
                     const title = (item.querySelector(".basicTeaser__title") as HTMLElement | null)?.innerText ?? "";
                     const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
-                    const attributes = item.querySelectorAll(".apartment__info > span");
+
+                    // Each `.apartment__info > span` now holds an SVG icon plus text, in
+                    // the order price / rooms / size — so read innerText (not innerHTML,
+                    // which is the icon markup) and pick by content rather than index.
+                    const attributeTexts = Array.from(item.querySelectorAll(".apartment__info > span")).map(
+                        (span) => (span as HTMLElement).innerText.trim(),
+                    );
+                    const roomsText = attributeTexts.find((t) => /zimmer/i.test(t));
+                    const sizeText = attributeTexts.find((t) => /m²/i.test(t));
 
                     const link = item
                         .querySelector(".basicTeaser__title")
@@ -45,8 +51,8 @@ async function extractGESOBAUOffers(page: Page): Promise<{ offers: Offer[]; isMu
                                     .querySelector(".basicTeaser__title")
                                     ?.getElementsByTagName("a")[0]
                                     .getAttribute("href"),
-                            size: attributes[1]?.innerHTML,
-                            rooms: +attributes[0]?.innerHTML.trim()[0],
+                            size: sizeText,
+                            rooms: roomsText ? parseFloat(roomsText.replace(",", ".")) : undefined,
                         });
                     }
                 }),
