@@ -72,6 +72,18 @@ class BrowserPool {
     }
 
     async acquire(): Promise<Browser> {
+        // Drop any instances whose underlying Chrome has died/disconnected.
+        // Handing one of these back out would only surface as "socket hang up" /
+        // "Target closed" on the next page operation.
+        this.instances = this.instances.filter((inst) => {
+            if (inst.browser.connected) return true;
+            logger.warn("Discarding disconnected browser instance from pool", {
+                poolSize: this.instances.length,
+            });
+            void inst.browser.close().catch(() => {});
+            return false;
+        });
+
         // Try to find an available instance
         const available = this.instances.find((inst) => !inst.inUse);
 
@@ -188,8 +200,41 @@ class BrowserPool {
     }
 }
 
-// Singleton pool instance
-const browserPool = new BrowserPool();
+// Singleton pool instance.
+//
+// Stored on globalThis, NOT a plain module-level const, because Next.js's dev
+// server gives each route handler (/api/cron/evm, /api/cron/berlinovo, …) its
+// OWN copy of imported modules. A module-level `new BrowserPool()` therefore
+// creates a SEPARATE pool per route: every scrape sees an empty pool, launches a
+// fresh Chrome, and — because the next route's pool holds no reference to it —
+// never closes it. Those orphaned browsers pile up into hundreds of zombie
+// Chrome processes until new launches fail with "socket hang up" (the system
+// runs out of RAM / file descriptors). A globalThis singleton is shared across
+// every module copy and survives HMR reloads, so browsers are genuinely pooled,
+// reused, and cleaned up. (Same pattern used for sharing a Prisma client in Next.)
+const globalForPool = globalThis as unknown as {
+    __browserPool?: BrowserPool;
+    __browserPoolShutdownHooked?: boolean;
+};
+
+const browserPool = (globalForPool.__browserPool ??= new BrowserPool());
+
+// Close every browser when the process exits so Ctrl+C / container stop / a dev
+// restart doesn't strand headless Chrome processes. Registered once per process
+// (guarded on globalThis) to avoid stacking duplicate listeners under HMR.
+if (!globalForPool.__browserPoolShutdownHooked) {
+    globalForPool.__browserPoolShutdownHooked = true;
+    const shutdownAndExit = (signal: NodeJS.Signals) => {
+        logger.info(`Received ${signal} — closing browser pool before exit`);
+        void browserPool.shutdown().finally(() => process.exit(0));
+    };
+    process.once("SIGINT", shutdownAndExit);
+    process.once("SIGTERM", shutdownAndExit);
+    // Natural, signal-less exit (event loop drained): best-effort close.
+    process.once("beforeExit", () => {
+        void browserPool.shutdown();
+    });
+}
 
 /**
  * Get a browser from the pool
