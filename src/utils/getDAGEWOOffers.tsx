@@ -1,62 +1,128 @@
 import { Offer } from "@/types";
-import { config } from "@/config";
 import { createScraper } from "./baseScraper";
 import { Page } from "puppeteer-core";
 import { dagewoUrl } from "./providerUrls";
+import { config } from "@/config";
 
-const { minRoomSize, minRoomNumber, maxColdRent, maxWarmRent } = config.apartment;
+const { navigationTimeout, selectorTimeout } = config.scraping;
+
+// Safety cap so a misbehaving pagination nav can never spin forever. degewo
+// currently has ~7 pages of results; 30 leaves comfortable head-room.
+const MAX_PAGES = 30;
+
+const TEASER_LIST = "#immo-teaser-list";
+
+/**
+ * Extract every listing on the page currently loaded in `page`, plus the
+ * absolute URL of the next pagination page (or null when on the last page).
+ *
+ * degewo's search has no server-side room/size filters on this URL, so the full
+ * Berlin result set is returned and filtered client-side here. Each pagination
+ * link carries its own TYPO3 `cHash`, so we can't synthesise page URLs — we read
+ * the live "next" link's href instead.
+ */
+async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: string | null }> {
+    return await page.evaluate(async () => {
+        const minRoomNumber = await window.getMinRoomNumber();
+        const minRoomSize = await window.getMinRoomSize();
+
+        const list = document.querySelector("#immo-teaser-list");
+        const teasers = list
+            ? Array.from(list.querySelectorAll(".c-teaser")).filter((t) =>
+                  t.querySelector('a[href*="/immosuche/details/"]'),
+              )
+            : [];
+
+        const results: Offer[] = [];
+
+        await Promise.all(
+            teasers.map(async (item) => {
+                const titleEl = item.querySelector(".c-headline a");
+                const title = titleEl?.textContent?.trim() ?? "";
+                const link = titleEl?.getAttribute("href") ?? null;
+                const address = item.querySelector(".c-copy > p")?.textContent?.trim();
+
+                // Definition list holds the key facts as term/definition pairs,
+                // e.g. { "946,35 €": "Warmmiete", "1": "Zimmer", "45,52": "m²" }.
+                const facts: Record<string, string> = {};
+                item.querySelectorAll(".c-definition-list__item").forEach((entry) => {
+                    const term = entry.querySelector(".c-definition-list__term")?.textContent?.trim();
+                    const def = entry.querySelector(".c-definition-list__definition")?.textContent?.trim();
+                    if (term && def) facts[def] = term;
+                });
+
+                const rooms = facts["Zimmer"] ? parseInt(facts["Zimmer"], 10) : 100;
+                const size = facts["m²"] ? parseFloat(facts["m²"].replace(",", ".")) : 1000;
+
+                const tags = Array.from(item.querySelectorAll(".c-tag__label")).map((t) =>
+                    (t.textContent ?? "").trim().toLowerCase(),
+                );
+                const isWBS = tags.some((t) => t.includes("wbs"));
+
+                const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
+
+                const filterConditions =
+                    address &&
+                    title &&
+                    !containsDisqualifyingPattern &&
+                    !isWBS &&
+                    rooms >= minRoomNumber &&
+                    size >= minRoomSize;
+
+                if (filterConditions) {
+                    results.push({
+                        address,
+                        id: link || address,
+                        title,
+                        region: "-",
+                        link: link ? `https://www.degewo.de${link}` : null,
+                        size: size + " m²",
+                        rooms,
+                    });
+                }
+            }),
+        );
+
+        // Follow the live "next page" link; it carries the correct cHash. Absent
+        // or disabled means we're on the last page.
+        const nextLink = document.querySelector(".c-pagination__link--next");
+        const nextHref = nextLink?.getAttribute("href");
+        const disabled =
+            !nextLink ||
+            nextLink.classList.contains("is-disabled") ||
+            nextLink.getAttribute("aria-disabled") === "true";
+        const nextUrl = !disabled && nextHref ? new URL(nextHref, window.location.href).href : null;
+
+        return { offers: results, nextUrl };
+    });
+}
 
 async function extractDAGEWOOffers(page: Page): Promise<{ offers: Offer[]; isMultiPages: boolean }> {
-    return await page.evaluate(async () => {
-        let isMultiPages = false;
-        let results: Offer[] = [];
-        let items = document.querySelectorAll(".article-list__item--immosearch");
+    const byId = new Map<string, Offer>();
+    let pagesVisited = 0;
 
-        items &&
-            (await Promise.all(
-                Array.from(items).map(async (item) => {
-                    const address = item.querySelector(".article__meta")?.innerHTML;
+    // Page 1 is already loaded by the base scraper's initial navigation.
+    let nextUrl: string | null = null;
+    do {
+        if (nextUrl) {
+            await page.goto(nextUrl, { waitUntil: "networkidle2", timeout: navigationTimeout });
+        }
+        await page.waitForSelector(TEASER_LIST, { timeout: selectorTimeout }).catch(() => {});
 
-                    const title = item.querySelector(".article__title")?.innerHTML ?? "";
-                    const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
-                    const link = item?.getElementsByTagName("a")?.[0]?.getAttribute("href");
-                    const properties = item.querySelectorAll(".article__properties-item > span");
-                    const isWBS = (properties?.[3] as HTMLElement | undefined)?.innerText === "mit WBS";
-                    const size = (properties?.[1] as HTMLElement | undefined)?.innerText;
-                    const shortenedSize = size ? +size.split(" ")[0].substr(0, 2) : 1000;
-                    const rooms = (properties?.[0] as HTMLElement | undefined)?.innerText;
-                    const shortenedRooms = rooms ? +rooms.split(" ")[0] : 100;
+        const { offers, nextUrl: next } = await extractPage(page);
+        // Dedupe across pages defensively (stable per-listing link is the key).
+        offers.forEach((offer) => byId.set(offer.id, offer));
 
-                    const minRoomNumber = await window.getMinRoomNumber();
-                    const minRoomSize = await window.getMinRoomSize();
+        pagesVisited += 1;
+        nextUrl = next;
+    } while (nextUrl && pagesVisited < MAX_PAGES);
 
-                    const filterConditions =
-                        address &&
-                        title &&
-                        !containsDisqualifyingPattern &&
-                        !isWBS &&
-                        shortenedRooms >= minRoomNumber &&
-                        shortenedSize >= minRoomSize;
-
-                    if (!!filterConditions) {
-                        results.push({
-                            address,
-                            id: link || address,
-                            title,
-                            region: "-",
-                            link: `https://www.degewo.de/${link}`,
-                            size: shortenedSize + " m²",
-                            rooms: shortenedRooms,
-                        });
-                    }
-                }),
-            ));
-        return { offers: results, isMultiPages };
-    });
+    return { offers: Array.from(byId.values()), isMultiPages: pagesVisited > 1 };
 }
 
 export const getDAGEWOOffers = createScraper({
     providerName: "DAGEWO",
     url: dagewoUrl,
+    stableId: true,
     extractOffers: extractDAGEWOOffers,
 });

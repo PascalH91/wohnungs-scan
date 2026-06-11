@@ -34,7 +34,7 @@ export const stadtUndLandUrl = `https://www.stadtundland.de/immobiliensuche.php?
 
 export const gesobauUrl = `https://www.gesobau.de/mieten/wohnungssuche/?tx_solr[filter][]=zimmer:%27${minRoomNumber}-3%27&tx_solr[filter][]=wohnflaeche:%27${minRoomSize}-58%27&tx_solr[filter][]=warmmiete:%270-${maxWarmRent}%27`;
 
-export const dagewoUrl = "https://www.degewo.de/immosuche#openimmo-search-result";
+export const dagewoUrl = "https://www.degewo.de/immosuche";
 
 export const vonoviaUrl = `https://www.vonovia.de/zuhause-finden/immobilien?rentType=miete&city=Berlin&lift=0&parking=0&cellar=0&immoType=wohnung&priceMax=${maxWarmRent}&sizeMin=${minRoomSize}&minRooms=${minRoomNumber}&floor=Beliebig&bathtub=0&bathwindow=0&bathshower=0&furnished=0&kitchenEBK=0&toiletSeparate=0&disabilityAccess=egal&seniorFriendly=0&balcony=egal&garden=0&subsidizedHousingPermit=egal&scroll=true`;
 
