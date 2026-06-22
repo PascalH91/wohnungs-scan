@@ -145,6 +145,20 @@ class BrowserPool {
         }
     }
 
+    /**
+     * Permanently remove a browser from the pool and close it. Use this instead of
+     * release() when a scrape errored or timed out: the browser may be wedged (a
+     * hung in-page evaluate, an unresponsive page), and returning it to the pool
+     * would either hand a bad browser to the next caller or — if it never gets
+     * released — leak its slot forever until the pool deadlocks. We drop the slot
+     * synchronously (so it's reclaimable immediately) and close Chrome best-effort.
+     */
+    destroy(browser: Browser): void {
+        this.instances = this.instances.filter((inst) => inst.browser !== browser);
+        void browser.close().catch(() => {});
+        logger.debug("Destroyed browser instance", { poolSize: this.instances.length });
+    }
+
     private startCleanup(): void {
         this.cleanupInterval = setInterval(() => {
             this.cleanup();
@@ -257,6 +271,14 @@ export const acquireBrowser = async (): Promise<Browser> => {
  */
 export const releaseBrowser = (browser: Browser): void => {
     browserPool.release(browser);
+};
+
+/**
+ * Permanently remove and close a browser — for the error/timeout path, where the
+ * browser may be wedged and must not go back into the pool.
+ */
+export const destroyBrowser = (browser: Browser): void => {
+    browserPool.destroy(browser);
 };
 
 /**

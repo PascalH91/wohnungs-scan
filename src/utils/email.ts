@@ -246,3 +246,60 @@ export async function sendHealthAlertEmail(issues: HealthIssue[]): Promise<boole
     logger.info("Sent health alert email", { issueCount: count, id: data?.id });
     return true;
 }
+
+export interface InfraFailure {
+    provider: string;
+    error: string;
+}
+
+/**
+ * Alert that the scraping system itself is broadly failing — more than half of
+ * the providers run in a cycle errored for non-block reasons (e.g. browser-pool
+ * exhaustion, server overload, network down). This is an "our infrastructure"
+ * signal, distinct from a single site changing (health alert) or a site blocking
+ * us (block alert). One throttled email per incident.
+ */
+export async function sendInfraAlertEmail(failures: InfraFailure[], attempted: number): Promise<boolean> {
+    if (!failures.length) return false;
+
+    const resend = getClient();
+    if (!resend || !TO) {
+        logger.warn("Email not configured — skipping infra alert", { failed: failures.length });
+        return false;
+    }
+
+    // Group identical error messages so a systemic cause shows up once with a count.
+    const byError: Record<string, string[]> = {};
+    for (const f of failures) (byError[f.error] ||= []).push(f.provider);
+
+    const subject = `🚨 Wohnungs-Scan: ${failures.length}/${attempted} Scraper fehlgeschlagen — System prüfen`;
+    const rows = Object.entries(byError)
+        .sort((a, b) => b[1].length - a[1].length)
+        .map(
+            ([err, providers]) =>
+                `<li style="margin:10px 0;"><b>${providers.length}×</b> — <span style="color:#666;font-size:13px;">${escapeHtml(
+                    err,
+                )}</span><br><span style="color:#999;font-size:12px;">${escapeHtml(providers.join(", "))}</span></li>`,
+        )
+        .join("");
+    const html = `
+        <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;">
+            <h2 style="color:#b00;">${failures.length} von ${attempted} Scrapern sind fehlgeschlagen</h2>
+            <p style="color:#444;">So viele gleichzeitige Fehler deuten auf ein <b>systemisches Problem</b> hin
+            (z. B. erschöpfter Browser-Pool, überlasteter Server, Netzwerk) — nicht auf einzelne Anbieter.
+            Bitte Server/Logs prüfen, ggf. den Container neu starten.</p>
+            <ul style="padding-left:18px;">${rows}</ul>
+        </div>`;
+    const text = Object.entries(byError)
+        .map(([err, providers]) => `${providers.length}× ${err} (${providers.join(", ")})`)
+        .join("\n");
+
+    const { data, error } = await resend.emails.send({ from: FROM, to: TO, subject, html, text });
+    if (error) {
+        logger.error("Failed to send infra alert email", error, { failed: failures.length });
+        throw new Error(error.message || "Resend send failed");
+    }
+
+    logger.info("Sent infra alert email", { failed: failures.length, attempted, id: data?.id });
+    return true;
+}

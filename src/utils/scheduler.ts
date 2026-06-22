@@ -68,6 +68,15 @@ const PROVIDER_GAP_JITTER_MS = parseInt(process.env.PROVIDER_GAP_JITTER_MS || "1
 // Once a provider blocks/rate-limits us, stop hitting it entirely for this long.
 const BLOCK_COOLDOWN_MS = parseInt(process.env.BLOCK_COOLDOWN_MS || `${60 * 60 * 1000}`, 10); // 1 hour
 
+// Systemic-failure alert: if more than this fraction of the providers actually
+// run in a cycle fail for NON-block reasons (timeout, browser-pool exhaustion,
+// server overload), email one "infrastructure problem" alert. Guarded by a
+// minimum sample size so a cycle where only a handful ran can't trip it, and
+// throttled so we don't re-alert every cycle while the problem persists.
+const INFRA_FAILURE_THRESHOLD = parseFloat(process.env.INFRA_FAILURE_THRESHOLD || "0.5"); // >50%
+const INFRA_MIN_ATTEMPTED = parseInt(process.env.INFRA_MIN_ATTEMPTED || "5", 10);
+const INFRA_ALERT_THROTTLE_MS = parseInt(process.env.INFRA_ALERT_THROTTLE_MS || `${12 * 60 * 60 * 1000}`, 10); // 12h
+
 // Hardcoded per-provider minimum gap between scrapes, enforced REGARDLESS of
 // SCRAPE_INTERVAL_MS. Protects sensitive providers (WBM has blocked us for
 // hitting it too often) even when the global interval is set short for testing.
@@ -138,27 +147,34 @@ let started = false;
 const cooldownUntil: Record<string, number> = {};
 // slug -> epoch ms of last actual scrape, for enforcing MIN_PROVIDER_INTERVAL_MS.
 const lastScrapedAt: Record<string, number> = {};
+// epoch ms of the last systemic-failure ("infra") alert, for throttling. In-memory
+// is fine: the scheduler is one long-lived process, and a restart is itself a signal.
+let lastInfraAlertAt = 0;
 
-/** Trigger one provider's scrape. Returns whether it blocked us and the detail. */
-async function triggerRoute(slug: string): Promise<{ blocked: boolean; detail: string }> {
+/**
+ * Trigger one provider's scrape. Returns whether it blocked us (with detail, for
+ * the block alert) and any NON-block error (for the systemic-failure alert).
+ * `error` is empty on success and on blocks (those go through `blocked`/`detail`).
+ */
+async function triggerRoute(slug: string): Promise<{ blocked: boolean; detail: string; error: string }> {
     try {
         const res = await fetch(`${BASE_URL}/api/cron/${slug}`, { cache: "no-store" });
         if (!res.ok) {
             logger.warn(`Scraper route returned non-OK status: ${slug}`, { status: res.status });
             const blocked = res.status === 403 || res.status === 429;
-            return { blocked, detail: blocked ? `HTTP ${res.status}` : "" };
+            return { blocked, detail: blocked ? `HTTP ${res.status}` : "", error: blocked ? "" : `HTTP ${res.status}` };
         }
         const body = (await res.json()) as { errors?: string };
         if (body?.errors) {
             logger.warn(`Scraper reported error: ${slug}`, { error: body.errors });
             // Heuristic: treat rate-limit / forbidden / explicit "blocked" as a block.
             const blocked = /\b(403|429)\b|blocked|rate.?limit|too many requests/i.test(body.errors);
-            return { blocked, detail: blocked ? body.errors : "" };
+            return { blocked, detail: blocked ? body.errors : "", error: blocked ? "" : body.errors };
         }
-        return { blocked: false, detail: "" };
-    } catch (error) {
+        return { blocked: false, detail: "", error: "" };
+    } catch (error: any) {
         logger.error(`Failed to trigger scraper: ${slug}`, error);
-        return { blocked: false, detail: "" };
+        return { blocked: false, detail: "", error: error?.message || String(error) };
     }
 }
 
@@ -182,6 +198,10 @@ async function runCycle(): Promise<void> {
     logger.info("Starting scrape cycle", { scrapers: order.length });
 
     const blockedThisCycle: { provider: string; detail: string }[] = [];
+    // Providers we actually ran this cycle, and those that failed for non-block
+    // reasons — the basis for the systemic-failure alert.
+    let attempted = 0;
+    const failuresThisCycle: { provider: string; error: string }[] = [];
 
     try {
         for (let i = 0; i < order.length; i++) {
@@ -210,8 +230,9 @@ async function runCycle(): Promise<void> {
                 }
             }
 
-            const { blocked, detail } = await triggerRoute(slug);
+            const { blocked, detail, error } = await triggerRoute(slug);
             lastScrapedAt[slug] = Date.now();
+            attempted += 1;
             if (blocked) {
                 cooldownUntil[slug] = Date.now() + BLOCK_COOLDOWN_MS;
                 blockedThisCycle.push({ provider: slug, detail });
@@ -219,6 +240,7 @@ async function runCycle(): Promise<void> {
                     cooldownUntil: new Date(cooldownUntil[slug]).toISOString(),
                 });
             }
+            if (error) failuresThisCycle.push({ provider: slug, error });
 
             // Polite randomized gap before the next provider (not after the last).
             if (i < order.length - 1) await sleep(randomGap());
@@ -235,6 +257,32 @@ async function runCycle(): Promise<void> {
                 });
             } catch (error) {
                 logger.error("Block-alert step failed", error);
+            }
+        }
+
+        // Systemic-failure alert: if more than half of the providers we actually
+        // ran failed for non-block reasons (e.g. browser-pool exhaustion, server
+        // overload), that's an infrastructure problem, not individual sites.
+        // One throttled email; the minimum sample size avoids tripping on a cycle
+        // where only a few providers ran.
+        if (attempted >= INFRA_MIN_ATTEMPTED && failuresThisCycle.length / attempted > INFRA_FAILURE_THRESHOLD) {
+            if (Date.now() - lastInfraAlertAt > INFRA_ALERT_THROTTLE_MS) {
+                lastInfraAlertAt = Date.now();
+                try {
+                    await fetch(`${BASE_URL}/api/notify-infra`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        cache: "no-store",
+                        body: JSON.stringify({ failures: failuresThisCycle, attempted }),
+                    });
+                } catch (error) {
+                    logger.error("Infra-alert step failed", error);
+                }
+            } else {
+                logger.warn("Systemic scrape failures detected but infra alert throttled", {
+                    failed: failuresThisCycle.length,
+                    attempted,
+                });
             }
         }
 

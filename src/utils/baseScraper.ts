@@ -2,7 +2,7 @@
  * Base scraper abstraction to eliminate code duplication across 25+ scrapers
  */
 import { Browser, Page } from "puppeteer-core";
-import { acquireBrowser, releaseBrowser } from "./getBrowser";
+import { acquireBrowser, releaseBrowser, destroyBrowser } from "./getBrowser";
 import { generateRandomUA } from "./generateRandomUserAgents";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
@@ -103,6 +103,23 @@ async function setupPageContext(page: Page, providerName: string): Promise<void>
  * retrying immediately would only deepen the block and look more bot-like.
  */
 class NonRetryableError extends Error {}
+
+/** Thrown when a scrape step blows past its hard time budget. */
+class TimeoutError extends Error {}
+
+/**
+ * Race a promise against a hard timeout. Used to bound the offer-extraction step,
+ * which otherwise has no timeout of its own (paginating scrapers run in-page
+ * loops that can hang). On timeout the underlying work keeps running, so the
+ * caller MUST tear down the browser to actually stop it and free the pool slot.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+    let timer: NodeJS.Timeout;
+    const timeout = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new TimeoutError(`${label} exceeded ${ms}ms`)), ms);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer)) as Promise<T>;
+}
 
 /**
  * Retry wrapper for async operations
@@ -276,6 +293,7 @@ export async function executeScraper(
 
     let browser: Browser | null = null;
     let page: Page | null = null;
+    let succeeded = false;
 
     try {
         // Acquire browser from pool
@@ -344,8 +362,16 @@ export async function executeScraper(
             logger.debug(`Selector found for ${providerName}`, { selector: waitForSelector });
         }
 
-        // Extract offers using provider-specific logic
-        const data = await extractOffers(page);
+        // Extract offers using provider-specific logic, under a hard time budget.
+        // Without this, a hung in-page evaluate (pagination loop, unresponsive
+        // page) would never resolve, the finally below would never run, and the
+        // browser's pool slot would be held forever — eventually deadlocking the
+        // whole pool. On timeout we throw; the finally then DESTROYS the browser.
+        const data = await withTimeout(
+            extractOffers(page),
+            config.scraping.scrapeTimeout,
+            `extractOffers(${providerName})`,
+        );
 
         // Assess scrape health (empty vs silently broken) before we tear the page
         // down — the probes read the live DOM. Never let this break the scrape.
@@ -378,6 +404,7 @@ export async function executeScraper(
             logger.error(`Failed to persist snapshot for ${providerName}`, error);
         }
 
+        succeeded = true;
         return { data, errors: "" };
     } catch (error: any) {
         const errorMessage = error?.message || String(error);
@@ -395,18 +422,24 @@ export async function executeScraper(
             errors: errorMessage,
         };
     } finally {
-        // Cleanup: close page and release browser back to pool
-        if (page) {
-            try {
-                await page.close();
-            } catch (error) {
-                logger.error(`Error closing page for ${providerName}`, error);
-            }
-        }
-
         if (browser) {
-            releaseBrowser(browser);
-            logger.debug(`Released browser for ${providerName}`);
+            if (succeeded) {
+                // Healthy scrape → close just the page (bounded, so a wedged page
+                // can't hang here) and return the browser to the pool for reuse.
+                if (page) {
+                    await withTimeout(page.close(), 5000, `page.close(${providerName})`).catch((error) =>
+                        logger.warn(`Error/timeout closing page for ${providerName}`, { error: error?.message }),
+                    );
+                }
+                releaseBrowser(browser);
+                logger.debug(`Released browser for ${providerName}`);
+            } else {
+                // Errored or timed out → the browser may be wedged (hung evaluate /
+                // unresponsive page). Destroy it so its pool slot is freed
+                // immediately and a bad browser is never handed to the next caller.
+                destroyBrowser(browser);
+                logger.debug(`Destroyed browser for ${providerName} after failure`);
+            }
         }
     }
 }

@@ -19,6 +19,11 @@ export const config = {
         defaultTimeout: parseInt(process.env.SCRAPER_DEFAULT_TIMEOUT || "60000", 10), // 60 seconds
         selectorTimeout: parseInt(process.env.SCRAPER_SELECTOR_TIMEOUT || "5000", 10), // 5 seconds
         navigationTimeout: parseInt(process.env.SCRAPER_NAVIGATION_TIMEOUT || "30000", 10), // 30 seconds
+        // Hard ceiling on the offer-extraction step (which has no intrinsic timeout
+        // of its own — paginating scrapers run in-page loops). If exceeded, the
+        // browser is destroyed so its pool slot can't be held forever. Generous
+        // enough for multi-page providers (degewo paginates ~7 pages).
+        scrapeTimeout: parseInt(process.env.SCRAPER_SCRAPE_TIMEOUT || "180000", 10), // 3 minutes
         maxRetries: parseInt(process.env.SCRAPER_MAX_RETRIES || "3", 10),
         retryDelay: parseInt(process.env.SCRAPER_RETRY_DELAY || "2000", 10), // 2 seconds
     },
