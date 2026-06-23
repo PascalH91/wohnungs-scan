@@ -7,12 +7,13 @@ import { vaterlandUrl } from "./providerUrls";
 // inside #content, with all the key facts in the header row, pipe-separated:
 //   "Burchardstraße 20 | 12103 Berlin | 2,5-Zimmer-Wohnung | ca. 65,49 qm | 2. OG links | ab sofort"
 // There's no per-listing detail page, so we link to the listings page itself.
-//
-// Note: unlike the big providers we do NOT apply the room/size/district filter
-// here — Vaterland rarely has anything, and its flats sit outside the usual
-// search grid, so we surface every offer (only obvious disqualifiers are dropped).
+// Filtered like the other providers: relevant district (by PLZ in the address),
+// minimum rooms/size, and the shared disqualifying-title patterns.
 async function extractVaterlandOffers(page: Page): Promise<{ offers: Offer[]; isMultiPages: boolean }> {
     const offers = await page.evaluate(async (listingsUrl) => {
+        const minRoomNumber = await window.getMinRoomNumber();
+        const minRoomSize = await window.getMinRoomSize();
+
         const tables = Array.from(document.querySelectorAll("#content table.contenttable"));
         const results: Offer[] = [];
 
@@ -30,23 +31,31 @@ async function extractVaterlandOffers(page: Page): Promise<{ offers: Offer[]; is
 
                 const roomsMatch = header.match(/([\d.,]+)\s*-?\s*Zimmer/i);
                 const sizeMatch = header.match(/ca\.?\s*([\d.,]+)\s*(?:qm|m²)/i);
-                const rooms = roomsMatch ? parseFloat(roomsMatch[1].replace(",", ".")) : undefined;
-                const size = sizeMatch ? parseFloat(sizeMatch[1].replace(",", ".")) : undefined;
+                const rooms = roomsMatch ? parseFloat(roomsMatch[1].replace(",", ".")) : 100;
+                const size = sizeMatch ? parseFloat(sizeMatch[1].replace(",", ".")) : 1000;
 
                 const roomType = parts.find((p) => /zimmer/i.test(p)) || "";
                 const rest = parts.slice(parts.indexOf(roomType) + 1).filter((p) => p && !/qm|m²/i.test(p));
                 const title = [roomType, ...rest].filter(Boolean).join(" · ");
 
+                const relevantDistrict = await window.isInRelevantDistrict(address);
                 const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(header);
 
-                if (address && !containsDisqualifyingPattern) {
+                const showItem =
+                    address &&
+                    relevantDistrict &&
+                    !containsDisqualifyingPattern &&
+                    rooms >= minRoomNumber &&
+                    size >= minRoomSize;
+
+                if (showItem) {
                     results.push({
                         address,
                         id: header, // no provider id — header line is unique per unit
                         title: title || "Wohnungsangebot",
-                        region: "-",
+                        region: relevantDistrict?.district || "-",
                         link: listingsUrl,
-                        size: size != null ? size + " m²" : undefined,
+                        size: size + " m²",
                         rooms,
                     });
                 }
