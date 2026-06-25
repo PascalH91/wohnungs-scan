@@ -4,7 +4,7 @@ import { Page } from "puppeteer-core";
 import { dagewoUrl } from "./providerUrls";
 import { config } from "@/config";
 
-const { navigationTimeout, selectorTimeout } = config.scraping;
+const { navigationTimeout, selectorTimeout, maxRetries, retryDelay } = config.scraping;
 
 // Safety cap so a misbehaving pagination nav can never spin forever. degewo
 // currently has ~7 pages of results; 30 leaves comfortable head-room.
@@ -118,6 +118,32 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
     });
 }
 
+/**
+ * Navigate to a results URL and confirm the listing container actually
+ * rendered. degewo intermittently serves a transient error/404 page for a
+ * pagination request; without a retry the loop would end on that bad page and
+ * the health check — which inspects whichever page is live after extraction —
+ * would falsely report the anchor as gone even though earlier pages scraped
+ * fine. Returns true once the teaser list is present, false if every attempt
+ * failed. Mirrors the base navigation's retry/backoff settings.
+ */
+async function gotoResultsPage(page: Page, url: string): Promise<boolean> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const resp = await page.goto(url, { waitUntil: "networkidle2", timeout: navigationTimeout });
+            const status = resp?.status();
+            if (status && status >= 200 && status < 300) {
+                await page.waitForSelector(TEASER_LIST, { timeout: selectorTimeout });
+                return true;
+            }
+        } catch {
+            // Timeout / nav error / missing selector — fall through to retry.
+        }
+        if (attempt < maxRetries) await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    }
+    return false;
+}
+
 async function extractDAGEWOOffers(page: Page): Promise<{ offers: Offer[]; isMultiPages: boolean }> {
     const byId = new Map<string, Offer>();
     let pagesVisited = 0;
@@ -126,9 +152,14 @@ async function extractDAGEWOOffers(page: Page): Promise<{ offers: Offer[]; isMul
     let nextUrl: string | null = null;
     do {
         if (nextUrl) {
-            await page.goto(nextUrl, { waitUntil: "networkidle2", timeout: navigationTimeout });
+            // A transient bad pagination page must not end the run on a broken DOM:
+            // retry, and if it still fails after all attempts, stop here and keep
+            // whatever earlier pages already yielded.
+            const ok = await gotoResultsPage(page, nextUrl);
+            if (!ok) break;
+        } else {
+            await page.waitForSelector(TEASER_LIST, { timeout: selectorTimeout }).catch(() => {});
         }
-        await page.waitForSelector(TEASER_LIST, { timeout: selectorTimeout }).catch(() => {});
 
         const { offers, nextUrl: next } = await extractPage(page);
         // Dedupe across pages defensively (stable per-listing link is the key).
@@ -137,6 +168,18 @@ async function extractDAGEWOOffers(page: Page): Promise<{ offers: Offer[]; isMul
         pagesVisited += 1;
         nextUrl = next;
     } while (nextUrl && pagesVisited < MAX_PAGES);
+
+    // The base scraper assesses health against whichever page is live right now —
+    // i.e. the last one we navigated to. If that page lost its results list (a
+    // transient degewo hiccup mid-pagination), health would wrongly report
+    // "anchor not found" despite a successful scrape. Re-land on the canonical
+    // results page so the health verdict reflects a representative page. If
+    // degewo is genuinely down this navigation also fails and the page stays
+    // broken — so a real outage is still correctly flagged.
+    const anchorPresent = await page.evaluate((sel) => !!document.querySelector(sel), TEASER_LIST).catch(() => false);
+    if (!anchorPresent) {
+        await gotoResultsPage(page, dagewoUrl);
+    }
 
     return { offers: Array.from(byId.values()), isMultiPages: pagesVisited > 1 };
 }
