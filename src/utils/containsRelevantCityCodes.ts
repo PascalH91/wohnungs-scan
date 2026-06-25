@@ -28,6 +28,7 @@ export const containsRelevantCityCode = async (inputString: string) => {
         //     "10717",
         //     "13053",
         //     "12589",
+        //     "12439",
         // ],
     };
 
