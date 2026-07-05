@@ -41,7 +41,16 @@ async function extractWBMOffers(page: Page): Promise<{ offers: Offer[]; isMultiP
                     if (showItem) {
                         results.push({
                             address,
-                            id: `${item.getAttribute("data-id")}_${item.getAttribute("data-uid")}`,
+                            // Identity key: WBM's data-id is a structured, stable
+                            // per-unit code (Bestand-Gebäude/Aufgang/Einheit, e.g.
+                            // "51-5175/1/55"). data-uid is a running counter that WBM
+                            // bumps every time it re-publishes a listing, so mixing it
+                            // in minted a fresh id on every refresh — a long-lived flat
+                            // was then re-notified each scrape cycle. data-id alone is
+                            // stable across re-publishes and unique per apartment.
+                            // Falls back to the content fingerprint when data-id is
+                            // absent (see computeOfferId).
+                            id: item.getAttribute("data-id") || "",
                             title: title?.innerHTML,
                             region: relevantDistrict?.district || item.querySelector(".area")?.innerHTML,
                             link: `https://www.wbm.de${item.querySelector(".btn-holder")?.getElementsByTagName("a")[0].getAttribute("href")}`,
