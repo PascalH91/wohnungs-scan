@@ -117,6 +117,7 @@ declare global {
         getMinRoomSize: () => Promise<number>;
         getMaxColdRent: () => Promise<number>;
         getMaxWarmRent: () => Promise<number>;
+        getIncludeWbs: () => Promise<boolean>;
         titleContainsDisqualifyingPattern: (title: string) => Promise<boolean>;
     }
 }

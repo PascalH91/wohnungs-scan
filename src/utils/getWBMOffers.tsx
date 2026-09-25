@@ -29,11 +29,12 @@ async function extractWBMOffers(page: Page): Promise<{ offers: Offer[]; isMultiP
 
                     const minRoomNumber = await window.getMinRoomNumber();
                     const minRoomSize = await window.getMinRoomSize();
+                    const includeWbs = await window.getIncludeWbs();
 
                     const showItem =
                         title &&
                         address &&
-                        !isWBS &&
+                        (!isWBS || includeWbs) &&
                         relevantDistrict &&
                         roomNumber >= minRoomNumber &&
                         transformedSize >= minRoomSize;

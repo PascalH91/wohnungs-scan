@@ -30,11 +30,12 @@ async function extractFriedrichshainEGOffers(page: Page): Promise<{ offers: Offe
 
                     const minRoomNumber = await window.getMinRoomNumber();
                     const minRoomSize = await window.getMinRoomSize();
+                    const includeWbs = await window.getIncludeWbs();
 
                     const showItem =
                         title &&
                         address &&
-                        !isWBS &&
+                        (!isWBS || includeWbs) &&
                         relevantDistrict &&
                         transformedRoomNumber >= minRoomNumber &&
                         transformedSize >= minRoomSize;

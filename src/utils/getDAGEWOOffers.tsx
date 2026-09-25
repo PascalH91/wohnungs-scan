@@ -25,6 +25,7 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
     return await page.evaluate(async () => {
         const minRoomNumber = await window.getMinRoomNumber();
         const minRoomSize = await window.getMinRoomSize();
+        const includeWbs = await window.getIncludeWbs();
 
         const list = document.querySelector("#immo-teaser-list");
         const teasers = list
@@ -85,7 +86,7 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
                     address &&
                     title &&
                     !containsDisqualifyingPattern &&
-                    !isWBS &&
+                    (!isWBS || includeWbs) &&
                     isRelevantNeighbourhood &&
                     rooms >= minRoomNumber &&
                     size >= minRoomSize;

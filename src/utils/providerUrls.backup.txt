@@ -1,13 +1,13 @@
 import { config } from "@/config";
 
-const { minRoomSize, minRoomNumber, maxColdRent, maxWarmRent, includeWbs } = config.apartment;
+const { minRoomSize, minRoomNumber, maxColdRent, maxWarmRent } = config.apartment;
 
 // Provider URLs - safe to import in client components
 export const wbmUrl = "https://www.wbm.de/wohnungen-berlin/angebote/";
 
 export const friedrichsheimUrl = "https://www.friedrichsheim-eg.de/category/wohnungsangebote-fuer-alle/";
 
-export const gewobagUrl = `https://www.gewobag.de/fuer-mietinteressentinnen/suche/wohnung/?gesamtmiete_von&gesamtmiete_bis=${maxWarmRent}&gesamtflaeche_von=${minRoomSize}&gesamtflaeche_bis&zimmer_von=${minRoomNumber}&zimmer_bis${includeWbs ? "" : "&keinwbs=1"}&sort-by`;
+export const gewobagUrl = `https://www.gewobag.de/fuer-mietinteressentinnen/suche/wohnung/?gesamtmiete_von&gesamtmiete_bis=${maxWarmRent}&gesamtflaeche_von=${minRoomSize}&gesamtflaeche_bis&zimmer_von=${minRoomNumber}&zimmer_bis&keinwbs=1&sort-by`;
 
 export const deutscheWohnenUrl = `https://www.deutsche-wohnen.com/mieten/mietangebote?city=Berlin&furnished=0&seniorFriendly=0&subsidizedHousingPermit=egal&immoType=wohnung&priceMax=${maxColdRent}&sizeMin=${minRoomSize}&minRooms=${minRoomNumber}&floor=Beliebig&bathtub=0&bathwindow=0&bathshower=0&kitchenEBK=0&toiletSeparate=0&disabilityAccess=egal&balcony=egal&rentType=miete`;
 
@@ -32,7 +32,7 @@ export const dpfUrl = "https://www.dpfonline.de/interessenten/angebote/";
 
 export const stadtUndLandUrl = `https://www.stadtundland.de/wohnungssuche?form=stadtundland-expose-search-1.form&sp%3Acategories%5B3352%5D%5B%5D=-&sp%3Acategories%5B3352%5D%5B%5D=__last__&sp%3AroomsFrom%5B%5D=${minRoomNumber}&sp%3AroomsTo%5B%5D=&sp%3ArentPriceFrom%5B%5D=&sp%3ArentPriceTo%5B%5D=&sp%3AareaFrom%5B%5D=${minRoomSize}&sp%3AareaTo%5B%5D=&sp%3Afeature%5B%5D=__last__&action=submit`;
 
-export const gesobauUrl = `https://www.gesobau.de/mieten/wohnungssuche/?tx_solr[filter][]=zimmer:%27${minRoomNumber}-3%27&tx_solr[filter][]=wohnflaeche:%27${minRoomSize}-58%27&tx_solr[filter][]=warmmiete:%270-${maxWarmRent}%27`;
+export const gesobauUrl = `https://www.gesobau.de/mieten/wohnungssuche/?tx_solr[filter][]=zimmer:%27${minRoomNumber}-99%27&tx_solr[filter][]=wohnflaeche:%27${minRoomSize}-9999%27&tx_solr[filter][]=warmmiete:%270-${maxWarmRent}%27`;
 
 export const dagewoUrl = "https://www.degewo.de/immosuche";
 
@@ -59,7 +59,7 @@ export const vineta89Url = "https://vineta98.de/wohnungen/";
 
 export const forumKreuzbergUrl = "https://forumkreuzberg.de/s/wohnen/wohnungsangebote/";
 
-export const berlinovoUrl = `https://www.berlinovo.de/de/wohnungen/suche?w%5B0%5D=wohnungen_wohnflaeche%3A%28min%3A${minRoomSize}%2Cmax%3A105%2Call_min%3A${minRoomSize}%2Call_max%3A105%29&w%5B1%5D=wohungen_region%3A6`;
+export const berlinovoUrl = `https://www.berlinovo.de/de/wohnungen/suche?w%5B0%5D=wohnungen_wohnflaeche%3A%28min%3A${minRoomSize}%2Cmax%3A9999%2Call_min%3A${minRoomSize}%2Call_max%3A9999%29&w%5B1%5D=wohungen_region%3A6`;
 
 export const paradiesUrl = "https://abg-paradies.de/wohnungsangebote/";
 

@@ -84,6 +84,7 @@ async function setupPageContext(page: Page, providerName: string): Promise<void>
     await page.exposeFunction("getMinRoomSize", () => config.apartment.minRoomSize);
     await page.exposeFunction("getMaxColdRent", () => config.apartment.maxColdRent);
     await page.exposeFunction("getMaxWarmRent", () => config.apartment.maxWarmRent);
+    await page.exposeFunction("getIncludeWbs", () => config.apartment.includeWbs);
     await page.exposeFunction("titleContainsDisqualifyingPattern", (title: string) =>
         titleContainsDisqualifyingPattern(title),
     );

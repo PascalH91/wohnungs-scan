@@ -12,6 +12,10 @@ export const config = {
         minRoomNumber: parseInt(process.env.NEXT_PUBLIC_MIN_ROOM_NUMBER || "3", 10),
         maxColdRent: parseInt(process.env.NEXT_PUBLIC_MAX_COLD_RENT || "1900", 10),
         maxWarmRent: parseInt(process.env.NEXT_PUBLIC_MAX_WARM_RENT || "2000", 10),
+        // When true, flats that require a WBS (Wohnberechtigungsschein) are kept
+        // instead of filtered out — disables every WBS check (provider flags,
+        // search-URL params and the WBS title patterns). Default: excluded.
+        includeWbs: process.env.INCLUDE_WBS === "true",
     },
 
     // Browser and scraping configuration

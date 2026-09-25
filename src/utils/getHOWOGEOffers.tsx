@@ -33,8 +33,8 @@ interface HowogeResponse {
 }
 
 async function toOffer(obj: HowogeObject): Promise<Offer | null> {
-    // Skip listings that require a WBS certificate.
-    if (obj.wbs === "ja") return null;
+    // Skip listings that require a WBS certificate (unless WBS flats are wanted).
+    if (!config.apartment.includeWbs && obj.wbs === "ja") return null;
 
     const notice = obj.notice?.trim() ?? "";
     if (titleContainsDisqualifyingPattern(notice)) return null;
