@@ -56,6 +56,10 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
                     "prenzlauer berg",
                     "gesundbrunnen",
                     "treptow",
+                    "niederschönhausen",
+                    "reinickendorf",
+                    "karlshorst",
+                    "friedenau",
                 ];
                 const neighbourhood = (address ?? "").split("|").pop()?.trim() ?? "";
                 const normalizedNeighbourhood = neighbourhood.toLowerCase().replace(/-/g, " ");
