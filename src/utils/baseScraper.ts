@@ -10,6 +10,7 @@ import { config } from "@/config";
 import { Offer, ProviderHealth, ScraperResponse } from "@/types";
 import { createLogger } from "./logger";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
+import { extractPrice, RentKind } from "./price";
 import { persistOffers, persistSnapshot, retireOffers } from "./offerStore";
 
 const logger = createLogger("base-scraper");
@@ -93,6 +94,9 @@ async function setupPageContext(page: Page, providerName: string): Promise<void>
     await page.exposeFunction("getIncludeWbs", () => config.apartment.includeWbs);
     await page.exposeFunction("titleContainsDisqualifyingPattern", (title: string) =>
         titleContainsDisqualifyingPattern(title),
+    );
+    await page.exposeFunction("extractPrice", (text: string | undefined | null, fallbackKind?: RentKind) =>
+        extractPrice(text, fallbackKind),
     );
 
     // Mirror the target page's own console output. These are messages from the

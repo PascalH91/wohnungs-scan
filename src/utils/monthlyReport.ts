@@ -36,6 +36,7 @@ const NON_ADDRESSES = new Set(["", "-", "neues angebot"]);
 interface ReportRow {
     rooms: number | null;
     size: number | null;
+    price: string;
     address: string;
     company: string;
     firstSeenAt: string;
@@ -83,6 +84,7 @@ function toRow(offer: StoredOffer): ReportRow {
     return {
         rooms: parseNumber(offer.rooms, 15),
         size: parseNumber(offer.size, 1000),
+        price: offer.price || MISSING,
         address: NON_ADDRESSES.has(rawAddress.toLowerCase()) ? MISSING : rawAddress,
         company: offer.company || MISSING,
         firstSeenAt: offer.firstSeenAt,
@@ -105,7 +107,7 @@ function renderRow(row: ReportRow): string {
     const rooms = row.rooms !== null ? `${numberFormat.format(row.rooms)} Zi.` : MISSING;
     const size = row.size !== null ? `${numberFormat.format(row.size)} m²` : MISSING;
     const seen = row.firstSeenAt ? dateFormat.format(new Date(row.firstSeenAt)) : MISSING;
-    return `- ${rooms} | ${size} | ${row.address} | ${row.company} | ${seen}`;
+    return `- ${rooms} | ${size} | ${row.price} | ${row.address} | ${row.company} | ${seen}`;
 }
 
 function renderReport(title: string, subtitle: string, offers: StoredOffer[], now: Date): string {
@@ -115,7 +117,7 @@ function renderReport(title: string, subtitle: string, offers: StoredOffer[], no
         "",
         `${subtitle} · ${rows.length} Angebote · erstellt ${dateFormat.format(now)}`,
         "",
-        "Format: Zimmer | Größe | Adresse | Anbieter | zuerst gesehen",
+        "Format: Zimmer | Größe | Miete | Adresse | Anbieter | zuerst gesehen",
     ];
 
     for (const wbs of [true, false]) {

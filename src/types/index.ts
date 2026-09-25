@@ -16,6 +16,8 @@ export interface Offer {
     /** Whether the flat requires a WBS, when the provider states it. Undefined =
      * unknown (the monthly report then falls back to the title patterns). */
     wbs?: boolean;
+    /** Monthly rent as display string, e.g. "1.762 € warm" (see utils/price). */
+    price?: string;
     blocked?: boolean;
     daysUntilAccessible?: number;
     /** Server-side signal: this offer was first seen recently enough to warrant alerting. */
@@ -125,6 +127,7 @@ declare global {
         getMaxWarmRent: () => Promise<number>;
         getIncludeWbs: () => Promise<boolean>;
         titleContainsDisqualifyingPattern: (title: string) => Promise<boolean>;
+        extractPrice: (text: string | undefined | null, fallbackKind?: "warm" | "kalt") => Promise<string | undefined>;
     }
 }
 

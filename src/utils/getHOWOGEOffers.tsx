@@ -2,6 +2,7 @@ import { Offer } from "@/types";
 import { config } from "@/config";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
+import { formatPrice } from "./price";
 import { createApiScraper, fetchJson } from "./apiScraper";
 import { howogeApiUrl } from "./providerUrls";
 
@@ -57,6 +58,7 @@ async function toOffer(obj: HowogeObject): Promise<Offer | null> {
         size: `${Math.round(obj.area)}m²`,
         rooms: obj.rooms,
         wbs: obj.wbs === "ja",
+        price: formatPrice(obj.rent, "warm"), // HOWOGE lists the Warmmiete
     };
 }
 

@@ -50,6 +50,7 @@ async function extractFriedrichshainEGOffers(page: Page): Promise<{ offers: Offe
                             size: roomSize,
                             rooms: roomNumber,
                             wbs: isWBS,
+                            price: await window.extractPrice(itemInnerText),
                         });
                     }
                 }),

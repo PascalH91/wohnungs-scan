@@ -56,6 +56,7 @@ async function extractDPFOffers(page: Page): Promise<{ offers: Offer[]; isMultiP
                             link,
                             size,
                             rooms,
+                            price: await window.extractPrice(price, "kalt"),
                         });
                     }
                 }),

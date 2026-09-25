@@ -40,6 +40,8 @@ export interface StoredOffer {
     /** WBS required, as reported by the scraper. Absent on older records and for
      * providers that don't state it. */
     wbs?: boolean;
+    /** Monthly rent display string ("1.762 € warm"); absent on older records. */
+    price?: string;
     firstSeenAt: string;
     lastSeenAt: string;
     /**
@@ -169,6 +171,7 @@ export async function persistOffers(
             if (existing) {
                 existing.lastSeenAt = nowIso;
                 if (offer.wbs !== undefined) existing.wbs = offer.wbs;
+                if (offer.price) existing.price = offer.price;
                 const isNew = Date.parse(existing.firstSeenAt) >= windowStart;
                 return { ...offer, isNew };
             }
@@ -182,6 +185,7 @@ export async function persistOffers(
                 size: offer.size ?? "",
                 link: offer.link ?? "",
                 ...(offer.wbs !== undefined ? { wbs: offer.wbs } : {}),
+                ...(offer.price ? { price: offer.price } : {}),
                 firstSeenAt: nowIso,
                 lastSeenAt: nowIso,
             };

@@ -89,6 +89,7 @@ async function extractSTADTUNDLANDOffers(page: Page): Promise<{ offers: Offer[];
                         link: href ? `https://www.stadtundland.de${href}` : null,
                         size: size + " m²",
                         rooms,
+                        price: await window.extractPrice((item as HTMLElement).innerText),
                     });
                 }
             }),

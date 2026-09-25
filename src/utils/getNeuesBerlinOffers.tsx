@@ -52,6 +52,7 @@ async function extractNeuesBerlinOffers(page: Page): Promise<{ offers: Offer[]; 
                                 item.querySelector(".oi-wa-info")?.getElementsByTagName("a")[0].getAttribute("href"),
                             size,
                             rooms,
+                            price: await window.extractPrice((item as HTMLElement).innerText),
                         });
                     }
                 }),

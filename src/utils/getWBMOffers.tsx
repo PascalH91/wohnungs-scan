@@ -58,6 +58,7 @@ async function extractWBMOffers(page: Page): Promise<{ offers: Offer[]; isMultiP
                             size: roomSize,
                             rooms: roomNumber,
                             wbs: isWBS,
+                            price: await window.extractPrice((item as HTMLElement).innerText),
                         });
                     }
                 }),

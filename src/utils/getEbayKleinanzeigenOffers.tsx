@@ -56,6 +56,7 @@ async function extractEbayKleinanzeigenOffers(page: Page): Promise<{ offers: Off
                             link: `https://www.kleinanzeigen.de${href}`,
                             size: transformedSize.toString(),
                             rooms: transformedRooms,
+                            price: await window.extractPrice((item as HTMLElement).innerText),
                         });
                     }
                 }),

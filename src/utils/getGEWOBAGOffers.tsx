@@ -41,6 +41,7 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
                                 .querySelector(".angebot-footer")
                                 ?.getElementsByTagName("a")[0]
                                 .getAttribute("href"),
+                            price: await window.extractPrice((item as HTMLElement).innerText),
                             size: (item.querySelector(".angebot-area > td") as HTMLElement | undefined)?.innerText
                                 ?.split("|")[1]
                                 .trim(),

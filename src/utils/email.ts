@@ -56,7 +56,11 @@ function googleMapsLink(address: string | undefined): string | null {
 
 function renderOffer(offer: StoredOffer): string {
     const title = escapeHtml(offer.title || "Wohnungsangebot");
-    const meta = [offer.rooms && `${escapeHtml(offer.rooms)} Zi.`, offer.size && `${escapeHtml(offer.size)} m²`]
+    const meta = [
+        offer.rooms && `${escapeHtml(offer.rooms)} Zi.`,
+        offer.size && `${escapeHtml(offer.size)} m²`,
+        offer.price && escapeHtml(offer.price),
+    ]
         .filter(Boolean)
         .join(" · ");
     const address = offer.address ? escapeHtml(offer.address) : "";
@@ -104,7 +108,7 @@ function renderEmail(offers: StoredOffer[]): { subject: string; html: string; te
             [
                 o.company,
                 o.title,
-                [o.rooms && `${o.rooms} Zi.`, o.size && `${o.size} m²`].filter(Boolean).join(" "),
+                [o.rooms && `${o.rooms} Zi.`, o.size && `${o.size} m²`, o.price].filter(Boolean).join(" "),
                 o.address,
                 o.link,
             ]

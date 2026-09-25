@@ -87,6 +87,7 @@ async function extractBerolinaOffers(page: Page): Promise<{ offers: Offer[]; isM
                         link: `${base}/#!/detail-expose-2-${id}-x`,
                         size: sizeText,
                         rooms: roomsText,
+                        price: await window.extractPrice(warmRentText, "warm"),
                     });
                 }
             }

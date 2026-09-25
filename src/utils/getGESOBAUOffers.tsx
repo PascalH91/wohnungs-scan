@@ -53,6 +53,8 @@ async function extractGESOBAUOffers(page: Page): Promise<{ offers: Offer[]; isMu
                                     .getAttribute("href"),
                             size: sizeText,
                             rooms: roomsText ? parseFloat(roomsText.replace(",", ".")) : undefined,
+                            // The price span carries no label; the search filters on warm rent.
+                            price: await window.extractPrice((item as HTMLElement).innerText, "warm"),
                         });
                     }
                 }),

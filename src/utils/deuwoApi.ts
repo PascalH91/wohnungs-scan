@@ -15,6 +15,7 @@ import { Offer, ScraperResponse } from "@/types";
 import { config } from "@/config";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
+import { formatPrice } from "./price";
 import { createApiScraper, fetchJson } from "./apiScraper";
 
 const { minRoomSize } = config.apartment;
@@ -100,6 +101,7 @@ async function toOffer(result: DeuwoResult, detailBaseUrl: string): Promise<Offe
         link: `${detailBaseUrl}/${result.slug}`,
         size: `${Math.round(result.groesse)}m²`,
         rooms: result.anzahl_zimmer,
+        price: formatPrice(result.preis, "kalt"), // `preis` is the Kaltmiete on every brand's site
     };
 }
 

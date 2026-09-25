@@ -47,6 +47,7 @@ async function extractBerlinovoOffers(page: Page): Promise<{ offers: Offer[]; is
                                 item.querySelector(".title .field")?.getElementsByTagName("a")[0].getAttribute("href"),
                             size: `> ${minRoomSize}m²`,
                             rooms: transformedRooms,
+                            price: await window.extractPrice((item as HTMLElement).innerText),
                         });
                     }
                 }),

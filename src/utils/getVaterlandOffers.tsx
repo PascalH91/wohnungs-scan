@@ -57,6 +57,7 @@ async function extractVaterlandOffers(page: Page): Promise<{ offers: Offer[]; is
                         link: listingsUrl,
                         size: size + " m²",
                         rooms,
+                        price: await window.extractPrice((table as HTMLElement).innerText),
                     });
                 }
             }),

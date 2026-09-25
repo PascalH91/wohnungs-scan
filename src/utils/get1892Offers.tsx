@@ -6,6 +6,7 @@ import { eg1892Url } from "./providerUrls";
 import { transformSizeIntoValidNumber } from "./transformSizeIntoValidNumber";
 import { containsRelevantCityCode } from "./containsRelevantCityCodes";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
+import { formatPrice } from "./price";
 
 interface RawListing {
     objectId: string;
@@ -95,6 +96,7 @@ async function extract1892Offers(page: Page): Promise<{ offers: Offer[]; isMulti
                 link: "https://hpm2.immosolve.eu/immosolve_presentation/pub/modern/2145111/HP/immo.jsp",
                 size: String(size),
                 rooms,
+                price: formatPrice(rent, "warm"),
             });
         }
     }

@@ -48,6 +48,7 @@ async function extractADLERGROUPOffers(page: Page): Promise<{ offers: Offer[]; i
                                         .getAttribute("href"),
                                 size: String(roomSize),
                                 rooms: roomNumber,
+                                price: await window.extractPrice((item as HTMLElement).innerText),
                             });
                         }
                     }),

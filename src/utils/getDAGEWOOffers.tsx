@@ -105,6 +105,7 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
                         size: size + " m²",
                         rooms,
                         wbs: isWBS,
+                        price: await window.extractPrice((item as HTMLElement).innerText),
                     });
                 }
             }),
