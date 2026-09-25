@@ -56,6 +56,7 @@ async function toOffer(obj: HowogeObject): Promise<Offer | null> {
         link: `https://www.howoge.de${obj.link}`,
         size: `${Math.round(obj.area)}m²`,
         rooms: obj.rooms,
+        wbs: obj.wbs === "ja",
     };
 }
 

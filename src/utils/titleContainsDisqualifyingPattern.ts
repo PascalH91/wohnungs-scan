@@ -8,6 +8,9 @@ const wbsPattern =
 // Titles that are always disqualifying, regardless of the WBS setting.
 const otherPattern = /eilgewerbe|voll ausgestattet|Wohnaktiv! Wohnen ab.*$/;
 
+/** True when the title marks the flat as WBS-only (independent of includeWbs). */
+export const titleIndicatesWbs = (inputString?: string) => wbsPattern.test(inputString || "");
+
 export const titleContainsDisqualifyingPattern = (inputString?: string) => {
     const title = inputString || "";
 

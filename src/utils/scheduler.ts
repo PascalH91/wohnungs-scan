@@ -313,6 +313,16 @@ async function runCycle(): Promise<void> {
             logger.error("Health-check step failed", error);
         }
 
+        // Monthly report: the route itself tracks whether last month's report
+        // already went out, so calling it every cycle sends it exactly once.
+        try {
+            const res = await fetch(`${BASE_URL}/api/report`, { cache: "no-store" });
+            const body = (await res.json()) as { sent?: boolean; month?: string };
+            if (body?.sent) logger.info("Monthly report sent", { month: body.month });
+        } catch (error) {
+            logger.error("Monthly report step failed", error);
+        }
+
         logger.info("Scrape cycle complete", { durationMs: Date.now() - startedAt, newOffers });
     } finally {
         running = false;

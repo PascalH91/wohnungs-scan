@@ -11,6 +11,7 @@
  */
 import { Resend } from "resend";
 import { StoredOffer } from "./offerStore";
+import type { MonthlyReport } from "./monthlyReport";
 import { createLogger } from "./logger";
 
 const logger = createLogger("email");
@@ -301,5 +302,54 @@ export async function sendInfraAlertEmail(failures: InfraFailure[], attempted: n
     }
 
     logger.info("Sent infra alert email", { failed: failures.length, attempted, id: data?.id });
+    return true;
+}
+
+/**
+ * Monthly report: short summary in the body, the two Markdown reports attached.
+ * Throws on a delivery error so the month is not marked as sent.
+ */
+export async function sendMonthlyReportEmail(report: MonthlyReport): Promise<boolean> {
+    const resend = getClient();
+    if (!resend || !TO) {
+        logger.warn("Email not configured — skipping monthly report", { month: report.month });
+        return false;
+    }
+
+    const subject = `📊 Wohnungs-Scan: Monatsbericht ${report.monthLabel}`;
+    const text = [
+        `Monatsbericht ${report.monthLabel}`,
+        `Neu gesehen im ${report.monthLabel}: ${report.monthCount}`,
+        `Alle bisher gesehenen Angebote: ${report.totalCount}`,
+        "",
+        `Anhänge: ${report.files.map((file) => file.filename).join(", ")}`,
+    ].join("\n");
+    const html = `
+        <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;">
+            <h2>Monatsbericht ${escapeHtml(report.monthLabel)}</h2>
+            <p>Neu gesehen im ${escapeHtml(report.monthLabel)}: <b>${report.monthCount}</b><br>
+            Alle bisher gesehenen Angebote: <b>${report.totalCount}</b></p>
+            <p style="color:#666;font-size:13px;">Details in den angehängten Markdown-Dateien
+            (sortiert nach WBS → Bezirk → Zimmer → Anbieter).</p>
+        </div>`;
+
+    const { data, error } = await resend.emails.send({
+        from: FROM,
+        to: TO,
+        subject,
+        html,
+        text,
+        attachments: report.files.map((file) => ({
+            filename: file.filename,
+            content: Buffer.from(file.content, "utf8"),
+            contentType: "text/markdown; charset=utf-8",
+        })),
+    });
+    if (error) {
+        logger.error("Failed to send monthly report email", error, { month: report.month });
+        throw new Error(error.message || "Resend send failed");
+    }
+
+    logger.info("Sent monthly report email", { month: report.month, id: data?.id });
     return true;
 }

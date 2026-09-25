@@ -13,6 +13,9 @@ export interface Offer {
     link?: string | null;
     size?: string;
     rooms?: number | string;
+    /** Whether the flat requires a WBS, when the provider states it. Undefined =
+     * unknown (the monthly report then falls back to the title patterns). */
+    wbs?: boolean;
     blocked?: boolean;
     daysUntilAccessible?: number;
     /** Server-side signal: this offer was first seen recently enough to warrant alerting. */

@@ -49,6 +49,7 @@ async function extractFriedrichshainEGOffers(page: Page): Promise<{ offers: Offe
                             link: item.querySelector(".details-button")?.getAttribute("href"),
                             size: roomSize,
                             rooms: roomNumber,
+                            wbs: isWBS,
                         });
                     }
                 }),

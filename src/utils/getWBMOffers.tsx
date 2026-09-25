@@ -57,6 +57,7 @@ async function extractWBMOffers(page: Page): Promise<{ offers: Offer[]; isMultiP
                             link: `https://www.wbm.de${item.querySelector(".btn-holder")?.getElementsByTagName("a")[0].getAttribute("href")}`,
                             size: roomSize,
                             rooms: roomNumber,
+                            wbs: isWBS,
                         });
                     }
                 }),

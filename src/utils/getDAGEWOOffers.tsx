@@ -100,6 +100,7 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
                         link: link ? `https://www.degewo.de${link}` : null,
                         size: size + " m²",
                         rooms,
+                        wbs: isWBS,
                     });
                 }
             }),

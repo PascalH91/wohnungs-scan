@@ -37,6 +37,9 @@ export interface StoredOffer {
     rooms: string;
     size: string;
     link: string;
+    /** WBS required, as reported by the scraper. Absent on older records and for
+     * providers that don't state it. */
+    wbs?: boolean;
     firstSeenAt: string;
     lastSeenAt: string;
     /**
@@ -165,6 +168,7 @@ export async function persistOffers(
 
             if (existing) {
                 existing.lastSeenAt = nowIso;
+                if (offer.wbs !== undefined) existing.wbs = offer.wbs;
                 const isNew = Date.parse(existing.firstSeenAt) >= windowStart;
                 return { ...offer, isNew };
             }
@@ -177,6 +181,7 @@ export async function persistOffers(
                 rooms: offer.rooms !== undefined ? String(offer.rooms) : "",
                 size: offer.size ?? "",
                 link: offer.link ?? "",
+                ...(offer.wbs !== undefined ? { wbs: offer.wbs } : {}),
                 firstSeenAt: nowIso,
                 lastSeenAt: nowIso,
             };
@@ -192,6 +197,11 @@ export async function persistOffers(
 
         return decorated;
     });
+}
+
+/** All stored offers (every offer ever seen) — read-only, for reporting. */
+export async function readAllOffers(): Promise<StoredOffer[]> {
+    return Object.values((await readStore()).offers);
 }
 
 /**
