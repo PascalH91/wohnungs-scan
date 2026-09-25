@@ -3,6 +3,8 @@
  * "1.762 € warm", so the offer store and the monthly report can show prices
  * from every provider in the same shape.
  */
+import { Offer } from "@/types";
+import { config } from "@/config";
 
 export type RentKind = "warm" | "kalt";
 
@@ -90,4 +92,26 @@ export function extractPrice(text?: string | null, fallbackKind?: RentKind): str
 
     const best = found.find((f) => f.kind === "warm") ?? found.find((f) => f.kind === "kalt") ?? found[0];
     return best ? formatPrice(best.amount, best.kind ?? fallbackKind) : undefined;
+}
+
+/** Reverse of formatPrice: "1.762 € warm" → { amount: 1762, kind: "warm" }. */
+export function parsePrice(price?: string): { amount: number; kind?: RentKind } | null {
+    const match = (price ?? "").match(/^([\d.]+) €(?: (warm|kalt))?$/);
+    if (!match) return null;
+    return { amount: parseInt(match[1].replace(/\./g, ""), 10), kind: match[2] as RentKind | undefined };
+}
+
+/**
+ * Central rent check applied to every provider before offers are stored (and
+ * therefore before anything is emailed) — many providers' search pages can't
+ * filter by rent, so their scrapers don't. Warm rent is checked against
+ * maxWarmRent, cold rent against maxColdRent, and an amount of unknown kind
+ * against the more lenient maxWarmRent. Offers without a price are kept:
+ * better one look too many than a missed flat.
+ */
+export function isWithinRentLimit(offer: Offer): boolean {
+    const parsed = parsePrice(offer.price);
+    if (!parsed) return true;
+    const limit = parsed.kind === "kalt" ? config.apartment.maxColdRent : config.apartment.maxWarmRent;
+    return parsed.amount <= limit;
 }

@@ -10,7 +10,7 @@ import { config } from "@/config";
 import { Offer, ProviderHealth, ScraperResponse } from "@/types";
 import { createLogger } from "./logger";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
-import { extractPrice, RentKind } from "./price";
+import { extractPrice, isWithinRentLimit, RentKind } from "./price";
 import { persistOffers, persistSnapshot, retireOffers } from "./offerStore";
 
 const logger = createLogger("base-scraper");
@@ -399,6 +399,10 @@ export async function executeScraper(
             health: health?.status,
             ...(health && health.status !== "HEALTHY" ? { healthReasons: health.reasons } : {}),
         });
+
+        // Central rent check (see isWithinRentLimit) — after the health probe, so
+        // health still judges the raw scrape.
+        data.offers = data.offers.filter(isWithinRentLimit);
 
         // Persist offers to the local store and attach isNew flags from firstSeenAt.
         // Persistence failures must not break the scrape response.

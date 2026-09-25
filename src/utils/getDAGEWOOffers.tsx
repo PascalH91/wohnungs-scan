@@ -57,7 +57,8 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
                     "gesundbrunnen",
                     "treptow",
                     "niederschönhausen",
-                    "reinickendorf",
+                    // "reinickendorf" deliberately left out: degewo labels the whole
+                    // district that way (e.g. Cité Pasteur, 13405), not just the Ortsteil.
                     "karlshorst",
                     "friedenau",
                 ];

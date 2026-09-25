@@ -12,6 +12,7 @@ import { Offer, ScraperResponse } from "@/types";
 import { persistOffers, persistSnapshot } from "./offerStore";
 import { createLogger } from "./logger";
 import { generateRandomUA } from "./generateRandomUserAgents";
+import { isWithinRentLimit } from "./price";
 
 const logger = createLogger("api-scraper");
 
@@ -63,7 +64,8 @@ export function createApiScraper(cfg: ApiScraperConfig): () => Promise<ScraperRe
         const userAgent = generateRandomUA();
 
         try {
-            const offers = await fetchOffers({ userAgent });
+            // Central rent check (see isWithinRentLimit).
+            const offers = (await fetchOffers({ userAgent })).filter(isWithinRentLimit);
 
             logger.info(`Successfully scraped ${providerName}`, { matched: offers.length });
 
