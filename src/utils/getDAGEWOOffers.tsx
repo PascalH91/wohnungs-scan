@@ -45,9 +45,10 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
 
                 // degewo's card address is "Street | Neighbourhood" with no postal
                 // code, so the PLZ-based isInRelevantDistrict() can't be used here.
-                // Filter on the neighbourhood name instead. Compared case- and
-                // hyphen-insensitively, so "Prenzlauer-Berg" and "Prenzlauer Berg"
-                // both match.
+                // Filter on the neighbourhood name instead. It must equal an entry
+                // (case- and hyphen-insensitively, so "Prenzlauer-Berg" matches
+                // "prenzlauer berg") — a substring match let "Marzahn Mitte" through
+                // as "mitte".
                 const NEIGHBOURHOOD_ALLOWLIST = [
                     "mitte",
                     "friedrichshain",
@@ -56,6 +57,7 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
                     "prenzlauer berg",
                     "gesundbrunnen",
                     "treptow",
+                    "alt treptow",
                     "niederschönhausen",
                     // degewo uses "Reinickendorf" for the whole district (e.g. Cité
                     // Pasteur, 13405), so this matches beyond the Ortsteil — accepted.
@@ -66,7 +68,7 @@ async function extractPage(page: Page): Promise<{ offers: Offer[]; nextUrl: stri
                 const neighbourhood = (address ?? "").split("|").pop()?.trim() ?? "";
                 const normalizedNeighbourhood = neighbourhood.toLowerCase().replace(/-/g, " ");
                 const isRelevantNeighbourhood = NEIGHBOURHOOD_ALLOWLIST.some((name) =>
-                    normalizedNeighbourhood.includes(name),
+                    normalizedNeighbourhood === name,
                 );
 
                 // Definition list holds the key facts as term/definition pairs,
