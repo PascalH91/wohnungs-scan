@@ -10,7 +10,7 @@ import { config } from "@/config";
 import { Offer, ProviderHealth, ScraperResponse } from "@/types";
 import { createLogger } from "./logger";
 import { titleContainsDisqualifyingPattern } from "./titleContainsDisqualifyingPattern";
-import { persistOffers, persistSnapshot } from "./offerStore";
+import { persistOffers, persistSnapshot, retireOffers } from "./offerStore";
 
 const logger = createLogger("base-scraper");
 
@@ -31,7 +31,13 @@ export interface ScraperConfig {
      * unset/false for providers that use a constant or content-derived id.
      */
     stableId?: boolean;
-    extractOffers: (page: Page) => Promise<{ offers: Offer[]; isMultiPages?: boolean }>;
+    /**
+     * `confirmedEmpty` is for sentinel providers (see sentinelScraper): set it
+     * when the page POSITIVELY shows its "no offers" state. That ends the current
+     * episode — this provider's stored offers are retired, so if one of them is
+     * published again later it notifies again instead of being deduped away.
+     */
+    extractOffers: (page: Page) => Promise<{ offers: Offer[]; isMultiPages?: boolean; confirmedEmpty?: boolean }>;
     /**
      * Optional probes that let assessHealth() tell a genuinely-empty result apart
      * from a silently-broken scraper. All fields are optional — supply whatever
@@ -396,6 +402,15 @@ export async function executeScraper(
             data.offers = await persistOffers(providerName, data.offers, { useProviderId: stableId });
         } catch (error: any) {
             logger.error(`Failed to persist offers for ${providerName}`, error);
+        }
+
+        // Sentinel page is confirmed empty again → end the episode.
+        if (data.confirmedEmpty) {
+            try {
+                await retireOffers(providerName);
+            } catch (error: any) {
+                logger.error(`Failed to retire offers for ${providerName}`, error);
+            }
         }
 
         // Save the current listing as this provider's snapshot for the frontend.

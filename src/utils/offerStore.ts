@@ -45,6 +45,12 @@ export interface StoredOffer {
      * of truth for email dedup and survives process restarts.
      */
     notifiedAt?: string;
+    /**
+     * Set when a sentinel provider's page went back to its "no offers" state
+     * (see retireOffers). A retired offer that is scraped again is treated as a
+     * brand-new sighting: fresh firstSeenAt and a new notification.
+     */
+    retiredAt?: string;
 }
 
 interface StoreFile {
@@ -144,6 +150,19 @@ export async function persistOffers(
             const id = computeOfferId(company, offer, options.useProviderId);
             const existing = store.offers[id];
 
+            if (existing?.retiredAt) {
+                // Reappeared after its provider's page was confirmed empty — a new
+                // episode, so notify again (same id, fresh lifecycle).
+                existing.title = offer.title ?? "";
+                existing.link = offer.link ?? "";
+                existing.firstSeenAt = nowIso;
+                existing.lastSeenAt = nowIso;
+                delete existing.notifiedAt;
+                delete existing.retiredAt;
+                newlyStoredCount += 1;
+                return { ...offer, isNew: true };
+            }
+
             if (existing) {
                 existing.lastSeenAt = nowIso;
                 const isNew = Date.parse(existing.firstSeenAt) >= windowStart;
@@ -172,6 +191,33 @@ export async function persistOffers(
         }
 
         return decorated;
+    });
+}
+
+/**
+ * End the current episode for a sentinel provider: mark all of its stored offers
+ * as retired, so that any of them showing up again later counts as new (see
+ * persistOffers). Only called once the page positively shows its "no offers"
+ * state — never on a failed scrape, which would cause duplicate alerts.
+ */
+export async function retireOffers(company: string): Promise<number> {
+    return withLock(async () => {
+        const store = await readStore();
+        const nowIso = new Date().toISOString();
+        let retired = 0;
+
+        for (const offer of Object.values(store.offers)) {
+            if (offer.company === company && !offer.retiredAt) {
+                offer.retiredAt = nowIso;
+                retired += 1;
+            }
+        }
+
+        if (retired) {
+            await writeStore(store);
+            logger.info("Retired offers (provider page empty again)", { company, count: retired });
+        }
+        return retired;
     });
 }
 

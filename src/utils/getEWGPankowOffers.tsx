@@ -12,9 +12,12 @@ const LISTING_SELECTOR = "article.type-wohnungen";
  * of that type is a real offer, so we report each one individually. The same
  * post appears in several grids (desktop/mobile/sidebar) — deduped by link.
  */
-async function extractEWGPankowOffers(page: Page): Promise<{ offers: Offer[]; isMultiPages: boolean }> {
+async function extractEWGPankowOffers(
+    page: Page,
+): Promise<{ offers: Offer[]; isMultiPages: boolean; confirmedEmpty: boolean }> {
     return await page.evaluate(async (listingSelector) => {
         const byLink = new Map<string, Offer>();
+        let placeholderSeen = false;
 
         for (const item of Array.from(document.querySelectorAll(listingSelector))) {
             const titleLink = item.querySelector(".elementor-post__title a");
@@ -22,6 +25,7 @@ async function extractEWGPankowOffers(page: Page): Promise<{ offers: Offer[]; is
             const link = titleLink?.getAttribute("href") ?? "";
 
             const isPlaceholder = /kein Wohnungsangebot/i.test(title) || link.includes("kein-wohnungsangebot");
+            if (isPlaceholder) placeholderSeen = true;
             if (!title || !link || isPlaceholder || byLink.has(link)) continue;
 
             const containsDisqualifyingPattern = await window.titleContainsDisqualifyingPattern(title);
@@ -38,7 +42,13 @@ async function extractEWGPankowOffers(page: Page): Promise<{ offers: Offer[]; is
             });
         }
 
-        return { offers: Array.from(byLink.values()), isMultiPages: false };
+        // Placeholder alone = confirmed empty → ends the episode, so a flat that is
+        // re-published later (same link) alerts again.
+        return {
+            offers: Array.from(byLink.values()),
+            isMultiPages: false,
+            confirmedEmpty: placeholderSeen && byLink.size === 0,
+        };
     }, LISTING_SELECTOR);
 }
 
