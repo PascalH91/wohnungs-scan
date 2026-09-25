@@ -38,6 +38,12 @@ export interface DeuwoResult {
     vermarktungsart_miete: string;
 }
 
+interface SearchTokenResponse {
+    token?: string;
+    /** Seconds the token stays valid (currently 900). */
+    ttl?: number;
+}
+
 interface DeuwoResponse {
     paging?: { info?: { count?: number; limit?: number } };
     results?: DeuwoResult[];
@@ -49,6 +55,20 @@ export interface DeuwoApiScraperConfig {
     apiUrl: string;
     /** Detail-page base; the listing slug is appended (e.g. ".../immobilien" -> ".../immobilien/{slug}"). */
     detailBaseUrl: string;
+    /** Brand data set for the search-token endpoint ("deuwo", "vonovia"). */
+    dataSet: string;
+}
+
+/**
+ * The list endpoint answers 401 without an `x-von-search-token` header. The
+ * brand's own search page fetches that token anonymously from this endpoint
+ * (valid for ~15 minutes), so we do the same once per scrape run.
+ */
+async function fetchSearchToken(apiUrl: string, dataSet: string, userAgent: string): Promise<string> {
+    const tokenUrl = `${new URL(apiUrl).origin}/api/real-estate/search-token?dataSet=${dataSet}`;
+    const { token } = await fetchJson<SearchTokenResponse>(tokenUrl, userAgent);
+    if (!token) throw new Error("Search-token endpoint returned no token");
+    return token;
 }
 
 /**
@@ -89,18 +109,25 @@ async function toOffer(result: DeuwoResult, detailBaseUrl: string): Promise<Offe
  * the offer store dedups on it directly.
  */
 export function createDeuwoApiScraper(cfg: DeuwoApiScraperConfig): () => Promise<ScraperResponse> {
-    const { providerName, apiUrl, detailBaseUrl } = cfg;
+    const { providerName, apiUrl, detailBaseUrl, dataSet } = cfg;
 
     return createApiScraper({
         providerName,
         useProviderId: true,
         fetchOffers: async ({ userAgent }) => {
+            const token = await fetchSearchToken(apiUrl, dataSet, userAgent);
             const raw: DeuwoResult[] = [];
             let offset = 0;
             let total = Infinity;
 
             for (let page = 0; page < MAX_PAGES && offset < total; page++) {
-                const json = await fetchJson<DeuwoResponse>(`${apiUrl}&limit=${PAGE_LIMIT}&offset=${offset}`, userAgent);
+                const json = await fetchJson<DeuwoResponse>(
+                    `${apiUrl}&limit=${PAGE_LIMIT}&offset=${offset}`,
+                    userAgent,
+                    {
+                        "x-von-search-token": token,
+                    },
+                );
                 const results = json.results ?? [];
                 total = json.paging?.info?.count ?? results.length;
 

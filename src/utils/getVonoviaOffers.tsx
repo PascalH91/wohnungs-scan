@@ -9,4 +9,5 @@ export const getVonoviaOffers = createDeuwoApiScraper({
     providerName: "Vonovia",
     apiUrl: vonoviaApiUrl,
     detailBaseUrl: "https://www.vonovia.de/zuhause-finden/immobilien",
+    dataSet: "vonovia",
 });

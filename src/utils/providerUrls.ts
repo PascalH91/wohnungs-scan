@@ -32,7 +32,9 @@ export const dpfUrl = "https://www.dpfonline.de/interessenten/angebote/";
 
 export const stadtUndLandUrl = `https://www.stadtundland.de/wohnungssuche?form=stadtundland-expose-search-1.form&sp%3Acategories%5B3352%5D%5B%5D=-&sp%3Acategories%5B3352%5D%5B%5D=__last__&sp%3AroomsFrom%5B%5D=${minRoomNumber}&sp%3AroomsTo%5B%5D=&sp%3ArentPriceFrom%5B%5D=&sp%3ArentPriceTo%5B%5D=&sp%3AareaFrom%5B%5D=${minRoomSize}&sp%3AareaTo%5B%5D=&sp%3Afeature%5B%5D=__last__&action=submit`;
 
-export const gesobauUrl = `https://www.gesobau.de/mieten/wohnungssuche/?tx_solr[filter][]=zimmer:%27${minRoomNumber}-3%27&tx_solr[filter][]=wohnflaeche:%27${minRoomSize}-58%27&tx_solr[filter][]=warmmiete:%270-${maxWarmRent}%27`;
+// Solr range filters need an upper bound; 99 rooms / 9999 m² keep them open
+// (a bound below the minimum, e.g. "4-3", silently returns no flats at all).
+export const gesobauUrl = `https://www.gesobau.de/mieten/wohnungssuche/?tx_solr[filter][]=zimmer:%27${minRoomNumber}-99%27&tx_solr[filter][]=wohnflaeche:%27${minRoomSize}-9999%27&tx_solr[filter][]=warmmiete:%270-${maxWarmRent}%27`;
 
 export const dagewoUrl = "https://www.degewo.de/immosuche";
 
@@ -63,7 +65,7 @@ export const berolinaUrl = "https://2106276.hpm.immosolve.eu/#!/result-list-2";
 
 export const vineta89Url = "https://vineta98.de/wohnungen/";
 
-export const forumKreuzbergUrl = "https://forumkreuzberg.de/s/wohnen/wohnungsangebote/";
+export const forumKreuzbergUrl = "https://forumkreuzberg.de/wohngenossenschaft/wohnungsvergabe/";
 
 export const berlinovoUrl = `https://www.berlinovo.de/de/wohnungen/suche?w%5B0%5D=wohnungen_wohnflaeche%3A%28min%3A${minRoomSize}%2Cmax%3A105%2Call_min%3A${minRoomSize}%2Call_max%3A105%29&w%5B1%5D=wohungen_region%3A6`;
 

@@ -32,9 +32,9 @@ export interface ApiScraperConfig {
  * non-OK status (block statuses are surfaced distinctly so they read clearly in
  * logs/snapshots). Sends a browser-like UA and bypasses Next.js fetch caching.
  */
-export async function fetchJson<T>(url: string, userAgent: string): Promise<T> {
+export async function fetchJson<T>(url: string, userAgent: string, headers: Record<string, string> = {}): Promise<T> {
     const resp = await fetch(url, {
-        headers: { "User-Agent": userAgent, Accept: "application/json" },
+        headers: { "User-Agent": userAgent, Accept: "application/json", ...headers },
         cache: "no-store",
     });
 

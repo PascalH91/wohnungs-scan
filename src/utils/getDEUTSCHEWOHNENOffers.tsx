@@ -9,4 +9,5 @@ export const getDEUTSCHEWOHNENOffers = createDeuwoApiScraper({
     providerName: "Deutsche Wohnen",
     apiUrl: deutscheWohnenApiUrl,
     detailBaseUrl: "https://www.deutsche-wohnen.com/mieten/mietangebote",
+    dataSet: "deuwo",
 });
