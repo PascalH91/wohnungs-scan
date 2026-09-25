@@ -45,6 +45,12 @@ export const vonoviaApiUrl = `https://www.vonovia.de/api/real-estate/list?rentTy
 
 export const solidariaetUrl = "https://wg-solidaritaet.de/wohnen/mietangebote/";
 
+export const vbvUrl = "https://www.vbveg.de/wohnungs-gewerbe-angebote.html";
+
+export const ewgPankowUrl = "https://www.ewg-pankow.de/wohnen/";
+
+export const dieseUrl = "https://diese-eg.de/wohnungsangebote/";
+
 export const neuesBerlinUrl = "https://www.neues-berlin.de/wohnen/wohnungsangebote";
 
 export const FriedrichshainEGUrl = "https://wgf.berlin/services/wohnung-finden/#wohnung";

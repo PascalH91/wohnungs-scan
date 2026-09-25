@@ -21,6 +21,9 @@ import {
     FriedrichshainEGUrl,
     berolinaUrl,
     vineta89Url,
+    vbvUrl,
+    ewgPankowUrl,
+    dieseUrl,
     forumKreuzbergUrl,
     berlinovoUrl,
     paradiesUrl,
@@ -146,6 +149,27 @@ const providerDetails: ProviderList = {
         name: "VINETA 89",
         logo: "/images/friedrichsheim.jpg",
         url: vineta89Url,
+    },
+
+    VBV: {
+        id: "VBV",
+        name: "Vaterländischer Bauverein eG",
+        logo: "/images/friedrichsheim.jpg",
+        url: vbvUrl,
+    },
+
+    EWG_PANKOW: {
+        id: "EWG_PANKOW",
+        name: "EWG Pankow",
+        logo: "/images/friedrichsheim.jpg",
+        url: ewgPankowUrl,
+    },
+
+    DIESE: {
+        id: "DIESE",
+        name: "DIESE eG",
+        logo: "/images/friedrichsheim.jpg",
+        url: dieseUrl,
     },
 
     FORUM_KREUZBERG: {
