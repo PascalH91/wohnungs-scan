@@ -60,6 +60,14 @@ const dateFormat = new Intl.DateTimeFormat("de-DE", {
     month: "2-digit",
     year: "numeric",
 });
+// "Mo., 07.06.2026" — weekday in front of the first-seen date of each row.
+const seenDateFormat = new Intl.DateTimeFormat("de-DE", {
+    timeZone: TZ,
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+});
 const monthNameFormat = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, month: "long", year: "numeric" });
 
 /** "YYYY-MM" of a date in Berlin time. */
@@ -106,7 +114,7 @@ function compareRows(a: ReportRow, b: ReportRow): number {
 function renderRow(row: ReportRow): string {
     const rooms = row.rooms !== null ? `${numberFormat.format(row.rooms)} Zi.` : MISSING;
     const size = row.size !== null ? `${numberFormat.format(row.size)} m²` : MISSING;
-    const seen = row.firstSeenAt ? dateFormat.format(new Date(row.firstSeenAt)) : MISSING;
+    const seen = row.firstSeenAt ? seenDateFormat.format(new Date(row.firstSeenAt)) : MISSING;
     return `- ${rooms} | ${size} | ${row.price} | ${row.address} | ${row.company} | ${seen}`;
 }
 
