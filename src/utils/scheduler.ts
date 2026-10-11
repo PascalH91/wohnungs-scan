@@ -86,6 +86,10 @@ const INFRA_ALERT_THROTTLE_MS = parseInt(process.env.INFRA_ALERT_THROTTLE_MS || 
 // A provider is skipped in a pass if it was scraped more recently than this.
 const MIN_PROVIDER_INTERVAL_MS: Record<string, number> = {
     wbm: 3 * 60 * 1000, // WBM: at most once every 3 minutes
+    // GEWOBAG flagged our long-lived browser session after ~2 weeks at the full
+    // cadence (Oct 2026: served a different page until a restart). Its offers stay
+    // online ~15 h on average, so a slower check misses nothing.
+    gewobag: 15 * 60 * 1000,
 };
 // Added on top of the minimum so the gap isn't exactly on the dot.
 const MIN_INTERVAL_JITTER_MS = 30_000; // +0..30s

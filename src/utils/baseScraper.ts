@@ -110,6 +110,26 @@ async function setupPageContext(page: Page, providerName: string): Promise<void>
 }
 
 /**
+ * Short description of the page currently loaded — title, URL and the start of
+ * its visible text. Appended to "anchor not found" health reasons, so an alert
+ * shows at a glance whether we got a bot-check/blocked page, a redirect or a
+ * real redesign (e.g. GEWOBAG served a different page to a long-lived browser
+ * session while the site itself was unchanged).
+ */
+async function describeLoadedPage(page: Page): Promise<string> {
+    try {
+        const { title, url, text } = await page.evaluate(() => ({
+            title: document.title,
+            url: location.href,
+            text: (document.body?.innerText ?? "").replace(/\s+/g, " ").trim().slice(0, 160),
+        }));
+        return ` — page loaded: "${title}" (${url}), text: "${text}"`;
+    } catch {
+        return "";
+    }
+}
+
+/**
  * Error that must NOT be retried. Used for block/rate-limit responses, where
  * retrying immediately would only deepen the block and look more bot-like.
  */
@@ -234,7 +254,9 @@ async function assessHealth(
         if (anchorPresent === false) {
             return {
                 status: "SUSPECT",
-                reasons: [`anchor "${hc.anchorSelector}" not found — page may have been redesigned (presence check can no longer run)`],
+                reasons: [
+                    `anchor "${hc.anchorSelector}" not found — page may have been redesigned (presence check can no longer run)${await describeLoadedPage(page)}`,
+                ],
                 rawCount,
                 advertisedCount,
                 baselineEligible: false,
@@ -247,7 +269,9 @@ async function assessHealth(
 
     // Structural anchor gone → page redesigned or we were redirected somewhere else.
     if (anchorPresent === false) {
-        reasons.push(`structural anchor "${hc!.anchorSelector}" not found — page may have been redesigned or moved`);
+        reasons.push(
+            `structural anchor "${hc!.anchorSelector}" not found — page may have been redesigned or moved${await describeLoadedPage(page)}`,
+        );
     }
 
     // Site advertises results but our card selector matched none → selector broken.
