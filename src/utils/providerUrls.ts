@@ -53,6 +53,9 @@ export const ewgPankowUrl = "https://www.ewg-pankow.de/wohnen/";
 
 export const dieseUrl = "https://diese-eg.de/wohnungsangebote/";
 
+// Immobilien Hensel GmbH: immowelt "Homepagemodul" widget, rendered client-side.
+export const henselUrl = "https://www.immobilien-hensel-gmbh.net/immobilie-suchen/mieten/#/list1";
+
 export const neuesBerlinUrl = "https://www.neues-berlin.de/wohnen/wohnungsangebote";
 
 export const FriedrichshainEGUrl = "https://wgf.berlin/services/wohnung-finden/#wohnung";

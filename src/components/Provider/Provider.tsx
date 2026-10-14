@@ -40,6 +40,7 @@ const providerNameById: { [key in ProviderT]?: string } = {
     VBV: "VBV",
     EWG_PANKOW: "EWG Pankow",
     DIESE: "DIESE",
+    HENSEL: "Hensel",
     VONOVIA: "Vonovia",
     EBAY_KLEINANZEIGEN: "Ebay Kleinanzeigen",
     STADTUNDLAND: "Stadt und Land",

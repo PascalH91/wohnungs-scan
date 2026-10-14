@@ -89,6 +89,7 @@ export type ProviderType =
     | "VBV"
     | "EWG_PANKOW"
     | "DIESE"
+    | "HENSEL"
     | "EBAY_KLEINANZEIGEN"
     | "BERLINOVO"
     | "ADLERGROUP"

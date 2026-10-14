@@ -24,6 +24,7 @@ import {
     vbvUrl,
     ewgPankowUrl,
     dieseUrl,
+    henselUrl,
     forumKreuzbergUrl,
     berlinovoUrl,
     paradiesUrl,
@@ -170,6 +171,13 @@ const providerDetails: ProviderList = {
         name: "DIESE eG",
         logo: "/images/friedrichsheim.jpg",
         url: dieseUrl,
+    },
+
+    HENSEL: {
+        id: "HENSEL",
+        name: "Immobilien Hensel",
+        logo: "/images/friedrichsheim.jpg",
+        url: henselUrl,
     },
 
     FORUM_KREUZBERG: {

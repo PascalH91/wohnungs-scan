@@ -52,6 +52,7 @@ const SCRAPER_ROUTES: string[] = [
     "vbv",
     "ewg_pankow",
     "diese",
+    "hensel",
     "ebay_kleinanzeigen",
     "berlinovo",
     "adlergroup",

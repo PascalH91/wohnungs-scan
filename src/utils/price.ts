@@ -33,8 +33,9 @@ function parseAmount(raw: string): number {
 const AMOUNT = /(\d{1,3}(?:[.\s]\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(?:€|EUR\b|Euro\b)/gi;
 const WARM = /warm|gesamt|brutto|inkl/gi;
 const COLD = /kalt|netto|grundmiete/gi;
-// Other money figures on a listing card that are not the rent.
-const NOT_RENT = /neben|heiz|betriebs|kaution|provision|anteil|stellplatz|garage/i;
+// Other money figures on a listing card that are not the rent. "heizkost", not
+// "heiz": titles like "…mit Fußbodenheizung! 560 € Kaltmiete" must not hide the rent.
+const NOT_RENT = /neben|heizkost|betriebs|kaution|provision|anteil|stellplatz|garage/i;
 
 /** Kind of the label closest to the end of `text` (for text before an amount). */
 function lastLabel(text: string): RentKind | undefined {
@@ -84,8 +85,14 @@ export function extractPrice(text?: string | null, fallbackKind?: RentKind): str
 
         const labelBefore = lastLabel(before);
         if (!labelBefore && NOT_RENT.test(before)) continue;
-        const kind = labelBefore ?? (NOT_RENT.test(after) ? null : firstLabel(after));
-        if (kind === null) continue;
+        // After the amount, whichever comes first decides: "560 € Kaltmiete zzgl.
+        // Nebenkosten" is cold rent, "250 € Nebenkosten" is skipped.
+        const notRentAfter = after.search(NOT_RENT);
+        const labelAfterAt = after.search(new RegExp(`${WARM.source}|${COLD.source}`, "i"));
+        const labelAfter =
+            labelAfterAt >= 0 && (notRentAfter < 0 || labelAfterAt < notRentAfter) ? firstLabel(after) : undefined;
+        if (!labelBefore && !labelAfter && notRentAfter >= 0) continue;
+        const kind = labelBefore ?? labelAfter;
 
         found.push({ amount, kind });
     }
