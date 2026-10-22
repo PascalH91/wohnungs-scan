@@ -78,7 +78,8 @@ export const wgVorwaertsUrl = "https://www.wg-vorwaerts.de/wohnungssuche/";
 
 export const evmUrl = "https://www.evmberlin.de/wohnungsbestand/";
 
-export const vaterlandUrl = "https://www.bg-vaterland.de/index.php?id=31";
+// Vaterland switched to static pages (Oct 2026); index.php?id=31 now answers 403.
+export const vaterlandUrl = "https://www.bg-vaterland.de/index6fb5.html?id=31";
 
 export const adlergroupUrl = `https://www.adler-group.com/suche/wohnung?tx_adleropenimmo_filterbig%5Bsearch%5D%5BmaxPrice%5D=${maxWarmRent}&tx_adleropenimmo_filterbig%5Bsearch%5D%5Brooms%5D=${minRoomNumber}&tx_adleropenimmo_filterbig%5Bsearch%5D%5Bcity%5D=Berlin&tx_adleropenimmo_filterbig%5Bsearch%5D%5BminSurface%5D=${minRoomSize}`;
 export const eg1892Url = "https://hpm2.immosolve.eu/immosolve_presentation/pub/modern/2145111/HP/immo.jsp";
